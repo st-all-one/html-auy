@@ -1,0 +1,15 @@
+# build
+/target/
+**/*.rs.bk
+**/*.snap.new
+
+# ferramentas
+/.cq-cache/
+/fuzz/corpus/
+/fuzz/artifacts/
+
+# editores / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store

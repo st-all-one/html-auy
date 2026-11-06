@@ -1,0 +1,915 @@
+# spec/elements.toml — vocabulário de elementos do html-auy
+#
+# FONTE DA VERDADE do vocabulário. O crate `html-spec` é GERADO a partir deste arquivo
+# (`build.rs`); não edite o gerado.
+#
+# ── Esquema 2 (revisão após auditoria; ver docs/13-decisoes.md D16) ──
+#
+#   schema              versão do FORMATO deste arquivo
+#   meta.spec_version   versão do VOCABULÁRIO; congelada por minor (docs/11-estabilidade.md)
+#
+schema = 2
+
+[meta]
+spec_version = "2.0.0"
+# Atributos booleanos = PRESENÇA. `disabled="false"` é `true` em HTML, então o tipo é `bool` e o
+# gerador emite só o nome (`<button disabled>`), nunca `disabled="false"`. `hidden` fica de fora
+# porque aceita o valor `until-found` (ver [globals]).
+# categorias de conteúdo-modelo (usadas em `children`); `svg_shape` é própria de SVG
+categories = ["flow", "phrasing", "sectioning", "heading", "form", "table", "media", "metadata",
+              "interactive", "text", "svg_shape", "json", "none"]
+boolean_attributes = [
+  "async", "checked", "controls", "default", "defer", "disabled", "loop", "multiple",
+  "muted", "open", "playsinline", "readonly", "required", "reversed", "selected",
+]
+# escopo medido que originou a tabela: 63 elementos distintos, 6.765 tags
+# (docs/15-migracao-blade.md). Elementos entram por PR com decisão registrada (D5).
+
+# ─────────────────────────── globais ───────────────────────────
+
+[invariants]
+# Escopo de cada invariante — a informação que falta em quase toda spec de vocabulário:
+#
+#   block  = decidido dentro de UM bloco `html!` (a macro recusa: erro de compilação)
+#   page   = só o HTML final responde (N4 sobre a saída); a macro NÃO cobra e NÃO promete
+#
+# Toda invariante usada por um elemento precisa estar aqui: é o que impede uma regra de
+# página ser anunciada como garantia de compilação.
+
+a_rel_enum = "block"
+action_required_unless_dialog = "block"
+alt_empty_means_decorative = "block"
+attribute_by_input_type = "block"
+autocomplete_enum = "block"
+banner_unique_at_root = "type"
+shell_only_elements = "block"
+blank_target_implies_noopener = "block"
+caption_not_empty = "block"
+caption_required = "block"
+captions_kind_required = "block"
+closedby_enum = "block"
+cross_origin_requires_sandbox = "block"
+datetime_profile = "block"
+control_has_accessible_name = "block"
+details_name_accordion = "block"
+dialog_modal_semantics = "block"
+document_title_required = "type"
+fold_controls_loading = "block"
+for_matches_id_in_block = "block"
+head_charset_first = "block"
+href_is_typed = "block"
+intrinsic_dimensions_required = "block"
+label_exempt_types = "block"
+label_or_labelledby_in_block = "block"
+heading_levels_no_skips = "output"
+landmark_names_distinct = "output"
+legend_not_empty = "block"
+li_only_in_list = "block"
+link_rel_enum = "block"
+main_tabindex_minus_one = "block"
+main_unique = "type"
+media_requires_captions = "block"
+media_requires_transcript = "block"
+media_source_xor_src = "block"
+meta_form_exclusive = "block"
+form_requires_csrf = "type"
+meta_name_enum = "block"
+method_enum = "block"
+named_is_landmark = "block"
+no_aria_label_over_visible_text = "block"
+no_aria_hidden_on_focusable = "block"
+no_aria_modal = "block"
+no_content_derived_identifiers = "output"
+ids_unique = "output"
+no_flow_inside_phrasing = "block"
+no_http_equiv = "block"
+no_text_children = "block"
+noscript_context = "block"
+novalidate_forbidden = "block"
+pattern_flags_forbidden = "block"
+popover_target_resolves = "output"
+preload_requires_as_and_crossorigin = "block"
+preserve_whitespace = "block"
+referrer_policy_enum = "block"
+scope_enum = "block"
+scope_matches_section = "block"
+script_form_exclusive = "block"
+script_is_jsonld_only = "block"
+script_src_requires_defer = "block"
+section_has_heading_or_name = "block"
+select_has_selectable_option = "block"
+shell_owns_h1 = "type"
+single_h1 = "type"
+source_profile_media_only = "block"
+source_profile_picture_only = "block"
+srclang_required_for_subtitles = "block"
+srcset_requires_sizes_and_dims = "block"
+summary_single_heading = "block"
+svg_icon_default_decorative = "block"
+svg_informative_has_name = "block"
+tbody_explicit = "block"
+type_enum = "block"
+
+#   [globals]         atributos universais e seus valores permitidos
+#
+#   [element.<nome>]
+#     category          string ou array. Um elemento casa com `children` do pai se QUALQUER
+#                       categoria dele está na lista (multi-categoria é obrigatório: <a> é
+#                       phrasing E interactive; <img> é phrasing E media).
+#     void              true = sem filhos, sem fechamento.
+#     required          atributos cuja ausência é ERRO DE COMPILAÇÃO.
+#                       IMPLICITAMENTE PERMITIDOS (allowlist = required ∪ allowed).
+#     allowed           allowlist adicional. Qualquer outro nome é erro.
+#     accessible_name   "required" | "optional" | "none" — nome acessível (WCAG 4.1.2/1.3.1).
+#                       Substitui o antigo pseudo-atributo `label` que estava em `required`.
+#     children          categorias e/ou NOMES de elemento. Nome tem precedência sobre categoria.
+#                       `text` = apenas texto (nenhum elemento filho); `none` = só para void.
+#     required_children filho(s) obrigatório(s) — regra estrutural, verificada no bloco.
+#     first_child       filho que precisa vir primeiro.
+#     forbidden_children  exceções sobre `children`.
+#     invariants        nomes de regra implementados pelo validador (docs/04-validacao.md §4).
+#     deprecated        motivo; advisory e mantém compilação por uma minor.
+#
+# Atributos NUNCA permitidos em nenhum elemento (não aparecem em `allowed`):
+#   style, on*, srcdoc, formaction, ping, @*, hx-on*, x-on:*, slot=, shadowrootmode, part=,
+#   exportparts, is=, xlink:href  (docs/03 §5, docs/08 §2)
+#
+# A ordem dos atributos neste arquivo é a ordem de emissão na saída (determinismo de bytes, D14).
+
+[globals]
+# atributos aceitos em qualquer elemento, com valores enumerados (nunca string livre)
+hidden = ["", "until-found"]
+dir = ["ltr", "rtl", "auto"]
+translate = ["yes", "no"]
+spellcheck = ["true", "false"]
+inert = "presence"
+lang = "bcp47"
+class = "tokens"          # Class: tokens do vocabulário de design
+id = "id"                 # Id: gerado por primitivo, nunca derivado de conteúdo (DOM clobbering)
+data = "declared"         # data-*: nome validado pelo macro; conjunto fechado por `tools/data-check` (D26)
+tabindex = ["-1", "0"]    # negativo só para alvo de foco programático; positivo nunca
+popover = ["", "auto", "manual"]   # alvo do `popovertarget`; nunca é o único caminho de acesso
+
+# `aria-*`: allowlist global COM enum de valor — não é lista de nomes soltos.
+[globals.aria]
+aria-atomic = ["true", "false"]
+aria-busy = ["true", "false"]
+aria-controls = "idref"
+aria-current = ["page", "step", "location", "date", "time", "true"]
+aria-describedby = "idref-list"
+aria-expanded = ["true", "false"]
+aria-haspopup = ["true", "menu", "listbox", "tree", "dialog"]
+aria-hidden = ["true", "false"]
+aria-invalid = ["true", "false", "grammar", "spelling"]
+aria-label = "text"
+aria-labelledby = "idref-list"
+aria-live = ["off", "polite", "assertive"]
+aria-modal = ["true"]
+aria-pressed = ["true", "false", "mixed"]
+aria-required = ["true", "false"]
+aria-selected = ["true", "false"]
+# `role` NÃO é global: cada elemento declara `roles = [...]` ou nenhum (D4 — sem escape hatch).
+
+# ─────────────────────────── documento ───────────────────────────
+
+[element.html]
+only = "shell"                          # só o `Page` emite; `html!` recusa
+category = "metadata"
+required = ["lang"]
+allowed = ["dir", "class"]
+accessible_name = "none"
+children = ["metadata", "flow"]
+required_children = ["head", "body"]
+first_child = "head"
+invariants = ["shell_only_elements"]
+
+[element.head]
+only = "shell"                          # só o `Page` emite; `html!` recusa
+category = "metadata"
+allowed = []
+accessible_name = "none"
+children = ["metadata"]
+first_child = "meta"                      # `charset` nas primeiras 1024 posições (docs/06 §1)
+required_children = ["title"]
+invariants = ["shell_only_elements", "head_charset_first"]
+
+[element.body]
+only = "shell"                          # só o `Page` emite; `html!` recusa
+category = "metadata"
+allowed = ["class", "data-*"]
+accessible_name = "none"
+children = ["flow"]
+invariants = ["ids_unique", "shell_only_elements"]
+
+[element.title]
+only = "shell"                          # só o `Page` emite; `html!` recusa
+category = "metadata"
+allowed = []
+accessible_name = "none"
+children = ["text"]
+invariants = ["shell_only_elements", "document_title_required"]     # <title> é o nome da página (2.4.2)
+
+[element.meta]
+only = "shell"                          # só o `Page` emite; `html!` recusa
+category = "metadata"
+void = true
+required = []                             # três formas exclusivas (ver invariante)
+allowed = ["name", "property", "content", "charset", "media"]
+accessible_name = "none"
+children = ["none"]
+invariants = ["shell_only_elements", "meta_form_exclusive", "meta_name_enum", "no_http_equiv"]
+
+[element.link]
+only = "shell"                          # só o `Page` emite; `html!` recusa
+category = "metadata"
+void = true
+required = ["rel", "href"]
+allowed = ["as", "type", "media", "integrity", "hreflang", "sizes", "fetchpriority", "crossorigin", "title"]
+accessible_name = "none"
+children = ["none"]
+invariants = ["shell_only_elements", "link_rel_enum", "preload_requires_as_and_crossorigin"]
+
+[element.script]
+only = "shell"                          # só o `Page` emite; `html!` recusa
+category = "metadata"
+required = []                             # formas exclusivas: src | JSON-LD | importmap
+allowed = ["src", "type", "defer", "async", "integrity", "crossorigin"]
+accessible_name = "none"
+children = ["json"]                       # SOMENTE JSON-LD (`type=application/ld+json`)
+invariants = ["shell_only_elements", "script_form_exclusive", "script_is_jsonld_only", "script_src_requires_defer"]   # inline/executável proibido (D3)
+
+[element.noscript]
+only = "shell"                          # só o `Page` emite; `html!` recusa
+category = "metadata"
+allowed = []
+accessible_name = "none"
+children = ["metadata", "flow", "phrasing"]   # metadata no <head>, flow/phrasing no <body>
+invariants = ["shell_only_elements", "noscript_context"]
+
+# ─────────────────────────── estrutura ───────────────────────────
+
+[element.header]
+category = ["sectioning"]
+required = []
+allowed = ["class", "data-*", "aria-*"]
+accessible_name = "optional"              # header de <body> costuma precisar; de <article> não
+children = ["flow"]
+forbidden_children = ["header", "footer"]
+invariants = ["banner_unique_at_root"]
+
+[element.footer]
+category = ["sectioning"]
+allowed = ["class", "data-*", "aria-*"]
+accessible_name = "optional"
+children = ["flow"]
+forbidden_children = ["header", "footer"]
+
+[element.main]
+category = ["sectioning"]
+allowed = ["class", "id", "tabindex", "data-*", "aria-*"]
+accessible_name = "optional"
+children = ["flow"]
+invariants = ["main_unique", "main_tabindex_minus_one"]   # alvo do skip link
+
+[element.nav]
+category = ["sectioning"]
+allowed = ["class", "data-*", "aria-*"]
+accessible_name = "required"              # nome obrigatório: 1.3.1 (landmark repetido)
+children = ["flow"]
+invariants = ["landmark_names_distinct"]
+
+[element.aside]
+category = ["sectioning"]
+allowed = ["class", "data-*", "aria-*"]
+accessible_name = "required"
+children = ["flow"]
+
+[element.section]
+category = ["sectioning"]
+allowed = ["class", "data-section", "data-*", "aria-*"]
+accessible_name = "optional"              # obrigatório se houver mais de uma sem heading
+children = ["flow"]
+invariants = ["section_has_heading_or_name"]
+
+[element.article]
+category = ["sectioning"]
+allowed = ["class", "data-*", "aria-*"]
+accessible_name = "optional"
+children = ["flow"]
+
+[element.search]
+category = ["sectioning"]
+allowed = ["class", "data-*", "aria-*"]
+accessible_name = "required"              # <search> é landmark (HTML moderno)
+children = ["flow"]
+forbidden_children = ["search"]
+
+[element.address]
+category = ["flow"]
+allowed = ["class", "data-*"]
+accessible_name = "none"
+children = ["flow"]
+
+[element.div]
+category = ["flow"]
+roles = ["status", "alert", "tooltip"]   # só regiões vivas e tooltip (D4)
+allowed = ["class", "id", "data-*", "aria-*"]
+accessible_name = "none"
+children = ["flow"]
+
+[element.span]
+category = ["phrasing"]
+allowed = ["class", "id", "data-*", "aria-*", "lang"]
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.p]
+category = ["flow"]
+allowed = ["class", "id", "data-*"]
+accessible_name = "none"
+children = ["phrasing"]
+invariants = ["no_flow_inside_phrasing"]   # <div> em <p> é erro de compilação
+
+# ─────────────────────────── texto ───────────────────────────
+
+[element.h1]
+only = "shell"                            # o <h1> é o heading da TELA, do shell
+category = ["heading"]
+allowed = ["class", "id", "data-*"]
+accessible_name = "none"
+children = ["phrasing"]
+invariants = ["shell_only_elements", "single_h1", "shell_owns_h1"]   # só o Page emite
+
+[element.h2]
+category = ["heading"]
+allowed = ["class", "id", "data-*"]
+accessible_name = "none"
+children = ["phrasing"]
+invariants = ["heading_levels_no_skips"]
+
+[element.h3]
+category = ["heading"]
+allowed = ["class", "id", "data-*"]
+accessible_name = "none"
+children = ["phrasing"]
+invariants = ["heading_levels_no_skips"]
+
+[element.h4]
+category = ["heading"]
+allowed = ["class", "id", "data-*"]
+accessible_name = "none"
+children = ["phrasing"]
+invariants = ["heading_levels_no_skips"]
+
+[element.h5]
+category = ["heading"]
+allowed = ["class", "id", "data-*"]
+accessible_name = "none"
+children = ["phrasing"]
+invariants = ["heading_levels_no_skips"]
+
+[element.h6]
+category = ["heading"]
+allowed = ["class", "id", "data-*"]
+accessible_name = "none"
+children = ["phrasing"]
+invariants = ["heading_levels_no_skips"]
+
+[element.strong]
+category = ["phrasing"]
+allowed = ["class"]
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.em]
+category = ["phrasing"]
+allowed = ["class"]
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.small]
+category = ["phrasing"]
+allowed = ["class"]
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.code]
+category = ["phrasing"]
+allowed = ["class", "data-*"]
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.pre]
+category = ["flow"]
+allowed = ["class", "data-*", "tabindex"]
+accessible_name = "none"
+children = ["phrasing"]
+invariants = ["preserve_whitespace"]      # o codegen não normaliza espaço dentro de <pre>
+
+[element.abbr]
+category = ["phrasing"]
+required = ["title"]
+allowed = ["class"]
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.cite]
+category = ["phrasing"]
+allowed = ["class"]
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.q]
+category = ["phrasing"]
+allowed = ["class", "cite"]
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.blockquote]
+category = ["flow"]
+allowed = ["class", "cite", "data-*"]
+accessible_name = "none"
+children = ["flow"]
+
+[element.s]
+category = ["phrasing"]
+allowed = ["class"]
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.del]
+category = ["phrasing"]
+allowed = ["class", "cite", "datetime"]
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.ins]
+category = ["phrasing"]
+allowed = ["class", "cite", "datetime"]
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.kbd]
+category = ["phrasing"]
+allowed = ["class"]
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.mark]
+category = ["phrasing"]
+allowed = ["class"]
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.time]
+category = ["phrasing"]
+required = ["datetime"]
+allowed = ["class", "data-*"]
+accessible_name = "none"
+children = ["phrasing"]
+invariants = ["datetime_profile"]
+
+[element.br]
+category = ["phrasing"]
+void = true
+allowed = ["class"]
+accessible_name = "none"
+children = ["none"]
+
+[element.hr]
+category = ["flow"]
+void = true
+allowed = ["class"]
+accessible_name = "none"
+children = ["none"]
+
+# ─────────────────────────── listas ───────────────────────────
+
+[element.ul]
+category = ["flow"]
+allowed = ["class", "data-*"]
+accessible_name = "none"
+children = ["li"]
+forbidden_children = ["ul", "ol"]
+
+[element.ol]
+category = ["flow"]
+allowed = ["class", "data-*", "start", "reversed"]   # `type` em lista é obsoleto (5.2)
+accessible_name = "none"
+children = ["li"]
+
+[element.li]
+category = ["flow"]
+allowed = ["class", "data-*", "aria-*"]
+accessible_name = "none"
+children = ["flow"]
+invariants = ["li_only_in_list"]
+
+[element.dl]
+category = ["flow"]
+allowed = ["class", "data-*"]
+accessible_name = "none"
+children = ["dt", "dd"]
+required_children = ["dt"]
+
+[element.dt]
+category = ["flow"]
+allowed = ["class", "data-*"]
+accessible_name = "none"
+children = ["phrasing"]
+forbidden_children = ["dl"]
+
+[element.dd]
+category = ["flow"]
+allowed = ["class", "data-*"]
+accessible_name = "none"
+children = ["flow"]
+
+# ─────────────────────────── links ───────────────────────────
+
+[element.a]
+category = ["phrasing", "interactive"]
+required = ["href"]
+allowed = ["hreflang", "target", "download", "type", "class", "data-*", "aria-*"]   # `rel`/`referrerpolicy` são enums
+accessible_name = "required"              # link precisa de nome (texto ou sr-only)
+children = ["phrasing"]
+forbidden_children = ["a", "button", "input", "select", "textarea", "details", "summary", "dialog"]
+invariants = ["no_aria_hidden_on_focusable", "control_has_accessible_name", "href_is_typed", "blank_target_implies_noopener", "no_aria_label_over_visible_text",
+              "a_rel_enum", "referrer_policy_enum", "no_content_derived_identifiers"]
+
+# ─────────────────────────── mídia ───────────────────────────
+
+[element.img]
+category = ["phrasing", "media"]
+void = true
+required = ["src", "alt", "width", "height"]
+allowed = ["loading", "decoding", "fetchpriority", "sizes", "srcset", "class", "data-*"]
+accessible_name = "alt"
+children = ["none"]
+invariants = ["srcset_requires_sizes_and_dims", "alt_empty_means_decorative", "fold_controls_loading",
+              "intrinsic_dimensions_required"]
+
+[element.picture]
+category = ["phrasing", "media"]
+allowed = ["class"]
+accessible_name = "none"
+children = ["source", "img"]
+required_children = ["img"]
+first_child = "source"
+
+[element.source]                          # dentro de <picture>: srcset
+category = ["media"]
+void = true
+required = ["srcset"]
+allowed = ["type", "media", "sizes"]
+accessible_name = "none"
+children = ["none"]
+invariants = ["source_profile_picture_only"]
+
+[element.media_source]                    # dentro de <video>/<audio>: src
+category = ["media"]
+void = true
+required = ["src", "type"]
+allowed = ["media"]
+accessible_name = "none"
+children = ["none"]
+invariants = ["source_profile_media_only"]
+
+[element.video]
+category = ["flow", "media"]
+required = []                             # `src` OU `media_source` (nunca os dois)
+allowed = ["src", "controls", "preload", "poster", "muted", "loop", "playsinline", "width", "height", "class"]
+accessible_name = "optional"
+children = ["media_source", "track"]
+required_children = ["track"]
+invariants = ["media_source_xor_src", "media_requires_captions", "captions_kind_required"]   # WCAG 1.2.2
+
+[element.audio]
+category = ["flow", "media"]
+required = []                             # `src` OU `media_source` (nunca os dois)
+allowed = ["src", "controls", "preload", "loop", "class"]
+accessible_name = "optional"
+children = ["media_source", "track"]
+required_children = ["track"]
+invariants = ["media_source_xor_src", "media_requires_transcript"]
+
+[element.track]
+category = ["media"]
+void = true
+required = ["kind", "src"]
+allowed = ["srclang", "label", "default"]
+accessible_name = "none"
+children = ["none"]
+invariants = ["srclang_required_for_subtitles"]
+
+[element.iframe]
+category = ["flow", "media"]
+required = ["src", "title"]
+allowed = ["width", "height", "loading", "referrerpolicy", "sandbox", "class"]
+accessible_name = "title"
+children = ["text"]
+invariants = ["cross_origin_requires_sandbox"]
+
+[element.svg]
+category = ["phrasing", "media"]
+allowed = ["viewBox", "class", "width", "height", "fill", "stroke", "aria-*", "focusable"]   # case-sensitive
+accessible_name = "optional"              # <title> como filho, ou aria-labelledby
+children = ["svg_title", "desc", "svg_shape"]
+invariants = ["svg_icon_default_decorative", "svg_informative_has_name"]
+
+[element.path]
+category = ["svg_shape"]
+void = true
+required = ["d"]
+allowed = ["fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin", "class"]
+accessible_name = "none"
+children = ["none"]
+
+[element.circle]
+category = ["svg_shape"]
+void = true
+required = ["cx", "cy", "r"]
+allowed = ["fill", "stroke", "stroke-width", "class"]
+accessible_name = "none"
+children = ["none"]
+
+[element.rect]
+category = ["svg_shape"]
+void = true
+required = ["x", "y", "width", "height"]
+allowed = ["rx", "ry", "fill", "stroke", "stroke-width", "class"]
+accessible_name = "none"
+children = ["none"]
+
+[element.line]
+category = ["svg_shape"]
+void = true
+required = ["x1", "y1", "x2", "y2"]
+allowed = ["stroke", "stroke-width", "class"]
+accessible_name = "none"
+children = ["none"]
+
+[element.polyline]
+category = ["svg_shape"]
+void = true
+required = ["points"]
+allowed = ["fill", "stroke", "stroke-width", "class"]
+accessible_name = "none"
+children = ["none"]
+
+[element.polygon]
+category = ["svg_shape"]
+void = true
+required = ["points"]
+allowed = ["fill", "stroke", "stroke-width", "class"]
+accessible_name = "none"
+children = ["none"]
+
+[element.g]
+category = ["svg_shape"]
+allowed = ["fill", "stroke", "stroke-width", "class", "transform"]
+accessible_name = "none"
+children = ["svg_shape", "svg_title", "desc"]
+
+[element.use]
+category = ["svg_shape"]
+void = true
+required = ["href"]
+allowed = ["class"]
+accessible_name = "none"
+children = ["none"]
+
+[element.svg_title]   # <title> dentro de <svg> (mesmo nome HTML, namespace do gerador)
+category = ["metadata"]
+allowed = []
+accessible_name = "none"
+children = ["text"]
+
+[element.desc]
+category = ["metadata"]
+allowed = []
+accessible_name = "none"
+children = ["text"]
+
+# ─────────────────────────── figuras ───────────────────────────
+
+[element.figure]
+category = ["flow"]
+allowed = ["class", "data-*"]
+accessible_name = "optional"
+children = ["flow", "figcaption"]
+forbidden_children = ["figure"]
+
+[element.figcaption]
+category = ["flow"]
+allowed = ["class"]
+accessible_name = "none"
+children = ["flow"]
+
+# ─────────────────────────── formulários ───────────────────────────
+
+[element.form]
+only = "component"                        # só `Form::open` emite (exige CSRF); `html!` recusa
+category = ["flow", "form"]
+required = ["method"]
+allowed = ["action", "class", "id", "data-*", "enctype", "aria-*"]
+accessible_name = "optional"              # obrigatório quando há mais de um form na página
+children = ["flow"]
+forbidden_children = ["form"]
+invariants = ["form_requires_csrf", "named_is_landmark", "method_enum", "action_required_unless_dialog", "novalidate_forbidden"]
+
+[element.fieldset]
+category = ["form", "phrasing"]
+allowed = ["class", "id", "name", "disabled", "data-*"]
+accessible_name = "legend"
+children = ["legend", "flow"]
+required_children = ["legend"]
+first_child = "legend"
+invariants = ["legend_not_empty"]
+
+[element.legend]
+category = ["form"]
+allowed = ["class"]
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.label]
+category = ["form", "phrasing"]
+required = ["for"]
+allowed = ["class", "data-*"]
+accessible_name = "none"
+children = ["phrasing"]
+forbidden_children = ["label", "form"]
+invariants = ["for_matches_id_in_block"]
+
+[element.input]
+category = ["form", "interactive", "phrasing"]
+void = true
+required = ["type", "name"]
+allowed = ["value", "placeholder", "required", "disabled", "readonly", "autocomplete", "inputmode",
+           "enterkeyhint", "pattern", "min", "max", "step", "minlength", "maxlength", "size",
+           "checked", "multiple", "accept", "spellcheck", "aria-*", "data-*"]
+accessible_name = "label"                 # exceto type=hidden|submit|button|image
+children = ["none"]
+invariants = ["no_aria_hidden_on_focusable", "control_has_accessible_name", "label_or_labelledby_in_block", "label_exempt_types", "attribute_by_input_type",
+              "autocomplete_enum", "pattern_flags_forbidden"]
+
+[element.textarea]
+category = ["form", "interactive", "phrasing"]
+required = ["name"]
+allowed = ["rows", "cols", "placeholder", "required", "disabled", "readonly", "minlength",
+           "maxlength", "wrap", "dirname", "autocomplete", "spellcheck", "aria-*"]
+accessible_name = "label"
+children = ["text"]
+invariants = ["label_or_labelledby_in_block"]
+
+[element.select]
+category = ["form", "interactive", "phrasing"]
+required = ["name"]
+allowed = ["required", "disabled", "multiple", "size", "autocomplete", "aria-*"]
+accessible_name = "label"
+children = ["option", "optgroup"]
+required_children = ["option"]
+invariants = ["label_or_labelledby_in_block", "select_has_selectable_option"]
+
+[element.optgroup]
+category = ["form"]
+required = ["label"]
+allowed = ["disabled"]
+accessible_name = "label"
+children = ["option"]
+
+[element.option]
+category = ["form"]
+required = ["value"]
+allowed = ["selected", "disabled"]
+accessible_name = "none"
+children = ["text"]
+
+[element.button]
+category = ["phrasing", "interactive"]
+required = ["type"]
+allowed = ["class", "id", "name", "value", "disabled", "form", "popovertarget",
+           "popovertargetaction", "aria-*", "data-*"]
+accessible_name = "required"
+children = ["phrasing"]
+forbidden_children = ["interactive", "heading", "sectioning"]
+invariants = ["no_aria_hidden_on_focusable", "control_has_accessible_name", "type_enum", "popover_target_resolves", "no_aria_label_over_visible_text"]
+
+[element.output]
+category = ["phrasing"]
+required = ["for"]
+allowed = ["name", "class"]
+accessible_name = "optional"
+children = ["phrasing"]
+
+[element.progress]
+category = ["phrasing"]
+allowed = ["id", "value", "max", "class"]
+accessible_name = "required"
+children = ["phrasing"]
+
+[element.meter]
+category = ["phrasing"]
+allowed = ["id", "value", "min", "max", "low", "high", "optimum", "class"]
+accessible_name = "required"
+children = ["phrasing"]
+
+# ─────────────────────────── tabela ───────────────────────────
+
+[element.table]
+category = ["table"]
+allowed = ["class", "data-*"]
+accessible_name = "caption"
+children = ["caption", "colgroup", "thead", "tbody", "tfoot"]   # `tr` só dentro de seção
+required_children = ["caption"]
+first_child = "caption"
+invariants = ["caption_required", "tbody_explicit", "no_text_children"]
+
+[element.caption]
+category = ["table"]
+allowed = ["class"]
+accessible_name = "none"
+children = ["phrasing"]
+invariants = ["caption_not_empty"]
+
+[element.colgroup]
+category = ["table"]
+allowed = ["class", "span"]
+accessible_name = "none"
+children = ["col"]
+
+[element.col]
+category = ["table"]
+void = true
+allowed = ["class", "span"]
+accessible_name = "none"
+children = ["none"]
+
+[element.thead]
+category = ["table"]
+allowed = ["class"]
+accessible_name = "none"
+children = ["tr"]
+
+[element.tbody]
+category = ["table"]
+allowed = ["class"]
+accessible_name = "none"
+children = ["tr"]
+
+[element.tfoot]
+category = ["table"]
+allowed = ["class"]
+accessible_name = "none"
+children = ["tr"]
+
+[element.tr]
+category = ["table"]
+allowed = ["class", "aria-*"]
+accessible_name = "none"
+children = ["td", "th"]
+forbidden_children = ["tr"]
+
+[element.th]
+category = ["table"]
+required = ["scope"]
+allowed = ["class", "colspan", "rowspan", "id", "aria-*"]
+accessible_name = "none"
+children = ["phrasing"]
+forbidden_children = ["heading", "sectioning"]
+invariants = ["scope_enum", "scope_matches_section"]
+
+[element.td]
+category = ["table"]
+allowed = ["class", "colspan", "rowspan", "headers", "aria-*"]
+accessible_name = "none"
+children = ["flow"]
+
+# ─────────────────────────── interativos ───────────────────────────
+
+[element.details]
+category = ["flow", "interactive"]
+allowed = ["class", "open", "name", "data-*"]
+accessible_name = "summary"               # o <summary> é o nome do disclosure
+children = ["summary", "flow"]
+required_children = ["summary"]
+first_child = "summary"
+invariants = ["details_name_accordion"]
+
+[element.summary]
+category = ["interactive"]
+allowed = ["class"]
+accessible_name = "none"
+children = ["phrasing", "heading"]         # um heading é o conteúdo recomendado
+invariants = ["summary_single_heading"]
+
+[element.dialog]
+category = ["flow", "interactive"]
+allowed = ["class", "id", "open", "closedby", "aria-*", "data-*"]
+accessible_name = "required"              # aria-labelledby gerado pelo primitivo
+children = ["flow"]
+roles = ["alertdialog"]                  # só para ação destrutiva; o padrão é o papel nativo
+invariants = ["dialog_modal_semantics", "closedby_enum", "no_aria_modal"]
+# `open` = não-modal: sem trap de foco e sem Escape. O primitivo `Dialog` só emite `open`
+# quando o consumidor declara estado estático; abrir/fechar é asset declarado (docs/07 §7).
