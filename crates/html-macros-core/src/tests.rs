@@ -43,6 +43,12 @@ fn valid_forms_parse() {
         "div { div { div { span { Msg::X } } } }",
         "div hidden?=(maybe) { }",
         "div title=\"literal\" { }",
+        "div { \"texto\" }",
+        "div { \"a\\x20b\" }",
+        "div { \"a\\u{20}b\" }",
+        "div { r#\"texto\"# }",
+        "div title=r#\"a b\"# { }",
+        "div { (1 + 2) }",
     ];
     for source in cases {
         assert!(parse_str(source).is_ok(), "deveria parsear: {source}");
@@ -116,17 +122,15 @@ fn if_chain_nests() {
 
 #[test]
 fn invalid_forms_report_their_code() {
-    let cases: [(&str, &str); 12] = [
+    let cases: [(&str, &str); 13] = [
         ("div", "`div` exige corpo: `div { … }`"),
         ("img src=(Src::media(&m))", "`img` é void: termine com `;`"),
         (
             "div class { }",
             "atributo `class` sem valor; use `class=(…)`",
         ),
-        (
-            "div { \"texto\" }",
-            "texto literal não é permitido; use uma variante de `Msg`",
-        ),
+        ("div { 1 }", "literal não é texto"),
+        ("div { b\"bytes\" }", "literal não é texto"),
         ("div { @when cond { } }", "diretiva desconhecida `@when`"),
         ("@else { }", "`@else` sem `@if`"),
         ("div { } ;", "token inesperado em `html!`"),
@@ -148,8 +152,8 @@ fn errors_carry_position_and_hint() {
     assert_eq!(diag.span.start().line, 1);
     assert_eq!(diag.span.start().column, 0);
 
-    let diag = first_error("div { \"texto\" }");
-    assert!(diag.hint.is_some(), "texto literal precisa de ajuda");
+    let diag = first_error("div { 1 }");
+    assert!(diag.hint.is_some(), "literal não-texto precisa de ajuda");
     assert_eq!(diag.span.start().line, 1);
 
     let diag = first_error("for item { }");

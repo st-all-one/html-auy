@@ -175,6 +175,9 @@ fn emit_attr(element: &Element, attr: &Attr, name: &str, writer: &Ident) -> Toke
             }
             let value = Literal::string(text);
             let at = *span;
+            if name == "class" {
+                return quote_spanned! {at=> #writer.attr_class_static(#value); };
+            }
             quote_spanned! {at=> #writer.attr_static(#name_literal, #value); }
         }
         AttrValue::Computed { expr, span } => {

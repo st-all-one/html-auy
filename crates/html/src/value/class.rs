@@ -24,6 +24,18 @@ impl Class {
         Self { tokens: list }
     }
 
+    /// Conjunto a partir de uma lista estática (`"a b"`), na ordem canônica.
+    ///
+    /// É o atalho para o consumidor que não gera um `enum` de tokens: a lista continua estática,
+    /// o crate divide, ordena e deduplica como em [`Class::of`].
+    #[must_use]
+    pub fn new(tokens: &'static str) -> Self {
+        let mut list: Vec<&'static str> = tokens.split_whitespace().collect();
+        list.sort_unstable();
+        list.dedup();
+        Self { tokens: list }
+    }
+
     /// Funde dois conjuntos mantendo a ordem canônica.
     #[must_use]
     pub fn extend(mut self, other: Self) -> Self {

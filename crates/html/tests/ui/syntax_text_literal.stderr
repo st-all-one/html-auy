@@ -1,6 +1,0 @@
-error: texto literal não é permitido; use uma variante de `Msg`
-         = ajuda: mensagem estática: `Msg::Texto`; dado dinâmico: `Text::new(&valor)`; composição: `(minha_markup)`
- --> tests/ui/syntax_text_literal.rs:6:27
-  |
-6 |     let _ = html! { div { "texto" } };
-  |                           ^^^^^^^

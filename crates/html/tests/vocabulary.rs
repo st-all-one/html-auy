@@ -140,3 +140,25 @@ fn nested_list_is_allowed_inside_li() {
             .contains("<ul><li>pai<ul><li>filho</li></ul></li></ul>")
     );
 }
+
+#[test]
+fn bare_text_is_escaped() {
+    let drawn = html! { p { "a < b & c" } };
+    assert_eq!(drawn.as_str(), "<p>a &lt; b &amp; c</p>");
+}
+
+#[test]
+fn literal_strings_use_rust_escapes_and_raw_forms() {
+    let drawn = html! { p { "a\x20b" } };
+    assert_eq!(drawn.as_str(), "<p>a b</p>");
+    let drawn = html! { p { r"a < b" } };
+    assert_eq!(drawn.as_str(), "<p>a &lt; b</p>");
+}
+
+#[test]
+fn class_literal_is_canonical() {
+    let drawn = html! { div class="b a b" { } };
+    assert_eq!(drawn.as_str(), "<div class=\"a b\"></div>");
+    let drawn = html! { div class=r#"b a"# { } };
+    assert_eq!(drawn.as_str(), "<div class=\"a b\"></div>");
+}

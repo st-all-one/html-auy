@@ -60,6 +60,16 @@ fn lur_with_segments_encodes() {
 }
 
 #[test]
+fn class_new_canonicalizes_static_lists() {
+    let class = Class::new("b a b");
+    assert_eq!(class.tokens(), ["a", "b"]);
+    assert!(Class::new("   ").is_empty());
+    let mut out = String::new();
+    Class::new("b a b").write_attr(&mut out);
+    assert_eq!(out, "a b");
+}
+
+#[test]
 fn fragment_is_the_only_same_page_destination() {
     assert_eq!(
         attr_value(&Href::fragment(Fragment::new("#").unwrap())),

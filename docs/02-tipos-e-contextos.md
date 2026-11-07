@@ -34,7 +34,7 @@ tem **um** tipo, com **um** construtor seguro e nenhum construtor cru.
 
 | Tipo | Contexto | Construção | Regras |
 |---|---|---|---|
-| `Text<'a>` | texto de conteúdo | `Text::new(&str)` · `Text::msg(Msg)` | escapa `&` `<` `>` `"` `'` e NUL; **nunca** vira markup |
+| `Text<'a>` | texto de conteúdo | `Text::new(&str)` · `Text::msg(Msg)` | escapa `&` `<` `>` `"` `'` e NUL; **nunca** vira markup. `&str`/`String` também são `Render` escapado, e o literal `"…"` no `html!` vira esse caminho |
 | `AttrVal<'a>` | valor de atributo comum | `AttrVal::new` | escapa os 5 + `\r` `\n` `\t` como entidades numéricas |
 | `Href` | link | `Href::internal(LUrl)` · `Href::fragment(Fragment)` · `Href::external(https)` · `Href::mailto` · `Href::tel` | **recusa** `javascript:`, `data:`, `vbscript:`; normaliza esquema em minúsculas |
 | `LUrl` | rota interna | `LUrl::new("/…")` · `LUrl::with_segments(base, &[seg])` | começa com `/`, sem `//`, sem `:`, sem `..` (nem `%2e%2e`); o locale/rota é helper do consumidor (C2) |
@@ -49,7 +49,7 @@ tem **um** tipo, com **um** construtor seguro e nenhum construtor cru.
 | `Integrity<'a>` | SRI de preload/stylesheet | `Integrity::parse(&str)` | só `sha256/384/512` + base64; o resto não constrói |
 | `JsonLd` | dado em `<script type="application/ld+json">` | `JsonLd::graph(&Graph)` | escapa `<` `>` `&` `'` como `\u003c` `\u003e` `\u0026` `\u0027` |
 | `Alt<'a>` | texto alternativo | `Alt::new(&str)` · `Alt::decorative()` | `decorative()` é explícito; `new("")` equivale a `decorative()` |
-| `Class` | classes CSS | `Class::of(&[Token])` | só tokens do vocabulário fechado; sem string livre |
+| `Class` | classes CSS | `Class::of(&[Token])` · `Class::new("a b")` · `class="a b"` | divide, ordena e deduplica; o enum de tokens continua disponível para o consumidor |
 | `Tone` | cor por identidade | `Tone::Primary` … (enum) | nunca hex; ver [`06-shell-e-tema.md`](06-shell-e-tema.md) |
 | `SectionId` | identidade de seção | enum por módulo | chave do mapa de tokens |
 | `WidthPx`/`HeightPx` | dimensão | `WidthPx::new(u32)` | > 0; emite `width`/`height` como número |
@@ -102,8 +102,10 @@ html! { div class=(Class::of(&[Token::Card, Token::Flat])) { … } }
 - `ClassToken` segue o mesmo desenho de `Msg` (D31): **o crate não conhece o vocabulário do consumidor**,
   só o contrato. `Tone` (primária/secundária/…) é do crate porque é identidade visual da biblioteca.
 - Merge é feito em `Class`, com deduplicação e ordem estável (bytes determinísticos).
-- Não existe `class="..."` com string livre nem atalho `.token`: o token é um `enum`, então
-  `class` fora do vocabulário **não compila**.
+- `class="a b"` (literal estático) é aceito e canonicalizado no codegen; `Class::new("a b")`
+  faz o mesmo em runtime. `Class::of` continua sendo o caminho do enum gerado de `tokens.css`.
+- O que não existe é `class` vindo de dado não estático: a lista é `&'static str` ou `Class`; o
+  escape e a ordem são do crate.
 
 ## 6. Texto, i18n e nomes acessíveis
 
@@ -117,8 +119,8 @@ impl Text<'static> { pub fn msg<M: Msg>(m: M) -> Self; }
 //   impl html::Msg for Msg { fn as_str(self) -> &'static str { … } }
 ```
 
-- Todo texto **visível** é `Msg`. Texto literal (`"Olá"`) não é aceito pelo vocabulário de texto
-  visível (o lint reprova; o tipo permite apenas em contexto de teste).
+- Texto visível pode ser `Msg` (i18n), `Text::new(&dado)` (dinâmico) ou o literal `"Olá"` no
+  `html!` (escapado). `Msg` continua sendo o caminho quando há catálogo/tradução.
 - `Label::text(m)` e `Label::sr_only(m)` recebem `M: Msg` e produzem nomes acessíveis traduzidos.
 - A paridade de tradução é gate **do consumidor**: variante sem string nos 4 locales = erro lá.
 - **Por que trait e não `enum Msg` no crate (D31):** o crate não pode resolver locale — isso exige

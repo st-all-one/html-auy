@@ -1,7 +1,0 @@
-error: `class` não aceita literal em `div`
-         = regra: contexto de escape (D1)
-         = ajuda: use `class=(Class::of(&[Token::…]))`
- --> tests/ui/literal_class.rs:6:31
-  |
-6 |     let _ = html! { div class="card" { } };
-  |                               ^^^^^^

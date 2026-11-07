@@ -3,8 +3,8 @@
 use crate::table;
 
 /// Atributos cujo valor é uma expressão tipada — literal é erro (E9/E41, §5.0).
-pub(crate) const TYPED: [&str; 10] = [
-    "href", "src", "poster", "srcset", "sizes", "alt", "class", "datetime", "width", "height",
+pub(crate) const TYPED: [&str; 9] = [
+    "href", "src", "poster", "srcset", "sizes", "alt", "datetime", "width", "height",
 ];
 
 /// Presença como booleano: os `BOOLEAN_ATTRIBUTES` da spec e os globais `Presence` (`inert`).

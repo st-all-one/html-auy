@@ -10,6 +10,7 @@ use crate::value::{
     Alt, AttrValue, Class, FieldName, Href, Id, Label, Sizes, Src, SrcSet, Timestamp,
 };
 use alloc::string::String;
+use alloc::vec::Vec;
 
 /// Buffer de saída com as operações que o macro emite.
 #[derive(Debug, Default)]
@@ -83,6 +84,24 @@ impl Writer {
         self.buf.push_str(name);
         self.buf.push_str("=\"");
         escape::attr(&mut self.buf, value);
+        self.buf.push('"');
+    }
+
+    /// `class` literal: divide, ordena e deduplica (mesma forma de [`Class`]).
+    pub fn attr_class_static(&mut self, value: &str) {
+        let mut tokens: Vec<&str> = value.split_whitespace().collect();
+        tokens.sort_unstable();
+        tokens.dedup();
+        let mut iter = tokens.iter();
+        let Some(first) = iter.next() else {
+            return;
+        };
+        self.buf.push_str(" class=\"");
+        escape::attr(&mut self.buf, first);
+        for token in iter {
+            self.buf.push(' ');
+            escape::attr(&mut self.buf, token);
+        }
         self.buf.push('"');
     }
 

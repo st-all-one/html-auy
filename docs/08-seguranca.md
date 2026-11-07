@@ -47,7 +47,7 @@ pub enum Href {
 
 | Superfície | Permitido | Proibido |
 |---|---|---|
-| classe | `Token` (enum fechado) | string livre |
+| classe | `Token` (enum fechado), `Class::new`, `class="a b"` estático | classe vinda de string não estática |
 | cor | `Tone`/`SectionId` → token do tema | hex, `rgb()`, nome de cor |
 | estilo inline | — | `style=`, `<style>` |
 | tema | tokens validados por schema, `oklch` | CSS, HTML, `url()`, `@import` |

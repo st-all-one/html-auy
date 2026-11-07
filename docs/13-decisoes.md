@@ -407,7 +407,10 @@ transparente e proíbe interativo em qualquer profundidade. (b) `title` entra em
 `Text`. (c) `Href::Fragment` valida `#`, `#id`. (d) `h1` deixa de ser `only = "shell"`; `Page`
 continua emitindo por padrão, mas a view pode declarar o heading. (e) `single_h1` passa de `type`
 para `output`; `shell_owns_h1` é removida. (f) O demo troca os quatro `Render` por `SERVICES`/
-`CONTROLS` + `for` dentro de `html!`.
+`CONTROLS` + `for` dentro de `html!`. (g) `class="a b"` estático é aceito e canonicalizado no
+codegen; `Class::new("a b")` cobre o caso dinâmico estático. (h) `&str`/`String` são `Render`
+escapado e o literal `"Olá"` no `html!` vira texto escapado; `Text`/`Msg` continuam explícitos para
+dado e i18n.
 
 **Consequência.** Menos falso-positivo, menos string crua e uma única forma de escrever cada
 destino. O preço é explícito: o `h1` único deixa de ser garantia de tipo e vira auditoria de

@@ -277,7 +277,7 @@ Três linhas, sem binário, sem crate extra — e é exatamente o que o `M3`
 | `style=` / `on*` | CSP sem `inline` é possível; não há handler inline |
 | `Raw` / `PreEscaped` / `\|safe` | o bypass de escape não é proibido: é inexprimível |
 | `render_template(path)` / template em runtime | a view é função Rust, compilada |
-| `class="string livre"` e atalho `.token` | classe é `Class::of(&[Token::…])` + `extend`; o `Token` é o `enum` do consumidor |
+| `class="string livre"` | `class="a b"` é aceito como lista **estática** e canonicalizado; para o vocabulário tipado, `Class::of(&[Token::…])` + `extend` |
 | `<html>`, `<head>`, `<body>`, `<title>`, `<h1>` em `html!` | só o `Page` os emite |
 | `<form>` em `html!` | só `Form::open` com `CsrfToken` |
 | locale dentro do crate | `Msg` é trait; quem resolve é o consumidor |
@@ -298,9 +298,9 @@ Escrever o uso final obrigou a decidir três pontos que estavam **inconsistentes
 
 | Ponto | Antes | Agora (normativo em [`21`](21-implementacao.md) F2) |
 |---|---|---|
-| valor de atributo | `div(class: …)` em `docs/02`, `href = expr` em F2, `.list` em `docs/01` | `nome=(expr)` para cálculo; `nome="literal"` só para atributo enumerado da spec. Os parênteses **delimitam** a expressão no `TokenStream` (`href=x rel=y` é ambíguo) |
+| valor de atributo | `div(class: …)` em `docs/02`, `href = expr` em F2, `.list` em `docs/01` | `nome=(expr)` para cálculo; `nome="literal"` para enum da spec e para `class`/texto; `href`/`src`/`alt` continuam tipados. Os parênteses **delimitam** a expressão no `TokenStream` (`href=x rel=y` é ambíguo) |
 | elemento vazio | sem terminador definido | `img src=(…) alt=(…);` — o `;` fecha o `void` |
-| `class` | `Class::of(&[Tone])` (só tons) + atalho `.token` | `Class::of(&[Token::…])` com `trait ClassToken` (o enum é do consumidor, como `Msg`); **sem atalho** — classe fora do vocabulário não compila |
+| `class` | `Class::of(&[Tone])` + atalho `.token` | `Class::of(&[Token::…])` com `trait ClassToken` ou `class="a b"` estático; ambos ordenam e deduplicam |
 
 O que **continua** sendo trabalho de F2: os erros de sintaxe com span (tag não fechada, atributo sem
 valor, texto depois de `}`) e o `trybuild` de cada um.

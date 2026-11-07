@@ -76,6 +76,22 @@ impl Render for Markup {
     }
 }
 
+/// `&str` e `String` são conteúdo **escapado**, não HTML cru.
+///
+/// O tipo [`crate::Text`] continua existindo para deixar a intenção explícita; esta implementação
+/// evita o ruído de `Text::new` em texto estático e em dados que já são `&str`.
+impl Render for str {
+    fn render_to(&self, out: &mut String) {
+        crate::escape::text(out, self);
+    }
+}
+
+impl Render for String {
+    fn render_to(&self, out: &mut String) {
+        crate::escape::text(out, self);
+    }
+}
+
 impl<T: Render + ?Sized> Render for &T {
     fn render_to(&self, out: &mut String) {
         (*self).render_to(out);

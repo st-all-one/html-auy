@@ -286,7 +286,32 @@ fn parse_attr(cursor: &mut Cursor, diags: &mut Vec<Diag>, ident: &Ident) -> Opti
 /// Desescapa um literal de string comum (`"…"`), sem sufixo e sem raw string.
 fn literal_text(literal: &Literal) -> Option<String> {
     let raw = literal.to_string();
+    if let Some(content) = raw_text(&raw) {
+        return Some(String::from(content));
+    }
     let inner = raw.strip_prefix('"')?.strip_suffix('"')?;
+    unescape(inner)
+}
+
+/// Conteúdo de um literal `r"…"`/`r#"…"#` (a parte entre as aspas).
+fn raw_text(raw: &str) -> Option<&str> {
+    let rest = raw.strip_prefix('r')?;
+    let hashes = rest.chars().take_while(|ch| *ch == '#').count();
+    let body = rest[hashes..].strip_prefix('"')?;
+    let close = hashes.checked_add(1)?;
+    if body.len() < close {
+        return None;
+    }
+    let (content, tail) = body.split_at(body.len().checked_sub(close)?);
+    if tail.starts_with('"') && tail[1..].chars().all(|ch| ch == '#') {
+        Some(content)
+    } else {
+        None
+    }
+}
+
+/// Desescapa uma string normal do Rust (o tokenizador já garantiu a forma).
+fn unescape(inner: &str) -> Option<String> {
     let mut out = String::with_capacity(inner.len());
     let mut chars = inner.chars();
     while let Some(ch) = chars.next() {
@@ -303,18 +328,33 @@ fn literal_text(literal: &Literal) -> Option<String> {
             't' => out.push('\t'),
             '0' => out.push('\0'),
             '\'' => out.push('\''),
+            'x' => {
+                let hi = chars.next()?.to_digit(16)?;
+                let lo = chars.next()?.to_digit(16)?;
+                out.push(char::from_u32(hi.saturating_mul(16).saturating_add(lo))?);
+            }
             'u' => {
                 if chars.next()? != '{' {
                     return None;
                 }
                 let mut hex = String::new();
-                for next in chars.by_ref() {
-                    if next == '}' {
-                        break;
+                loop {
+                    match chars.next()? {
+                        '}' => break,
+                        '_' => {}
+                        digit => hex.push(digit),
                     }
-                    hex.push(next);
                 }
                 out.push(char::from_u32(u32::from_str_radix(&hex, 16).ok()?)?);
+            }
+            '\n' => {
+                // Continuação de linha: o Rust remove o `\` + nova linha e o espaço seguinte.
+                for next in chars.by_ref() {
+                    if !next.is_whitespace() {
+                        out.push(next);
+                        break;
+                    }
+                }
             }
             _ => return None,
         }
@@ -428,9 +468,19 @@ fn parse_for(cursor: &mut Cursor, diags: &mut Vec<Diag>, span: Span) -> Option<F
 
 fn parse_expression(cursor: &mut Cursor, diags: &mut Vec<Diag>) -> Option<Item> {
     if let Some(TokenTree::Literal(literal)) = cursor.peek() {
-        diags.push(Diag::new(literal.span(), "texto literal não é permitido; use uma variante de `Msg`").hint(
-            "mensagem estática: `Msg::Texto`; dado dinâmico: `Text::new(&valor)`; composição: `(minha_markup)`",
-        ));
+        if literal_text(literal).is_some() {
+            let span = literal.span();
+            let literal = literal.clone();
+            cursor.bump();
+            return Some(Item::Child(Child {
+                expr: TokenStream::from(TokenTree::Literal(literal)),
+                span,
+            }));
+        }
+        diags.push(
+            Diag::new(literal.span(), "literal não é texto")
+                .hint("use uma string (`\"…\"`), `Msg` ou `(expressão)`"),
+        );
         cursor.bump();
         return None;
     }
