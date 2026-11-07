@@ -235,11 +235,11 @@ O corpus também erra (um erro grave em `05_SECURITY.md:215`): ele é evidência
 - Semântica: `type` em lista é presentacional e foi substituído por CSS.
 - Consequência: `spec/elements.toml:364-369` mantém `"type"` em `ol.allowed` (herdado da schema 1): é a única sobrevivência clara de atributo obsoleto no vocabulário — o tipo de coisa que D4 deveria impedir.
 - Veredito: **refuta** — remover (§5.5).
-#### A38. `popover` é global no padrão e não existe na crate
+#### A38. `popover` é global no padrão e não existia na crate
 - Citação: `03_MODERN_PATTERNS.md:88` — "## 3. Popover API (Atributo Global `popover`)"; `03:95-97` — "`popover="auto"` … `"hint"` … `"manual"`".
 - Semântica: atributo global, aplicável a qualquer elemento; o alvo tem `popover`, o gatilho tem `popovertarget`.
-- Consequência: `[globals]` (`spec` l. 45-62) não tem `popover`, mas `button.popovertarget` está permitido (l. 592): o gatilho existe e o alvo não pode ser declarado. O `Tooltip` de `docs/05 §3` (mapeado em `popover="hint"`, `modern:384-387`) perde o veículo.
-- Veredito: **refuta** — `popover` em `[globals]` (§5.11).
+- Consequência: `[globals]` (`spec` l. 45-62) não tinha `popover`, mas `button.popovertarget` estava permitido (l. 592): o gatilho existia e o alvo não podia ser declarado. O `Tooltip` de `docs/05 §3` (mapeado em `popover="hint"`, `modern:384-387`) perdia o veículo.
+- Veredito: **corrigido** — `popover` em `[globals]`, incluindo `hint` (§5.11).
 #### A39. Globais: lacunas pontuais e duplicação de fonte
 - Citação: `18_GLOBAL_ATTRIBUTES.md:154` — "`until-found` | Oculta até ser encontrado por find-in-page"; `18:48-61` (`autocapitalize`); `04_ACCESSIBILITY.md:183` — "`<div aria-live="polite" aria-atomic="true">`".
 - Semântica: `hidden="until-found"`, `inert` e `translate` são as três capacidades que permitem UI sem JS; `aria-atomic` é o que faz a região live anunciar a mensagem inteira.
@@ -294,7 +294,7 @@ O corpus também erra (um erro grave em `05_SECURITY.md:215`): ele é evidência
 | A35 offset | aberto | `docs/02 §7` ainda fixa "RFC 3339 em UTC" |
 | A36 del/ins | aberto | `datetime` sem `datetime_profile` |
 | A37 `ol type` | corrigido | `allowed = ["class","data-*","start","reversed"]` |
-| A38 `popover` global | aberto | `[globals]` sem `popover` |
+| A38 `popover` global | corrigido | `popover` em `[globals]`, inclusive `hint` |
 | A39 globais | aberto | sem `autocapitalize`/`aria-atomic`/`aria-details`/`tabindex` |
 | A40 abbr | aberto | `required = ["title"]`, sem `abbr_expansion_nearby` |
 
@@ -427,7 +427,7 @@ O corpus também erra (um erro grave em `05_SECURITY.md:215`): ele é evidência
 | `input.allowed` inclui `list` | `spec:599` `datalist` `deprecated` | remover `"list"`; `docs/03 §3`: "`datalist` sai do v1; busca incremental é `Field`." |
 | `link.allowed` sem `title` | `17:40-50` alternate exige `title` | remover `alternate stylesheet` de `link_rel_enum` |
 | `table.children` inclui `"tr"` | `req` `tbody_explicit` no mesmo bloco | remover `"tr"` de `children` |
-| `[globals]` sem `popover` | `03:88-97` popover é global | `popover = ["auto","hint","manual"]` |
+| `[globals]` sem `popover` (na revisão) | `03:88-97` popover é global | `popover = ["", "auto", "hint", "manual"]` — aplicado |
 | `docs/03 §1` fala "63 elementos" | `spec` tem 91 blocos (89 HTML + `svg_title`/`desc`) | `docs/03 §1`: "91 blocos em `spec_version = "2.0.0"`, contra 63 no escopo medido." |
 
 ## 5. Adições prontas para colar

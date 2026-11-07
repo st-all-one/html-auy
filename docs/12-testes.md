@@ -114,8 +114,8 @@ Cada regra de página tem um par de fixtures: uma que passa, uma que falha com a
 
 ```
 cargo test                          # unidade + integração + golden + doc-tests
-cargo test -p html --test ui        # mensagens (trybuild)
-cargo test -p html-auy --features audit # N4: invariantes de `output` (D30)
+cargo test -p html-auy --test ui      # mensagens (trybuild)
+cargo test -p html-auy --features audit # N4: regras do `audit` (D30)
 cargo +nightly fuzz run parser      # parser (crate `fuzz/`, fora do workspace)
 ```
 
@@ -136,7 +136,7 @@ cargo +nightly fuzz run parser      # parser (crate `fuzz/`, fora do workspace)
 |---|---|
 | `tools/validate_spec.py` | spec ↔ docs (escopos, contagens, rastreabilidade de invariante) |
 | `tools/data_check.py` (D26) | `data-*` declarado ↔ usado ↔ lido pelo JS |
-| `N4` (`feature = "audit"`) | as 13 regras de `output` sobre o HTML final |
+| `N4` (`feature = "audit"`) | as 13 regras do `audit` (8 invariantes de `output` + 5 de conformidade/estrutura) sobre o HTML final |
 
 ## 11.1 Inventário mínimo de `trybuild` (uma mensagem = um caso)
 

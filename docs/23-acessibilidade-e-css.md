@@ -33,9 +33,10 @@ quem cobre quem. Nenhum tipo e nenhum parse estático responde isso.
 | `id` duplicado entre fragmentos | 1.3.1 / 4.1.1 | página | **novo**: `ids_unique` (`output`) |
 | landmark/`main`/`h1` únicos | 1.3.1 / 2.4.1 | tipo + página | `main_unique`, `single_h1`, `landmark_names_distinct` |
 | landmark repetido sem nome | 1.3.1 | página | **novo**: `landmark_names_required` (`nav`/`aside` repetidos) |
+| `aria-current` repetido no mesmo nav | 1.3.1 / 4.1.2 | página | **novo**: `aria_current_unique_per_nav` (`nav`) |
 
-Os quatro **novos** entraram na spec nesta revisão (70 invariantes: 59 `block`, 4 `type`, 7 `output`). Os
-dois primeiros são de bloco porque o macro vê o conteúdo do controle e os atributos dele; os dois
+Os seis **novos** entraram na spec nesta revisão (71 invariantes: 59 `block`, 4 `type`, 8 `output`). Os
+dois primeiros são de bloco porque o macro vê o conteúdo do controle e os atributos dele; os quatro
 últimos são de página porque dependem de um conjunto que nenhum fragmento vê.
 
 ### 2.2 Só com estilo computado (gate do consumidor, nunca do crate)
@@ -97,7 +98,7 @@ invariante do crate dispensa o `sniff`.** Eles cobrem camadas diferentes, e a fr
 | Absorvido | Onde |
 |---|---|
 | divisão por decidibilidade (bloco / página / computado) | este documento + [`04`](04-validacao.md) §4.0 |
-| 4 invariantes estáticas novas | `spec/elements.toml` (`control_has_accessible_name`, `no_aria_hidden_on_focusable`, `heading_levels_no_skips`, `ids_unique`) |
+| 6 invariantes estáticas novas | `spec/elements.toml` (`control_has_accessible_name`, `no_aria_hidden_on_focusable`, `heading_levels_no_skips`, `ids_unique`, `landmark_names_required`, `aria_current_unique_per_nav`) |
 | catálogo de 25 regras computadas como **contrato de gate** do consumidor | §2.2 |
 | vocabulário `display_visible` × `accessibility_grade` | §3.3 |
 | doutrina "medir, não chutar" (evidência no relatório) | [`22`](22-rigor.md) §9 e [`12`](12-testes.md) |

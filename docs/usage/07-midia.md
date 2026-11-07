@@ -203,6 +203,8 @@ navegador baixa a imagem duas vezes. Para fonte, `Preload::font` já emite `type
 | dimensões (CLS) | `WidthPx`/`HeightPx` obrigatórios |
 | legendas de vídeo | `Video::new(src, Track::captions(…))` |
 | idioma de legenda | `Track::subtitles(…, Lang)` |
+| audiodescrição de vídeo | `Track::descriptions(…)` (1.2.3/1.2.5) |
+| transcrição de áudio/vídeo | `Audio::transcript(Transcript::new(…))` / `Video::transcript(Transcript::new(…))` |
 | controles nativos | `controls` por padrão |
 | fallback sem suporte | `.fallback(Text)` |
 

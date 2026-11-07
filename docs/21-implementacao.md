@@ -173,7 +173,7 @@ trybuild = "1"
 
 ## 2. Estado de partida
 
-- `spec/elements.toml`: **111 elementos**, **71 invariantes** (59 `block` / 6 `type` / 6 `output`),
+- `spec/elements.toml`: **111 elementos**, **71 invariantes** (59 `block` / 4 `type` / 8 `output`),
   `only`: 9 `shell` (`html head body title meta link script noscript main`) + 1 `component` (`form`).
 - `docs/00`–`24`: contrato completo (o que é garantia, o que é gate, e por quê).
 - `tools/validate_spec.py`: **a especificação executável do validador** — categorias, conteúdo-modelo,

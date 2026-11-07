@@ -13,6 +13,9 @@ do consumidor.
 | alternativa de imagem | `Img` exige `Alt`; `Alt::decorative()` é explícito |
 | dimensões intrínsecas | `Img` exige `WidthPx`/`HeightPx` |
 | legendas de vídeo | `Video::new` exige `Track::captions` |
+| audiodescrição de vídeo | `Track::descriptions`; alternativa completa por `Video::transcript` |
+| transcrição de áudio | `Audio::transcript(Transcript)` |
+| passkey | `Autocomplete` aceita `username webauthn`; sem bloquear colar/gerenciador |
 | idioma da página | `ShellData` exige `Lang` |
 | título | `Page` exige `title`/`heading` (forneça textos não vazios) |
 | um `h1` | `Page` emite um; não escreva outro na view |

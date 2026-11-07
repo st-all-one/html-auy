@@ -193,8 +193,8 @@ tiver andado. Quando um achado descreve algo já corrigido, ele diz isso explici
 ### A25. `aria-current`: um por conjunto, só no item atual
 - Citação: `02-aria.md:95` — "| `aria-current` | `page`/`step`/`location`/`date`/`time`/`true` | Elemento atual em um conjunto |"
 - Semântica: `aria-current` marca **um** elemento atual por conjunto; repetido, o AT anuncia vários "atual".
-- Consequência: `Pagination`/`Breadcrumb` prometem "um único `aria-current`" (`docs/05:76-77`), mas `[globals.aria]` (`spec/elements.toml:70`) valida só o valor — falta invariante de bloco (`single_aria_current`).
-- Veredito: refina; novo invariante.
+- Consequência: `Pagination`/`Breadcrumb` prometem "um único `aria-current`" (`docs/05:76-77`), mas `[globals.aria]` (`spec/elements.toml:70`) valida só o valor — a unicidade é uma propriedade do documento.
+- Veredito: **corrigido** — `aria_current_unique_per_nav` (`output`, por `<nav>`).
 
 ### A26. `aria-expanded` sem alvo resolvível
 - Citação: `22-design-patterns.md:15` — "aria-expanded=\"false\"" (+ `:16` "aria-controls=\"accordion-1-panel\">")
@@ -359,7 +359,7 @@ invariants = ["caption_not_empty", "caption_not_aria_hidden"]
 # novas invariantes de documento (passe global, docs/04 §4):
 #   heading_level_no_skip            (A6)
 #   landmark_names_distinct           (A3, escopo: nav|aside|search|form|section nomeados)
-#   single_aria_current               (A25)
+#   aria_current_unique_per_nav       (A25, output por <nav>)
 #   at_most_one_assertive_region      (A32)
 #   live_region_persistent_in_shell   (A32)
 #   aria_controls_resolves            (A26)
