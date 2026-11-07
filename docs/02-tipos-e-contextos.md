@@ -8,7 +8,7 @@ pub struct Markup(String);          // construtor privado ao crate
 
 Invariantes:
 
-- Só é construído por (a) `html!`, (b) `Markup::from_render(impl Render)`, (c) `html-core` interno.
+- Só é construído por (a) `html!`, (b) `Markup::from_render(impl Render)`, (c) `html-auy` interno.
 - **Não** implementa `From<String>`, `From<&str>`, `Display` público nem `Deref<Target = String>`.
 - `Markup` é o único tipo que o shell aceita como conteúdo.
 
@@ -119,7 +119,7 @@ impl Text<'static> { pub fn msg<M: Msg>(m: M) -> Self; }
 
 // no CONSUMIDOR: o enum dele, resolvido no locale da request
 //   enum Msg { NavHome, LatestNews, … }
-//   impl html::Msg for Msg { fn as_str(self) -> &'static str { … } }
+//   impl html_auy::Msg for Msg { fn as_str(self) -> &'static str { … } }
 ```
 
 - Todo texto **visível** entra por `Msg` (i18n) ou `Text::new(&dado)` (dinâmico); literal `"Olá"`

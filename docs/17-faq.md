@@ -1,8 +1,9 @@
 # 17 — Perguntas difíceis
 
-**Por que não publicar como crate?**
-Porque o consumidor é único e conhecido. Publicar criaria semver público, issues de estranhos e
-obrigação de suporte sem receita. D0 em [`13-decisoes.md`](13-decisoes.md).
+**Por que publicar como crate?**
+Porque o projeto passou de artefato interno a biblioteca pública em 2026-11-07. O crate `html-auy`
+segue semver, tem MSRV declarada e é instalável pelo crates.io; o custo é suporte a consumidores
+desconhecidos. Ver D35 em [`13-decisoes.md`](13-decisoes.md).
 
 **Por que não usar arquivos de template?**
 Porque template em arquivo precisa de lógica (`config()`, `route()`, normalização de variantes) e essa
@@ -64,17 +65,18 @@ Sim: tokens são dados; o `/theme.css` muda de `ETag` e a próxima request receb
 endpoint privado `no-store`.
 
 **E se o projeto morrer?**
-O consumidor fica com: `html-core` (vendorizado, ~600 LOC, sem macro), os snapshots como contrato e
-estes documentos como decisão registrada. Nada fica preso a um crate publicado.
+O código é MIT e o crate `html-auy` 0.1.0 continua disponível no crates.io; o consumidor pode
+vendorizar a versão que usa, mantém os snapshots como contrato e estes documentos como decisão
+registrada. Não há dependência de serviço ou runtime externo.
 
 **Quão frágil é depender de proc-macro?**
-É o ponto frágil real. Mitigação: MSRV declarada, CI em stable/beta, apenas `proc-macro2`/`quote`,
+É o ponto frágil real. Mitigação: MSRV declarada, CI na MSRV e na stable, apenas `proc-macro2`/`quote`,
 parser sem detalhes internos do compilador, fuzz para não gerar `panic`. Se quebrar, quebra em
 `cargo check`, não em produção.
 
 **Isso não é reinventar o maud?**
-É o maud **mais** quatro coisas que ele não tem: atributo validado, escape por contexto,
-acessibilidade por construção e `fmt`. Se você não precisa das quatro, use maud — está dito em
+É o maud **mais** três coisas que ele não tem: atributo validado, escape por contexto e
+acessibilidade por construção. Se você não precisa das três, use maud — está dito em
 [`14-alternativas.md`](14-alternativas.md) §3.
 
 **Licença e nome.**

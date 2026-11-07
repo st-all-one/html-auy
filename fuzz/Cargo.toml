@@ -10,7 +10,7 @@ cargo-fuzz = true
 [dependencies]
 libfuzzer-sys = "0.4"
 proc-macro2 = "1"
-html-macros-core = { path = "../crates/html-macros-core" }
+html-auy-macros-core = { path = "../crates/html-auy-macros-core" }
 
 [[bin]]
 name = "parser"

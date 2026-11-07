@@ -1,6 +1,0 @@
----
-source: crates/html/tests/golden.rs
-expression: "format!(\"{}\\n{}\", with.as_str(), without.as_str())"
----
-<div id="relatorio"></div>
-<div></div>

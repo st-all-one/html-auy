@@ -1,0 +1,15 @@
+error[E0061]: this function takes 3 arguments but 1 argument was supplied
+ --> tests/ui/shell_data_arity.rs:4:13
+  |
+4 |     let _ = ShellData::new(Text::new("Título"));
+  |             ^^^^^^^^^^^^^^--------------------- two arguments of type `html_auy::Text<'_>` and `html_auy::Lang` are missing
+  |
+note: associated function defined here
+ --> src/shell.rs
+  |
+  |     pub fn new(
+  |            ^^^
+help: provide the arguments
+  |
+4 |     let _ = ShellData::new(Text::new("Título"), /* Text<'_> */, /* Lang */);
+  |                                               ++++++++++++++++++++++++++++

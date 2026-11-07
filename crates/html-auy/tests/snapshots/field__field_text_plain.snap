@@ -1,0 +1,5 @@
+---
+source: crates/html-auy/tests/field.rs
+expression: drawn.as_str()
+---
+<div><label for="f-nome">Nome completo</label><input type="text" id="f-nome" name="nome" value=""></div>

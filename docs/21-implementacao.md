@@ -1,5 +1,7 @@
 # 21 — Plano de implementação
 
+> **Documento histórico.** O plano F0–F6 foi concluído no 0.1.0; os nomes de pacote abaixo seguem D35. O estado atual está em [`01`](01-arquitetura.md).
+>
 > **O que é:** a ordem executável para escrever o crate, já com as decisões fechadas
 > (**D21–D26**) e as decisões fechadas (**D27–D32**). Cada fase é um verde de `cargo test`.
 > **O que não é:** cronograma. Os números são de código, não de calendário.
@@ -31,8 +33,8 @@
 | `cargo-deny` · `cargo-audit` · `cargo-machete` · `cargo-fuzz` (nightly) | `--version` | ✅ no CI; `typos` saiu (dicionário inglês × corpus pt-BR) |
 | decisões **D27–D32** | [`13`](13-decisoes.md) | ✅ decididas em 2026-11-06 (§0.4) |
 
-**Estado:** o ambiente atende ao [`22`](22-rigor.md); o workspace tem `html`, `html-macros` e
-`html-macros-core`, e o `fuzz/` compila com `cargo +nightly build --manifest-path fuzz/Cargo.toml`.
+**Estado:** o ambiente atende ao [`22`](22-rigor.md); o workspace tem `html-auy`, `html-auy-macros` e
+`html-auy-macros-core`, e o `fuzz/` compila com `cargo +nightly build --manifest-path fuzz/Cargo.toml`.
 
 ### 0.2 Primeiro commit (árvore exata)
 
@@ -46,10 +48,10 @@ clippy.toml                # msrv = "1.92" + limiares + allowlists
 rustfmt.toml               # só opções estáveis (+ hex_literal_case = "Lower")
 deny.toml                  # advisories/yanked deny, licenças permissivas, wildcard/registry deny
 .github/workflows/ci.yml   # jobs: check, supply-chain, miri, fuzz
-crates/html/Cargo.toml     # publish = false, rust-version = 1.92, zero deps por padrão (feature `audit`)
-crates/html/src/lib.rs     # no_std + extern crate alloc + doc de topo (nada mais)
-crates/html-macros/Cargo.toml
-crates/html-macros/src/lib.rs   # proc-macro vazio + doc de topo
+crates/html-auy/Cargo.toml     # publicável, rust-version = 1.92, zero deps por padrão (feature `audit`)
+crates/html-auy/src/lib.rs     # no_std + extern crate alloc + doc de topo (nada mais)
+crates/html-auy-macros/Cargo.toml
+crates/html-auy-macros/src/lib.rs   # proc-macro vazio + doc de topo
 ```
 
 Aceitação do primeiro commit (rodar **duas vezes**, ADR-001):
@@ -64,10 +66,10 @@ cargo test
 
 | Não | Por quê |
 |---|---|
-| `syn` no `html-macros` | o fluxo é HTML, não Rust; `proc-macro2` + `quote` bastam ([`01`](01-arquitetura.md) §1) |
+| `syn` no `html-auy-macros` | o fluxo é HTML, não Rust; `proc-macro2` + `quote` bastam ([`01`](01-arquitetura.md) §1) |
 | `build.rs` / gerador / esquema de spec | D27 corta: a tabela vive em Rust (`macro_rules!`/`const`) |
 | binário `cq` (`fmt`/`fix`/`audit`/`spec`) | D28 corta; o gate é `cargo` puro |
-| `publish = true` ou versionamento público | D0: uso interno ([`13`](13-decisoes.md)); `publish = false` no manifesto |
+| tag/release sem gate | D35: o workflow `release.yml` verifica versão, testes e empacotamento antes de publicar |
 | F7 (corpus) e [`24`](24-exportacao.md) (exportação) | pós-MVP; sem eles o crate funciona |
 | tema, shell de tenant, cache | D29: o crate não faz I/O |
 | `#[allow]` para "depois eu tiro" | `allow_attributes_without_reason` é `deny`; exceção é `#[expect(…, reason)]` |
@@ -94,17 +96,17 @@ teste de que o desenho menor paga — se o `M3` não achar ≥ 3 defeitos reais,
 1. `git init` (o **humano** commita) e o primeiro commit de §0.2.
 2. **F-1** fechada: gates verdes duas vezes no workspace vazio.
 3. **F0** — tipos e valores, **sem macro**; é a fase do **M1** ([`16`](16-roadmap.md)) e o **ponto de
-   parada**: se F0 não pagar, o plano B é maud + estes mesmos valores (`html` de ~600 LOC), e F2–F6 não
+   parada**: se F0 não pagar, o plano B é maud + estes mesmos valores (`html-auy` de ~600 LOC), e F2–F6 não
    começam.
 
 ## 1. Regras de execução
 
 | Regra | Consequência prática |
 |---|---|
-| workspace com **3 crates** (`html`, `html-macros`, `html-macros-core`) | `html` só depende de `core`/`alloc`; o núcleo do macro depende de `proc-macro2`+`quote` (nunca `syn`) |
+| workspace com **3 crates** (`html-auy`, `html-auy-macros`, `html-auy-macros-core`) | `html-auy` só depende de `core`/`alloc`; o núcleo do macro depende de `proc-macro2`+`quote` (nunca `syn`) |
 | gate único: `cargo fmt --check` + `cargo clippy --all-targets -- -D warnings` + `cargo test` | não há binário de tarefas: o `cq` não existe (D28 pendente; até lá, nada depende dele) |
-| **1 mensagem de erro = 1 caso `trybuild`** | `crates/html-macros/tests/ui/*.rs` + `.stderr`; o texto de [`10`](10-ergonomia.md) §2 é contrato |
-| **1 saída canônica = 1 snapshot `insta`** | `crates/html/tests/snapshots/`; bytes determinísticos são testados, não prometidos |
+| **1 mensagem de erro = 1 caso `trybuild`** | `crates/html-auy-macros/tests/ui/*.rs` + `.stderr`; o texto de [`10`](10-ergonomia.md) §2 é contrato |
+| **1 saída canônica = 1 snapshot `insta`** | `crates/html-auy/tests/snapshots/`; bytes determinísticos são testados, não prometidos |
 | nenhum `HashMap` em ordem de saída | `BTreeMap`/`Vec` ordenado; sem tempo, sem `rand`, sem ordem de FS (ADR-001 do projeto pai) |
 | uma fase por vez, sempre verde | fase 4 não começa com fase 3 vermelha |
 | `sniff-css/` é workspace **independente** | tem `Cargo.toml` próprio e `resolver` próprio: não entra em `members`, não é tocado por `cargo fmt --all`/`clippy --workspace` daqui |
@@ -114,7 +116,7 @@ teste de que o desenho menor paga — se o `M3` não achar ≥ 3 defeitos reais,
 ```toml
 # Cargo.toml (workspace)
 [workspace]
-members = ["crates/html", "crates/html-macros", "crates/html-macros-core"]
+members = ["crates/html-auy", "crates/html-auy-macros", "crates/html-auy-macros-core"]
 resolver = "3"
 # `exclude` explícito: `sniff-css/` e `spec/` não são membros
 
@@ -128,12 +130,11 @@ pedantic = { level = "warn", priority = -1 }
 ```
 
 ```toml
-# crates/html/Cargo.toml
+# crates/html-auy/Cargo.toml
 [package]
-name = "html"
+name = "html-auy"
 edition = "2024"
 rust-version = "1.92"          # MSRV; o pin do toolchain vive no rust-toolchain.toml
-publish = false                # D0: não vai para crates.io
 
 [lints]
 workspace = true
@@ -150,12 +151,11 @@ proptest = "1"
 ```
 
 ```toml
-# crates/html-macros/Cargo.toml
+# crates/html-auy-macros/Cargo.toml
 [package]
-name = "html-macros"
+name = "html-auy-macros"
 edition = "2024"
 rust-version = "1.92"
-publish = false
 
 [lib]
 proc-macro = true
@@ -189,7 +189,7 @@ Não é código; é o chão. Absorvido de [`22`](22-rigor.md), derivado do `snif
 | Arquivo | Conteúdo |
 |---|---|
 | `rust-toolchain.toml` | `channel = "1.99"` (pin), `components = ["clippy", "rustfmt"]` |
-| `Cargo.toml` | `[workspace.package] rust-version = "1.92"` (**MSRV**, ≠ pin), `publish = false`, `resolver = "3"`, `[workspace.lints.rust]`/`[workspace.lints.clippy]`/`[workspace.lints.rustdoc]` |
+| `Cargo.toml` | `[workspace.package] rust-version = "1.92"` (**MSRV**, ≠ pin), `resolver = "3"`, `[workspace.lints.rust]`/`[workspace.lints.clippy]`/`[workspace.lints.rustdoc]` |
 | `clippy.toml` | limiares + allowlists (incl. `msrv` e `doc-valid-idents`) |
 | `rustfmt.toml` | só opções estáveis + `hex_literal_case = "Lower"` |
 | `deny.toml` | advisories/`yanked` deny, allowlist de licença permissiva, wildcard/registry deny |
@@ -225,7 +225,7 @@ impl Href { pub fn internal(LUrl<'_>) -> Self; pub fn external(ExternalUrl<'_>) 
 **Testes.** `proptest` para escape (`<>&"'` + controle), `SrcSet` (ordem, dedupe, largura > 0), `Class`
 (dedupe, ordem). `insta` para 3 saídas.
 **DoD.** `cargo test` verde; `Markup` não implementa `IntoResponse` (não há dependência de `http`);
-`grep -r http crates/html` vazio.
+`grep -r http crates/html-auy` vazio.
 
 ### F1 — tabela de elementos + porte do validador (≈400 LOC)
 
@@ -235,10 +235,10 @@ mesmas em qualquer caminho — o que muda é onde a tabela mora:
 | Caminho | Tabela | Gate |
 |---|---|---|
 | vigente (até D27) | `html-spec` gerado por `build.rs` a partir de `spec/elements.toml` | divergência = build quebrado (registro histórico) |
-| **decidido (D27)** | `spec/elements.toml` **normativo** → `tools/gen_spec.py` (manual) → `crates/html/src/spec/table.rs` **versionado** | **teste de paridade**: TOML ≠ tabela = CI vermelho; nenhum `build.rs` |
+| **decidido (D27)** | `spec/elements.toml` **normativo** → `tools/gen_spec.py` (manual) → `crates/html-auy/src/spec/table.rs` **versionado** | **teste de paridade**: TOML ≠ tabela = CI vermelho; nenhum `build.rs` |
 
-**Artefatos de F1:** `tools/gen_spec.py` (o gerador), `crates/html/src/spec/table.rs` (saída, commitada) e
-`crates/html/tests/spec_parity.rs` (a prova de que a saída não está velha). Esquecer de rodar o gerador
+**Artefatos de F1:** `tools/gen_spec.py` (o gerador), `crates/html-auy/src/spec/table.rs` (saída, commitada) e
+`crates/html-auy/tests/spec_parity.rs` (a prova de que a saída não está velha). Esquecer de rodar o gerador
 deixa o CI vermelho, nunca o produto errado.
 
 ```rust
@@ -400,7 +400,7 @@ pub struct Partial<'a> { /* main, updates, focus, select, reselect, select_oob *
 pub enum Sync { Drop, Replace, Abort }
 pub enum RequestClass { Full, Partial, Targeted, HistoryRestore, Boosted }
 
-// html/src/media.rs — builders de mídia; `srcset`+`sizes` andam juntos
+// crates/html-auy/src/media.rs — builders de mídia; `srcset`+`sizes` andam juntos
 pub struct Img<'a> { /* src, alt, width, height, srcset, sizes, loading, fetchpriority */ }
 impl<'a> Img<'a> {
     pub const fn new(Src<'a>, Alt<'a>, WidthPx, HeightPx) -> Self;
@@ -447,7 +447,7 @@ impl<'a> Track<'a> {
 
 **Desvios do plano aceitos na implementação:** o `CsrfToken` mora no `Method` (fecha o `GET` sem token
 inventado e torna “sem token” um erro de tipo, não de aridade); `FieldState` tem campos privados com
-builders; parser/validação/codegen vivem em `html-macros-core` (testáveis e fuzzáveis sem proc-macro);
+builders; parser/validação/codegen vivem em `html-auy-macros-core` (testáveis e fuzzáveis sem proc-macro);
 o parser tem teto de **64 níveis** de aninhamento (fonte patológico vira erro, não estouro de pilha).
 
 **Testes (aqui mora o valor das D23–D25):**
@@ -474,7 +474,7 @@ Parse com `html5ever` (dependência **opcional**, `features = ["audit"]`) + as i
 `RcDom` não guarda offset de origem: a ordem da saída é a **pré-ordem** do documento, com a ordem
 fixa das regras desempatando dois findings no mesmo nó. `.parent`/`.children` do DOM já são a ordem
 de documento, então o resultado é determinístico e não depende de mapa de posições.
-**DoD.** `html::audit::check(&page.markup())` roda no CI **do consumidor** em três linhas
+**DoD.** `html_auy::audit::check(&page.markup())` roda no CI **do consumidor** em três linhas
 (`html = { path = …, features = ["audit"] }`); sem binário e sem crate novo. Sem a feature, o crate tem
 zero dependências — provado por `cargo tree -e normal` no job `check`.
 
@@ -548,7 +548,7 @@ seguro".
    identificadores) é pt-BR — todo "erro" seria falso positivo (`erro`→`error`, `ser`→`set`). A
    checagem ortográfica equivalente é revisão humana, registrada aqui em vez de fingida no CI.
 4. Toda mensagem de erro de [`10`](10-ergonomia.md) §2 tem `trybuild`.
-5. `html` sem nenhuma dependência de runtime além de `core`/`alloc`.
+5. `html-auy` sem nenhuma dependência de runtime além de `core`/`alloc`.
 6. `Page`, `Form`, `Field`, `View` com os testes de F5 na tabela.
 7. Porte de §5 dentro dos critérios numéricos.
 8. `tools/validate_spec.py` removido **somente** quando F3 cobrir 100% das suas regras (até lá, ele é o

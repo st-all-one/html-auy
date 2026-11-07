@@ -1,0 +1,6 @@
+---
+source: crates/html-auy/tests/golden.rs
+expression: "format!(\"{}\\n{}\", on.as_str(), off.as_str())"
+---
+<button type="button" disabled>Enviar</button>
+<button type="button">Enviar</button>

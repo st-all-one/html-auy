@@ -1,0 +1,27 @@
+[package]
+name = "html-auy-macros-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+documentation = "https://docs.rs/html-auy-macros-core"
+description = "Parser, validator and code generator for html-auy's html! macro."
+readme = "README.md"
+keywords = ["html", "proc-macro", "parser", "validation"]
+categories = ["web-programming", "development-tools::procedural-macro-helpers"]
+
+[lib]
+name = "html_auy_macros_core"
+
+[lints]
+workspace = true
+
+[dependencies]
+proc-macro2.workspace = true
+quote.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+# `span-locations` só nos testes: as asserções conferem linha/coluna do diagnóstico.
+proc-macro2 = { workspace = true, features = ["span-locations"] }

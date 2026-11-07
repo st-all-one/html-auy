@@ -2,7 +2,7 @@
 """Validador de referência de spec/elements.toml (esquema 2).
 
 Este é o protótipo do comando `cq spec` descrito em docs/01-arquitetura.md.
-Enquanto o crate `html-spec` não existe, ele é a única barreira contra a spec apodrecer.
+Ele é a barreira executável contra a spec apodrecer.
 
 Uso:  python3 tools/validate_spec.py [caminho]
 Saída: uma linha por problema, prefixada por ERROR/WARN, e um resumo final.

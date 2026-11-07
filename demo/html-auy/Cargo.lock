@@ -71,7 +71,7 @@ name = "demo-html-auy"
 version = "0.1.0"
 dependencies = [
  "axum",
- "html",
+ "html-auy",
  "tokio",
 ]
 
@@ -109,21 +109,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "html"
+name = "html-auy"
 version = "0.1.0"
 dependencies = [
- "html-macros",
+ "html-auy-macros",
 ]
 
 [[package]]
-name = "html-macros"
+name = "html-auy-macros"
 version = "0.1.0"
 dependencies = [
- "html-macros-core",
+ "html-auy-macros-core",
 ]
 
 [[package]]
-name = "html-macros-core"
+name = "html-auy-macros-core"
 version = "0.1.0"
 dependencies = [
  "proc-macro2",

@@ -14,7 +14,7 @@ política de estilo deixa de ser `'none'` e passa a exigir uma decisão explíci
 ## 2. Tipos
 
 ```rust
-// html::shell — asset é (tipo, URL validada, ordem de declaração); hash é do consumidor
+// html_auy::shell — asset é (tipo, URL validada, ordem de declaração); hash é do consumidor
 pub struct Asset { /* privado */ }
 impl Asset {
     pub fn style(href: &'static str) -> Option<Asset>;             // `/assets/app.css`
@@ -57,7 +57,7 @@ CDN é aceito por construtor próprio (`external_style`/`external_script`, `http
 e é **desencorajado** em produção: self-host dá CSP estrita, SRI e cache sob seu controle.
 
 Mídia de conteúdo (`<img>`, `<picture>`, `<video>`, `<audio>`) **não** é `Asset`: ela carrega dados do
-documento e usa `Src`/`SrcSet`/`Alt` em [`media`](../crates/html/src/media.rs), sem hash de build.
+documento e usa `Src`/`SrcSet`/`Alt` em [`media`](../crates/html-auy/src/media.rs), sem hash de build.
 
 ## 3. Onde o JS passa a ler o estado
 
@@ -165,7 +165,7 @@ mecanismo de troca parcial que o consumidor declare como asset:
 ### 7.1 Contrato de resposta parcial
 
 O crate não emite `hx-*`, mas o consumidor precisa de um modelo de resposta que não seja string
-livre. `html::Partial` é esse modelo; ele **não** renderiza nem escolhe transporte — o adaptador do
+livre. `html_auy::Partial` é esse modelo; ele **não** renderiza nem escolhe transporte — o adaptador do
 consumidor serializa para OOB, `<hx-partial>` ou outro mecanismo.
 
 - `Partial::new(Markup)` substitui o alvo principal; `Partial::keep_main()` preserva o alvo e só

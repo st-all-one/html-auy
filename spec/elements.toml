@@ -1,7 +1,8 @@
 # spec/elements.toml — vocabulário de elementos do html-auy
 #
-# FONTE DA VERDADE do vocabulário. A tabela Rust do crate (`crates/html/src/spec/table.rs`) é
-# GERADA a partir deste arquivo por `tools/gen_spec.py` e VERSIONADA; não edite o gerado.
+# FONTE DA VERDADE do vocabulário. As tabelas Rust (`crates/html-auy/src/spec/table.rs` e
+# `crates/html-auy-macros-core/src/table.rs`) são GERADAS a partir deste arquivo por
+# `tools/gen_spec.py` e VERSIONADAS; não edite o gerado.
 # Não existe `build.rs`: esquecer de rodar o gerador deixa o CI vermelho (teste de paridade),
 # nunca o produto errado.
 #

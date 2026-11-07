@@ -69,9 +69,9 @@ confiável.
 ### P7 — Erro de marcação é erro de compilação
 Com span no ponto exato e mensagem acionável, testada por `trybuild`.
 
-### P8 — Um parser, três passes
-Parse, validação, formatação e geração de código compartilham o mesmo AST. É o que torna o
-`fmt` barato (~250 LOC) em vez de um projeto de gramática próprio.
+### P8 — Um parser, dois passes
+Parse, validação e geração de código compartilham o mesmo AST. Não há formatter (D28): o macro
+ignora whitespace e a saída não depende da forma do fonte, então a gramática é paga uma vez só.
 
 ### P9 — Nada de açúcar que esconde preço
 Toda economia de digitação tem que ser explicável em uma linha. `div` implícito por classe é aceito
@@ -83,16 +83,17 @@ o projeto para e a alternativa (maud + camada de valores tipados, ~600 LOC) já 
 
 ## 3. Não-objetivos permanentes
 
+`html-auy` é publicado como crate público desde `0.1.0` (D35); os não-objetivos abaixo são de escopo, não de distribuição.
+
 | Não-objetivo | Por quê |
 |---|---|
 | Framework web (HTTP, rotas, sessão, banco) | escopo; o crate é só a camada de HTML |
 | Template em runtime (arquivo lido em execução) | quebra tipagem, `ETag` e auditabilidade |
 | HTML/CSS vindo de banco | conteúdo é dado; apresentação é código |
-| `style=` e atributos `on*` | CSP sem inline, `ADR` de estilo, e nenhum ganho real |
+| `style=` como caminho normal de apresentação e atributos `on*` | `style=` é escape hatch auditado (D3/D34); `on*` quebra CSP e mantém comportamento no arquivo |
 | `Raw`/`PreEscaped` público | bypass de escape é o defeito que o projeto existe para eliminar |
 | Reatividade, hidratação, ilhas | o HTML deixaria de ser o artefato |
 | Elementos personalizados (`<my-*>`, `customElements.define`, Shadow DOM, `<slot>`) | comportamento passaria a viver no cliente, o HTML deixaria de ser o artefato e o elemento indefinido pisca antes do JS (D20) |
-| Publicação como crate com semver público | ver D0 em [`13-decisoes.md`](13-decisoes.md) |
 | Substituir `axe`/`sniffCSS` | o projeto reduz o custo de chegar até eles, não os troca |
 
 ## 4. Glossário

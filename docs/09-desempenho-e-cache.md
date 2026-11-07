@@ -89,10 +89,10 @@ pintura vira regressão de layout.
 
 | Componente | Estratégia |
 |---|---|
-| `html-spec` | gerado no `build.rs`, cacheado; só recompila se `spec/elements.toml` mudar |
-| `html-macro` | parser linear sobre tokens; sem análise semântica de Rust |
+| tabela gerada | arquivo Rust versionado; sem `build.rs`, só muda quando o gerador roda |
+| `html-auy-macros` | parser linear sobre tokens; sem análise semântica de Rust |
 | views | um crate por área (ou por módulo grande) para paralelizar `cargo check` |
-| `fmt` | roda sobre o AST em memória; sem reparse |
+| snapshots | `insta` compara bytes; não há formatter nem reparse |
 
 Regra: bloco `html!` acima de ~200 linhas deve ser dividido em primitivos. Não por estética — porque
 um erro em bloco grande recompila uma unidade grande.

@@ -35,7 +35,7 @@ Corpus real: **225 `.blade.php`** (23,6k LOC, 2.084 usos de componente, 6.765 ta
 ### 3.1 `Form` — o CSRF como argumento obrigatório
 
 ```rust
-// html-core::form — o crate não emite token; exige um.
+// html_auy::form — o crate não emite token; exige um.
 pub struct CsrfToken<'a>(&'a str);
 pub enum Method<'a> {
     Get,

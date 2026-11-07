@@ -106,7 +106,7 @@ Cada regra de página tem um par de fixtures: uma que passa, uma que falha com a
 
 ## 10. Cobertura
 
-- Cobertura de linha ≥ 90% em `html-core` e `html-macro` (excluindo código gerado de `html-spec`).
+- Cobertura de linha ≥ 90% em `html-auy` e `html-auy-macros` (excluindo a tabela gerada).
 - Mutação (`cargo-mutants`) nos módulos de escape, `SrcSet`, `Class` e validador da macro.
 - A cobertura **não** substitui golden/conformidade: bytes são o contrato, não linhas executadas.
 
@@ -115,7 +115,7 @@ Cada regra de página tem um par de fixtures: uma que passa, uma que falha com a
 ```
 cargo test                          # unidade + integração + golden + doc-tests
 cargo test -p html --test ui        # mensagens (trybuild)
-cargo test -p html --features audit # N4: invariantes de `output` (D30)
+cargo test -p html-auy --features audit # N4: invariantes de `output` (D30)
 cargo +nightly fuzz run parser      # parser (crate `fuzz/`, fora do workspace)
 ```
 
@@ -126,16 +126,16 @@ cargo +nightly fuzz run parser      # parser (crate `fuzz/`, fora do workspace)
 | formato | `cargo fmt --all -- --check` | só opções estáveis no `rustfmt.toml` |
 | lints | `cargo clippy --workspace --all-targets --all-features -- -D warnings` | duas camadas: níveis no `Cargo.toml`, valores no `clippy.toml`; a feature `audit` também é lintada |
 | supply chain | `cargo deny check` · `cargo audit` · `cargo machete` | licença/advisory/dep morta (`typos` saiu: dicionário só em inglês, corpus pt-BR) |
-| UB | `cargo miri test -p html --test miri_smoke` | núcleo puro (`forbid(unsafe_code)`) |
+| UB | `cargo miri test -p html-auy --test miri_smoke` | núcleo puro (`forbid(unsafe_code)`) |
 | pânico no parser | `cargo +nightly fuzz run parser` (smoke) | input adverso nunca vira pânico — sempre `compile_error!`; profundidade de aninhamento tem teto de 64 |
-| golden | `cargo test` + `UPDATE_GOLDEN=1` para regenerar | bytes determinísticos, comparação byte-for-byte |
+| snapshots | `cargo test` + `INSTA_UPDATE=always` para regenerar | bytes determinísticos, comparação byte-for-byte |
 
 ### 11.0 Gates fora do crate
 
 | Gate | O que cobra |
 |---|---|
 | `tools/validate_spec.py` | spec ↔ docs (escopos, contagens, rastreabilidade de invariante) |
-| `tools/data-check.py` (D26) | `data-*` declarado ↔ usado ↔ lido pelo JS |
+| `tools/data_check.py` (D26) | `data-*` declarado ↔ usado ↔ lido pelo JS |
 | `N4` (`feature = "audit"`) | as 12 regras de `output` sobre o HTML final |
 
 ## 11.1 Inventário mínimo de `trybuild` (uma mensagem = um caso)

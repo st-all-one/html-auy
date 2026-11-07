@@ -15,5 +15,5 @@ fuzz_target!(|data: &[u8]| {
     let Ok(tokens) = proc_macro2::TokenStream::from_str(text) else {
         return;
     };
-    let _ = html_macros_core::expand(tokens);
+    let _ = html_auy_macros_core::expand(tokens);
 });

@@ -6,7 +6,7 @@ Os elementos usados pelo escopo de origem (6.765 ocorrências, medido) mais o qu
 para emitir documento cabem em um arquivo. Manter a tabela como **dado versionado** dá três coisas de
 graça:
 
-1. o gerador (`html-spec`) não tem regra duplicada em código;
+1. o gerador (`tools/gen_spec.py`) não tem regra duplicada em código;
 2. o validador da macro e `tools/validate_spec.py` leem a mesma fonte;
 3. mudança de contrato é um diff revisável, com histórico próprio.
 
@@ -176,7 +176,7 @@ sinalizado por `audit` ([`08`](08-seguranca.md) §4). Prefira classe/token.
 
 ## 7. Geração
 
-`build.rs` de `html-spec` lê `spec/elements.toml` e gera:
+`tools/gen_spec.py` lê `spec/elements.toml` e gera:
 
 ```rust
 pub fn img(src: Src, alt: Alt<'_>, width?: Option<WidthPx>, height?: Option<HeightPx>, …) -> Markup;
@@ -199,7 +199,7 @@ erro: elemento `blink` não existe no vocabulário html-auy
 1. PR em `spec/elements.toml` com `category`, `required`, `allowed`, `children`.
 2. Entrada em `docs/13-decisoes.md` com o motivo e o caso de uso real.
 3. Teste de conformidade: fixture renderizada + golden.
-4. `tools/gen_spec.py` regenera `crates/html/src/spec/table.rs` (commitado); o teste de paridade e
+4. `tools/gen_spec.py` regenera as duas cópias de `table.rs` (commitadas); o teste de paridade e
    `tools/validate_spec.py` validam (**D27**).
 
 Não existe caminho alternativo. Se o elemento não está na spec, não dá para renderizá-lo — e é isso

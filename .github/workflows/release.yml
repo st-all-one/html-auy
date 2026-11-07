@@ -1,0 +1,118 @@
+# Release de um crate Rust: tag v* → verificação → crates.io → GitHub Release.
+#
+# Não há binários. Os artefatos de distribuição são os pacotes do crates.io; o GitHub Release
+# apenas publica as notas e aponta para a tag.
+#
+# Secret necessário (Settings → Secrets and variables → Actions):
+#   CARGO_REGISTRY_TOKEN  token de publicação do crates.io
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.99"
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - name: tag == versão do workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(cargo pkgid -p html-auy | sed 's/.*#//')"
+          test "v${version}" = "${GITHUB_REF_NAME}" || {
+            echo "::error::tag ${GITHUB_REF_NAME} não corresponde à versão ${version}"
+            exit 1
+          }
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - run: cargo test --workspace --locked
+      - run: cargo test -p html-auy --features audit --locked
+      - name: rustdoc
+        run: |
+          RUSTDOCFLAGS='-D warnings' cargo doc --workspace --no-deps
+          RUSTDOCFLAGS='-D warnings' cargo doc --workspace --no-deps --all-features
+      - name: spec e links
+        run: |
+          python3 tools/validate_spec.py
+          python3 tools/gen_spec.py --check
+          python3 tools/check_links.py
+          python3 -m unittest discover -s tools/tests
+      - name: pacote autocontido do núcleo
+        run: cargo package -p html-auy-macros-core --locked
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.99"
+      - uses: Swatinem/rust-cache@v2
+      - name: publicar html-auy-macros-core
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish -p html-auy-macros-core --locked
+      - name: aguardar html-auy-macros-core no índice
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(cargo pkgid -p html-auy-macros-core | sed 's/.*#//')"
+          for _ in $(seq 1 30); do
+            if curl -fsS -A "html-auy-release" \
+              "https://crates.io/api/v1/crates/html-auy-macros-core/${version}" >/dev/null 2>&1; then
+              sleep 10
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::html-auy-macros-core ${version} não apareceu no índice"
+          exit 1
+      - name: publicar html-auy-macros
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish -p html-auy-macros --locked
+      - name: aguardar html-auy-macros no índice
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(cargo pkgid -p html-auy-macros | sed 's/.*#//')"
+          for _ in $(seq 1 30); do
+            if curl -fsS -A "html-auy-release" \
+              "https://crates.io/api/v1/crates/html-auy-macros/${version}" >/dev/null 2>&1; then
+              sleep 10
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::html-auy-macros ${version} não apareceu no índice"
+          exit 1
+      - name: publicar html-auy
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish -p html-auy --locked
+
+  github-release:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: criar GitHub Release sem binários
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true

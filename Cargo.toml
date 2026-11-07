@@ -1,13 +1,17 @@
-# Workspace `html-auy`: geração de HTML tipada (crate `html` + proc-macro `html-macros`).
+# Workspace `html-auy`: geração de HTML tipada.
 #
-# Duas regras estruturais vivem aqui:
-#   1. `sniff-css/` e `fuzz/` NÃO são membros (workspace próprio / workspace-excluded);
-#   2. nenhum crate publica (`publish = false`): o produto é interno (D0).
+# Três crates publicáveis, em ordem de dependência:
+#   html-auy-macros-core → html-auy-macros → html-auy
 #
+# `sniff-css/` e `fuzz/` NÃO são membros (workspace próprio / workspace-excluded).
 # O pin do compilador é `rust-toolchain.toml` (1.99); a MSRV é `rust-version` (1.92).
 # São dois números diferentes por decisão (docs/22 §2, D32).
 [workspace]
-members = ["crates/html", "crates/html-macros", "crates/html-macros-core"]
+members = [
+    "crates/html-auy",
+    "crates/html-auy-macros",
+    "crates/html-auy-macros-core",
+]
 resolver = "3"
 exclude = ["fuzz"]
 
@@ -16,10 +20,11 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.92"
 license = "MIT"
+repository = "https://github.com/st-all-one/html-auy"
 
 [workspace.dependencies]
-html-macros = { path = "crates/html-macros" }
-html-macros-core = { path = "crates/html-macros-core" }
+html-auy-macros = { version = "0.1.0", path = "crates/html-auy-macros" }
+html-auy-macros-core = { version = "0.1.0", path = "crates/html-auy-macros-core" }
 
 html5ever = "0.27"
 markup5ever_rcdom = "0.3"

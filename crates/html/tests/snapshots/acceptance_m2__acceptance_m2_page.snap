@@ -1,5 +1,0 @@
----
-source: crates/html/tests/acceptance_m2.rs
-expression: page.markup().as_str()
----
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Notícias</title></head><body><div role="status" aria-atomic="true"></div><main id="main" tabindex="-1"><h1>Notícias</h1><h2>Notícias</h2><ul><li>Primeira</li><li>Segunda</li></ul></main></body></html>

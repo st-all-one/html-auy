@@ -59,13 +59,13 @@ pub enum Href {
 | Política | Detalhe |
 |---|---|
 | `unsafe` | **zero**, em todo o workspace (`#![forbid(unsafe_code)]`) |
-| dependências de produção | `html-core`: nenhuma externa; `html-spec`: apenas o gerado; `html-macro`: `proc-macro2` + `quote` |
+| dependências de produção | `html-auy`: nenhuma externa; tabela gerada: nenhuma dep; `html-auy-macros`: `proc-macro2` + `quote` |
 | dependências de desenvolvimento | `html5ever` (lint), `insta`, `trybuild`, `cargo-fuzz` |
-| versões | fixas (`=x.y.z`) e vendorizadas no consumidor |
+| versões | declaradas no manifesto; `Cargo.lock` versionado para o gate local |
 | auditoria | `cargo deny` (licenças permissivas, sem duplicata, sem yanked) |
-| MSRV | declarada; CI na stable e na beta |
+| MSRV | declarada; CI tem job na MSRV (1.92) e na stable; beta não é matriz de suporte |
 
-Observação de propósito: `html-macro` **não** usa `syn` — o fluxo é HTML; um parser próprio de ~1,2k
+Observação de propósito: `html-auy-macros` **não** usa `syn` — o fluxo é HTML; um parser próprio de ~1,2k
 LOC é menor e auditável, e evita a superfície de uma dependência grande em posição privilegiada
 (dentro de macro de compilação).
 

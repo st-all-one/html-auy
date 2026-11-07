@@ -11,7 +11,7 @@ elementos de documento (`html`, `head`, `body`, `main`, etc.) **não existem** n
 (`only = "shell"` no spec); `h1` é a exceção deliberada para shells próprios, com `single_h1` no `audit`):
 
 ```rust
-// html-core::shell — sem dependência de framework, sem I/O, sem status HTTP
+// html_auy::shell — sem dependência de framework, sem I/O, sem status HTTP
 pub struct Page { markup: Markup }
 
 impl Page {

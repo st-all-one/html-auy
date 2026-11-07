@@ -1,6 +1,6 @@
 //! Portal EXAMPLE.html implementado com `html!` + o contrato de valores do crate.
 
-use html::{
+use html_auy::{
     Alt, AttrVal, Class, Fragment, HeightPx, Href, Label, Markup, Src, Text, WidthPx, html,
 };
 

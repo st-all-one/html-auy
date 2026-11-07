@@ -1,5 +1,8 @@
 # 19 — Revisão arquitetural: a menor máquina que cumpre os objetivos
 
+> **Documento histórico.** O desenho abaixo antecede o 0.1.0 público; nomes `html-core`/`html-spec`/`html-macro` referem-se a crates da fase interna. O estado atual está em [`01`](01-arquitetura.md) e D35 em [`13`](13-decisoes.md).
+
+
 > **O que é:** uma revisão crítica do próprio desenho, feita depois dos 14 corpus. O critério é único:
 > **cada garantia tem que ser cobrada por uma máquina que falha**, com o menor número de peças móveis.
 > Complexidade que não compra garantia é dívida.

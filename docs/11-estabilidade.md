@@ -1,106 +1,111 @@
-# 11 — Estabilidade e versionamento
+# 11 — Estabilidade, versionamento e release
 
-## 1. O que "estável" significa aqui
+## 1. O que é estável
 
-O projeto **não** é publicado como crate (D0), mas precisa ser estável para o consumidor que o
-vendoriza. Estabilidade tem quatro contratos:
+`html-auy` é um crate público a partir de `0.1.0`. Estável significa: código que compila e produz os
+bytes documentados continua compilando na mesma linha `0.x` (salvo erro de segurança), e as mudanças
+que quebram têm release explícita.
 
 | Contrato | Garantia |
 |---|---|
-| **sintaxe de `html!`** | congelada por minor; mudança só em major interno |
-| **spec de elementos** | `spec_version` própria (`2.1.0`), congelada por minor do projeto |
-| **MSRV** | declarada, verificada no CI; subir MSRV é major |
-| **semântica de escape** | nunca muda sem major; tem propriedade testada |
+| **API pública de `html-auy`** | itens em `pub` e a sintaxe de `html!`; mudança incompatível é minor antes de 1.0 |
+| **spec de elementos** | `spec_version` própria (`2.1.0`), versionada junto com o crate |
+| **MSRV** | Rust 1.92, verificada no CI; subir a MSRV é mudança minor |
+| **semântica de escape** | nunca muda para pior sem release quebrada; há property tests |
+| **bytes de `Markup`** | ordem canônica de atributos, classes, `srcset`, assets e tema; snapshots versionados |
 
-## 2. Política de versão (interna)
+Não são contrato: mensagens de erro (texto), ordem interna de regras de auditoria, implementação do
+parser e números de benchmark.
 
-`0.x.y` com semver aplicado ao **consumidor** (que é único e conhecido):
+## 2. Política de versão
+
+Enquanto a versão for `0.x`:
 
 | Mudança | Bump |
 |---|---|
-| nova entrada em `spec/elements.toml` | minor |
-| nova regra de `N4` | minor **se** zero ocorrência nos arquivos de referência; senão major |
-| novo primitivo | minor |
-| atributo passa a ser obrigatório em um elemento | **major** |
-| elemento removido da spec | **major** |
-| mudança na tabela de escape | **major** |
-| novo erro de compilação numa marcação que antes compilava | **major** (é quebra) |
-| melhoria de mensagem de erro | patch |
+| correção de bug que não muda API nem bytes documentados | patch |
+| nova API compatível, novo elemento/atributo opcional, nova regra que não quebra código válido | minor |
+| remoção/renomeação de item público, parâmetro obrigatório novo, erro novo em marcação antes válida, subida de MSRV | **minor** (`0.x` → `0.(x+1)`) |
+| mudança de semântica de escape ou de bytes canônicos | **minor** com nota de migração |
 
-Regra prática: se um `cargo check` que passava para de passar, é major — mesmo que o código esteja
-"mais correto". O consumidor precisa de um ponto único de atualização.
+A partir de `1.0.0`, incompatibilidade passa a exigir major. Em `0.x`, a regra prática é:
+**se um `cargo check` que passava para de passar, o minor sobe**.
 
-## 3. MSRV e churn de proc-macro
+O `spec_version` pode subir dentro de um patch se a mudança for só de documentação; se altera
+validação, acompanha o bump do crate.
 
-O ponto frágil de qualquer macro é a dependência do compilador. Mitigações:
+## 3. MSRV e toolchain
 
-- MSRV declarada e testada (`cargo build --locked` com o toolchain mínimo no CI) — **D32**: MSRV `1.92` em três lugares, pin `1.99` é outro número.
-- Matriz de CI: MSRV, stable, beta. (nightly não é suportado.)
-- Parser sem dependência de detalhes internos: só `proc-macro2`/`quote`, ambos com API estável.
-- Nenhum `unsafe`, nenhum feature gate noturno.
-- Teste de fumaça de macro (`trybuild` de sucesso) roda na matriz inteira.
+- MSRV declarada em `[workspace.package] rust-version = "1.92"` e replicada em `clippy.toml`.
+- `rust-toolchain.toml` fixa a toolchain de desenvolvimento (pin), que é diferente da MSRV.
+- CI tem job `msrv` com `RUSTUP_TOOLCHAIN=1.92`, `cargo build --workspace --locked` e
+  `cargo test --workspace --lib --locked`.
+- `resolver = "3"` faz a resolução respeitar a MSRV.
+- O núcleo do macro usa apenas `proc-macro2` e `quote`; não usa `syn` nem APIs instáveis.
+
+Subir a MSRV é mudança minor em `0.x` e major em `1.x`, sempre com nota no release.
 
 ## 4. Congelamento da spec
 
-- `spec/elements.toml` tem `spec_version`.
-- Congelamento por minor: dentro de uma minor, só entram **adições** (elemento, atributo permitido,
-  invariante em elemento não usado).
-- Cada mudança registra entrada em `docs/13-decisoes.md` com: motivo, caso de uso, custo estimado de
-  migração.
-- Revisão periódica: a cada minor, um teste compara a spec com os elementos realmente emitidos no
-  consumidor e lista os sem uso — candidatos a remoção no próximo major.
+- `spec/elements.toml` é a fonte normativa; `tools/gen_spec.py` gera duas cópias idênticas de
+  `table.rs` (`crates/html-auy/src/spec/` e `crates/html-auy-macros-core/src/`), versionadas.
+- `spec_parity` falha se a tabela divergir do TOML.
+- Dentro de uma minor, a spec só ganha **adições compatíveis**: elemento novo, atributo opcional
+  novo, invariante que não recusa marcação antes válida.
+- Remoção, atributo que passa a obrigatório e regra nova que recusa código antes válido exigem novo
+  minor (ou major a partir de 1.0), com entrada em [`13-decisoes.md`](13-decisoes.md).
 
 ## 5. Deprecação
 
-```
-deprecated = "use `Tone::Primary` em vez de cor explícita; remoção em 1.0"
-```
-
-- Elemento/atributo deprecado continua compilando por uma minor inteira.
-- A mensagem de erro/aviso de compilação carrega o motivo (não existe advisory de lint: D28/A4).
-- Remoção só em major, com nota de migração (`docs/15-migracao-blade.md` mantido como exemplo).
-
-## 6. Atualização no consumidor
-
-```
-1. atualizar versão vendorizada
-2. cargo check          → erros de major aparecem aqui, com mensagem e sugestão
-3. defaults do gerador   → mecânicos já vêm aplicados (D28/A3)
-4. insta review         → snapshots mostram exatamente o que mudou no HTML
-5. gates (axe/sniff)    → sem mudança comportamental esperada
+```rust
+#[deprecated = "use `Tone::Primary`; remoção na próxima minor"]
 ```
 
-O passo 4 é o que torna atualização segura: qualquer diferença de bytes aparece como diff de snapshot.
+- Item deprecado continua funcionando por uma minor inteira.
+- A remoção vem com nota de migração no release e, quando aplicável, em [`15`](15-migracao-blade.md).
+- Não existe camada de aviso de acessibilidade: ou é tipo/erro de compilação, ou teste de `audit`.
 
-## 7. Compatibilidade com o consumidor (o que o crate assume)
+## 6. Release
 
-- Rust ≥ 1.92, edição 2024.
-- Traits que o consumidor implementa: `Msg` (texto), `ClassToken` (classes), `Variant` (srcset),
-  `MediaPath` (mídia) e `JsonGraph` (JSON-LD). `Asset`, `LUrl`, `Lang` e `Text` são tipos concretos
-  do crate; o domínio entra pelos traits, nunca por tipo concreto do consumidor.
-- Nenhum acesso a I/O, tempo, aleatoriedade ou variável de ambiente.
+O processo é por tag:
 
-### 7.1 Lints, publicação e lockfile
+1. Atualizar `version` em `Cargo.toml` e [`CHANGELOG.md`](../CHANGELOG.md).
+2. Rodar o gate local da seção 7.
+3. Commitar, criar tag anotada `v0.1.0` e enviar a tag.
+4. O workflow [`release.yml`](../.github/workflows/release.yml) verifica que a tag coincide com a
+   versão do workspace e publica, nesta ordem:
+   - `html-auy-macros-core`
+   - `html-auy-macros`
+   - `html-auy`
+5. O mesmo workflow cria o GitHub Release com notas geradas. **Não há binários**: o artefato é o
+   código-fonte e os pacotes do crates.io.
 
-```toml
-# workspace: os lints são declarados UMA vez, na forma correta ([workspace.lints.clippy]).
-[workspace.lints.rust]
-unsafe_code = "forbid"
+O segredo `CARGO_REGISTRY_TOKEN` precisa existir no repositório (Settings → Secrets and variables →
+Actions). O token deve ter escopo de publicação no crates.io.
 
-[workspace.lints.clippy]
-all = { level = "deny", priority = -1 }
-pedantic = { level = "warn", priority = -1 }
-# cada crate herda com `[lints] workspace = true`
+## 7. Gate de release
+
+```bash
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace
+cargo test -p html-auy --features audit
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features
+cargo package -p html-auy-macros-core --allow-dirty
+python3 tools/validate_spec.py
+python3 tools/gen_spec.py --check
+python3 tools/check_links.py
+python3 -m unittest discover -s tools/tests
 ```
 
-- `publish = false` em todos os crates (D0) e `Cargo.lock` **versionado**: build reprodutível não
-  depende de resolução de versão em CI.
-- `rust-version = "1.92"` em cada manifesto, e um job de CI compila **em 1.92**, não só na stable —
-  sem isso a MSRV declarada é ficção e API nova entra sem ninguém notar.
+`cargo package` da crate principal só verifica contra o crates.io depois que os dois crates internos
+estão publicados; até lá, `cargo publish --dry-run -p html-auy` pode ser usado como ensaio depois de
+publicar as dependências. O workflow de release é a autoridade final.
 
 ## 8. O que pode mudar sem aviso
 
-- Mensagens de erro (texto), desde que mantenham as três partes.
-- Ordem de regras de lint no relatório.
-- Implementação interna do parser.
-- Números de benchmark (documentados, não contratuais).
+- Texto de mensagens de erro, desde que preserve as três partes (o quê, onde, como corrigir).
+- Ordem de regras no relatório de `audit`.
+- Implementação interna do parser e do gerador.
+- Números de benchmark e tamanho de snapshots de diagnóstico.

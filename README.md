@@ -1,127 +1,171 @@
 # html-auy
 
-**Um vocabulário HTML tipado para Rust, orientado a prevenção de erros, acessibilidade e determinismo.**
+**A typed HTML vocabulary for Rust: compile-time attribute validation, context-aware escaping, and
+accessibility by construction.**
 
-`html-auy` é um projeto **open source independente**, mantido como repositório próprio, que especifica e
-implementa uma camada de renderização de HTML que trate o **HTML final como artefato**, e não como
-projeção de uma árvore reativa.
+`html-auy` renders HTML as an artifact, not as a projection of a reactive tree. The public crate is
+[`html-auy`](https://crates.io/crates/html-auy); its `html!` macro is implemented by
+[`html-auy-macros`](https://crates.io/crates/html-auy-macros) and
+[`html-auy-macros-core`](https://crates.io/crates/html-auy-macros-core).
 
-> **Este projeto NÃO será publicado como crate.**
-> Não há compromisso de semver público, nem obrigação de suportar consumidores externos.
-> A biblioteca é de uso interno do projeto que a originou; a abertura do repositório é para
-> **estudo, crítica e reuso por cópia/vendorização**. Ver [`docs/13-decisoes.md`](docs/13-decisoes.md), D0.
+```toml
+[dependencies]
+html-auy = "0.1"
+```
 
----
+```rust
+use html_auy::{Href, LUrl, Text, html};
 
-## O problema que este projeto resolve
+let link = html! {
+    a href=(Href::internal(LUrl::new("/news").expect("constant route"))) {
+        (Text::new("News"))
+    }
+};
 
-Todo framework web em Rust resolve HTML de uma das quatro maneiras:
+assert_eq!(link.as_str(), r#"<a href="/news">News</a>"#);
+```
 
-| Família | Representantes | O que falta |
+The macro rejects unknown elements and attributes, missing `alt` on `img`, controls without an
+accessible name, invalid nesting, and other page vocabulary errors at compile time. Values such as
+`Href`, `Src`, `SrcSet`, `Text`, and `JsonLd` choose the escaping context; `Markup` has no public
+constructor from `String`.
+
+## Why
+
+Every family of HTML generation in Rust leaves at least one of these as a runtime or review problem:
+
+| Family | Representatives | What is left unchecked |
 |---|---|---|
-| macro → `Markup`/`String` | maud, horrorshow, markup.rs | sem tipagem de atributo, sem escaping por contexto |
-| template de arquivo em compile-time | askama, sailfish | `\|safe` como porta de escape, composição rígida |
-| macro → árvore reativa/VDOM | leptos, yew, dioxus, sycamore, topcoat | o HTML deixa de ser o artefato; injeta script/estado |
-| template em runtime sobre `Value` | minijinja, tera, handlebars | zero tipagem; erro só em request |
+| macro → `Markup`/`String` | maud, horrorshow, markup.rs | attribute names and per-context escaping |
+| compile-time file templates | askama, sailfish | escape hatches such as `\|safe`; rigid composition |
+| macro → reactive tree/VDOM | leptos, yew, dioxus, sycamore, topcoat | the HTML stops being the artifact |
+| runtime templates over `Value` | minijinja, tera, handlebars | no typology; failures reach the request |
 
-Nenhuma delas valida **atributo intrínseco** (`hreff`, `aria-lable`, `altt` compilam em todas), nenhuma
-faz **escaping por contexto** (JSON-LD dentro de `<script>` é responsabilidade do chamador), e todas
-deixam a **acessibilidade** como disciplina do desenvolvedor.
+`html-auy` occupies a different quadrant:
 
-O quadrante vazio que este projeto ocupa:
+> **typed props + non-reactive `Markup` + attributes validated at compile time + accessibility by
+> construction**
 
-> **props tipadas + `Markup` não reativo + atributo validado em compilação + acessibilidade por construção**
+The design came from a municipal portal with 222 views, 6,765 tags, 111 declared elements, WCAG 2.2
+AA, a CSP without inline script, ETag/304, and a no-JavaScript baseline. The measurements behind
+each decision are in [`docs/15-migracao-blade.md`](docs/15-migracao-blade.md).
 
-O escopo real que motivou o desenho: um portal municipal com 222 views, 6.765 tags e 63 elementos realmente usados (o `spec/elements.toml` declara 111)
-distintos, exigência de **WCAG 2.2 AA**, **CSP sem inline**, **ETag/304**, **funcionamento sem JavaScript**
-e um conjunto de gates de acessibilidade em CI. Os números que sustentam cada decisão estão em
-[`docs/15-migracao-blade.md`](docs/15-migracao-blade.md).
+## Guarantees
 
----
+1. **The HTML is the artifact.** Output is deterministic bytes, with no VDOM, hydration markers, or
+   serialized state.
+2. **Escape context is a type.** `Href`, `Src`, `Text`, `JsonLd`, and `SrcSet` carry the context;
+   there is no public raw/`PreEscaped` escape hatch.
+3. **Accessibility is absence of API.** `img` without `Alt` does not compile; naming a `div` does
+   not create a landmark; components such as `Form` and `Field` derive their semantics.
+4. **Errors are compile errors.** The macro reports actionable spans, and its messages are covered
+   by `trybuild`.
+5. **Zero `unsafe`, zero runtime, zero embedded JavaScript.** The core is `no_std` + `alloc` and
+   does no I/O, clock, environment, or locale lookup.
+6. **Bytes are canonical.** Attribute, class, `srcset`, theme-token, and asset order are stable, so
+   `ETag` is trustworthy.
 
-## Estado do projeto
+## Non-goals
 
-**0.1.0 (MVP, F-1 → F6.1).** O workspace `crates/` já contém o produto descrito em
-[`docs/21-implementacao.md`](docs/21-implementacao.md): a biblioteca `html` (`no_std`, zero dependência
-normal) a proc-macro `html-macros` e seu núcleo `html-macros-core`; a tabela gerada de `spec/elements.toml`; o shell
-(`Page`/`View`/`Regions`), os componentes (`Form`/`Field`) e os builders de mídia (`Img`/`Picture`/`Video`/`Audio`/`Track`), além do `audit` opcional (`feature = "audit"`).
+- It is not a web framework: no HTTP, database, session, domain i18n, or routing.
+- It does not accept runtime templates, HTML from a database, or `on*` attributes. `style=` exists
+  only as an audited escape hatch; `<style>` and inline event handlers remain forbidden.
+- It does not replace `axe`, `sniffCSS`, or keyboard tests; it reduces the cost of reaching them.
 
-O gate é o do consumidor: `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets
---all-features -- -D warnings`, `cargo test --workspace` (duas vezes), `cargo test -p html --features
-audit`, `python3 tools/validate_spec.py`, `python3 tools/gen_spec.py --check` e
-`python3 -m unittest discover -s tools/tests`.
+Details: [`docs/00-principios.md`](docs/00-principios.md) and
+[`docs/14-alternativas.md`](docs/14-alternativas.md).
 
-Ficam para os marcos **medidos**: `M1`/`M2`/`M3` ([`docs/16-roadmap.md`](docs/16-roadmap.md)) comparam
-linhas e tempo de correção contra o Blade. Os testes de aceitação de leitura (`acceptance_m1`, `m2`,
-`port`) já provam a **igualdade byte a byte** entre a página sem macro e a com macro.
+## Crates
 
----
-
-## Princípios (resumo executivo)
-
-1. **O HTML é o artefato.** O que se escreve é o que sai, byte a byte, com escape automático e sem
-   `Raw`/`PreEscaped` público.
-2. **Contexto de escape é o tipo, não a posição sintática.** `Href`, `Src`, `Text`, `JsonLd`, `SrcSet`.
-3. **Acessibilidade é ausência de API, não aviso.** `img` sem `Alt` não compila; nomear um `div` não
-   cria landmark — o nome acessível existe só onde o elemento o expõe (`nav`, `section`, `dialog`).
-4. **O componente carrega a acessibilidade.** O desenvolvedor escolhe o componente, não os atributos.
-5. **Zero `unsafe`. Zero runtime. Zero JavaScript embutido.**
-6. **Determinismo total**: ordem de atributos, de `srcset`, de tokens de tema e de assets é canônica.
-7. **Erro de marcação é erro de compilação**, com mensagem acionável e testada.
-8. **Um parser, três passes**: validar, formatar e gerar código compartilham o mesmo AST.
-
-## Não-objetivos (resumo executivo)
-
-- Não é um framework: não conhece HTTP, banco, sessão, i18n de domínio nem roteamento.
-- Não aceita template em runtime, HTML vindo de banco ou `on*`; `style=` inline existe só como escape hatch auditado.
-- Não é publicado como crate; não há semver público.
-- Não substitui `axe`, `sniffCSS` ou testes de teclado — ele reduz o custo de chegar até eles.
-
-Detalhes em [`docs/00-principios.md`](docs/00-principios.md) e [`docs/14-alternativas.md`](docs/14-alternativas.md).
-
----
-
-## Como ler este repositório
-
-| Documento | Assunto |
+| Package | Role |
 |---|---|
-| [`docs/00-principios.md`](docs/00-principios.md) | problema, princípios, não-objetivos, glossário |
-| [`docs/01-arquitetura.md`](docs/01-arquitetura.md) | os quatro crates internos, fronteiras, fluxo de request |
-| [`docs/02-tipos-e-contextos.md`](docs/02-tipos-e-contextos.md) | `Markup`, valores tipados, regras de escape |
-| [`docs/03-vocabulario-de-elementos.md`](docs/03-vocabulario-de-elementos.md) | `spec/elements.toml`, invariantes por elemento, conteúdo-modelo |
-| [`docs/04-validacao.md`](docs/04-validacao.md) | os cinco níveis de validação e seus limites |
-| [`docs/05-acessibilidade.md`](docs/05-acessibilidade.md) | WCAG 2.2 AA → mecanismo, regras advisory, ergonomia |
-| [`docs/06-shell-e-tema.md`](docs/06-shell-e-tema.md) | base obrigatória, tokens, `/theme.css`, preview |
-| [`docs/07-js-e-assets.md`](docs/07-js-e-assets.md) | onde o JavaScript vive, bundles, CSP, JSON-LD |
-| [`docs/08-seguranca.md`](docs/08-seguranca.md) | modelo de ameaças do HTML, URLs, cadeia de suprimentos |
-| [`docs/09-desempenho-e-cache.md`](docs/09-desempenho-e-cache.md) | alocação, `ETag` canônico, compressão |
-| [`docs/10-ergonomia.md`](docs/10-ergonomia.md) | mensagens, formato recomendado, defaults do gerador, anti-ruído |
-| [`docs/11-estabilidade.md`](docs/11-estabilidade.md) | MSRV, política de mudança, congelamento de spec |
-| [`docs/12-testes.md`](docs/12-testes.md) | golden, property, fuzz, conformidade, e2e |
-| [`docs/13-decisoes.md`](docs/13-decisoes.md) | D0–D12 com contexto, decisão e consequência |
-| [`docs/14-alternativas.md`](docs/14-alternativas.md) | comparação com 9 alternativas e vereditos |
-| [`docs/15-migracao-blade.md`](docs/15-migracao-blade.md) | números medidos, mapa Blade → html-auy, plano |
-| [`docs/16-roadmap.md`](docs/16-roadmap.md) | M1/M2/M3, critérios go/no-go, riscos |
-| [`docs/17-faq.md`](docs/17-faq.md) | as perguntas difíceis |
-| [`docs/18-aprendizados/`](docs/18-aprendizados/README.md) | leitura dos 14 corpus técnicos: achados com citação, conflitos e decisões (D16–D20) |
-| [`docs/19-revisao-arquitetural.md`](docs/19-revisao-arquitetural.md) | revisão crítica do próprio desenho: o que cortar, o que promete demais, o que garantir pelo compilador (D21–D22 aceitas; D27–D30 propostas) |
-| [`docs/20-fronteira-de-aplicacao.md`](docs/20-fronteira-de-aplicacao.md) | os seis padrões de Blade que o crate não cobre: absorve ou não, como e por quê (D23–D26) |
-| [`docs/21-implementacao.md`](docs/21-implementacao.md) | plano de execução: fases F0–F6, arquivos, assinaturas, casos `trybuild`/`insta` e DoD |
-| [`docs/22-rigor.md`](docs/22-rigor.md) | rigor de compilação absorvido do `sniff-css`: duas camadas de lint, bans que importam aqui, deny/supply-chain, CI, golden e política de `#[expect]` |
-| [`docs/23-acessibilidade-e-css.md`](docs/23-acessibilidade-e-css.md) | a fronteira do decidível: 25 regras medidas do `sniff` divididas em bloco / página / estilo computado |
-| [`docs/24-exportacao.md`](docs/24-exportacao.md) | **pós-MVP:** exportar para PHP/Node/Java — o que viaja (spec + corpus), o que não (o macro) |
-| [`docs/25-exemplo-de-uso.md`](docs/25-exemplo-de-uso.md) | **o uso final, por escrito:** as três telas do portal, o que o compilador recusa, os bytes que saem e o teste que roda no CI — critério de aceite de F0–F6 |
-| [`docs/26-d29-consumidor.md`](docs/26-d29-consumidor.md) | D29 na prática: tema/CSS/`ETag` no consumidor e o desenho hipotético (recusado) dentro do crate |
-| [`docs/27-licoes-do-eta.md`](docs/27-licoes-do-eta.md) | o que o `eta` faz bem, o que foi absorvido no 0.1.0 e o que foi recusado |
-| [`crates/`](crates) | implementação do MVP: `html` (biblioteca), `html-macros` (`html!`) e `html-macros-core` (parser/validação/codegen) |
-| [`spec/elements.toml`](spec/elements.toml) | tabela de elementos e invariantes (dado versionado) |
-| [`spec/data.toml`](spec/data.toml) | tabela de `data-*` do consumidor (gate `tools/data_check.py`) |
-| [`tools/`](tools) | gerador da tabela, validador da spec, gate `data-*` e seus testes |
+| [`html-auy`](crates/html-auy) | Public library: values, `Markup`, shell, components, optional `audit`. |
+| [`html-auy-macros`](crates/html-auy-macros) | The `html!` procedural macro. |
+| [`html-auy-macros-core`](crates/html-auy-macros-core) | Parser, validator, and code generator; testable and fuzzable without a compiler plugin. |
 
----
+Only `html-auy` is meant as an application dependency. The other two are published because the
+macro needs them.
 
-## Licença
+## Status and compatibility
 
-MIT. Ver [`LICENSE`](LICENSE).
+`0.1.0` is the first public release. The project follows semantic versioning for the public
+`html-auy` API: a change that makes previously valid code stop compiling is a major release (for
+`0.x`, a minor bump), and the policy is documented in
+[`docs/11-estabilidade.md`](docs/11-estabilidade.md).
 
-O nome `html-auy` é mantido como proposto originalmente; não tem significado técnico interno.
+- **MSRV:** Rust 1.92, edition 2024. The development toolchain is pinned separately in
+  `rust-toolchain.toml`; CI compiles and tests the MSRV.
+- **Features:** `audit` enables `html_auy::audit::check`, a final-document pass backed by
+  `html5ever`. It is not part of the default dependency tree.
+- **Licence:** MIT.
+
+## Verifying the repository
+
+```bash
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace
+cargo test -p html-auy --features audit
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features
+python3 tools/validate_spec.py
+python3 tools/gen_spec.py --check
+python3 tools/check_links.py
+python3 -m unittest discover -s tools/tests
+```
+
+Releases are created by pushing a `v*` tag; `.github/workflows/release.yml` verifies the tag against
+`Cargo.toml`, publishes the three crates in dependency order, and creates the GitHub Release without
+binary artifacts.
+
+## Repository map
+
+| Path | Contents |
+|---|---|
+| [`crates/`](crates) | The three public crates. |
+| [`spec/elements.toml`](spec/elements.toml) | Normative element/attribute/invariant table. |
+| [`spec/data.toml`](spec/data.toml) | Consumer `data-*` table used by `tools/data_check.py`. |
+| [`tools/`](tools) | Table generator, spec validator, link checker, and their tests. |
+| [`CHANGELOG.md`](CHANGELOG.md) | Public release history. |
+| [`docs/`](docs) | Design, decisions, accessibility, security, testing, and migration notes. |
+| [`demo/`](demo) | Side-by-side html-auy/askama/maud examples (not part of the release). |
+| [`fuzz/`](fuzz) | Parser fuzz target (separate workspace, not published). |
+
+## Documentation
+
+| Document | Subject |
+|---|---|
+| [`docs/00-principios.md`](docs/00-principios.md) | problem, principles, non-goals, glossary |
+| [`docs/01-arquitetura.md`](docs/01-arquitetura.md) | the three crates, boundaries, request flow |
+| [`docs/02-tipos-e-contextos.md`](docs/02-tipos-e-contextos.md) | `Markup`, typed values, escaping |
+| [`docs/03-vocabulario-de-elementos.md`](docs/03-vocabulario-de-elementos.md) | `spec/elements.toml`, per-element invariants |
+| [`docs/04-validacao.md`](docs/04-validacao.md) | validation levels and their limits |
+| [`docs/05-acessibilidade.md`](docs/05-acessibilidade.md) | WCAG 2.2 AA → mechanism |
+| [`docs/06-shell-e-tema.md`](docs/06-shell-e-tema.md) | shell, theme tokens, `/theme.css` |
+| [`docs/07-js-e-assets.md`](docs/07-js-e-assets.md) | JavaScript, bundles, CSP, JSON-LD |
+| [`docs/08-seguranca.md`](docs/08-seguranca.md) | HTML threat model, URLs, supply chain |
+| [`docs/09-desempenho-e-cache.md`](docs/09-desempenho-e-cache.md) | allocation, ETag, compression |
+| [`docs/10-ergonomia.md`](docs/10-ergonomia.md) | diagnostics, formatting, anti-noise |
+| [`docs/11-estabilidade.md`](docs/11-estabilidade.md) | semver, MSRV, spec freezing, release |
+| [`docs/12-testes.md`](docs/12-testes.md) | golden, property, fuzz, conformance |
+| [`docs/13-decisoes.md`](docs/13-decisoes.md) | decision records |
+| [`docs/14-alternativas.md`](docs/14-alternativas.md) | comparison with nine alternatives |
+| [`docs/15-migracao-blade.md`](docs/15-migracao-blade.md) | measured migration notes |
+| [`docs/16-roadmap.md`](docs/16-roadmap.md) | milestones and kill criteria |
+| [`docs/17-faq.md`](docs/17-faq.md) | difficult questions |
+| [`docs/18-aprendizados/`](docs/18-aprendizados/README.md) | technical corpus reading notes |
+| [`docs/19-revisao-arquitetural.md`](docs/19-revisao-arquitetural.md) | architectural review |
+| [`docs/20-fronteira-de-aplicacao.md`](docs/20-fronteira-de-aplicacao.md) | application-boundary patterns |
+| [`docs/21-implementacao.md`](docs/21-implementacao.md) | implementation plan and file map |
+| [`docs/22-rigor.md`](docs/22-rigor.md) | lint, supply-chain, and CI policy |
+| [`docs/23-acessibilidade-e-css.md`](docs/23-acessibilidade-e-css.md) | decidable CSS/accessibility rules |
+| [`docs/24-exportacao.md`](docs/24-exportacao.md) | post-1.0 export notes |
+| [`docs/25-exemplo-de-uso.md`](docs/25-exemplo-de-uso.md) | end-to-end usage example |
+| [`docs/26-d29-consumidor.md`](docs/26-d29-consumidor.md) | consumer-owned theme, CSS, and ETag |
+| [`docs/27-licoes-do-eta.md`](docs/27-licoes-do-eta.md) | lessons absorbed from the `eta` engine |
+
+## License
+
+MIT. See [`LICENSE`](LICENSE).
+
+Repository: <https://github.com/st-all-one/html-auy>.

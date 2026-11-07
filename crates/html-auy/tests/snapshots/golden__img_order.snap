@@ -1,0 +1,5 @@
+---
+source: crates/html-auy/tests/golden.rs
+expression: markup.as_str()
+---
+<img src="/media/a.avif" srcset="/media/a-360.avif 360w, /media/a-720.avif 720w" sizes="(min-width: 48em) 33vw, 100vw" alt="Gráfico de vendas" width="720" height="480">

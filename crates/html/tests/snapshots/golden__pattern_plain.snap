@@ -1,5 +1,0 @@
----
-source: crates/html/tests/golden.rs
-expression: markup.as_str()
----
-<input type="text" name="codigo" pattern="[A-Za-z]+" aria-label="Busca">

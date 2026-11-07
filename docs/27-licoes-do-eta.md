@@ -84,7 +84,7 @@ distinção agora está no nome, não no comentário.
 | Ideia do `eta` | Por que não |
 |---|---|
 | template em runtime + `Storage` | o `html-auy` existe para o HTML ser o artefato e o erro ser de compilação; template em runtime devolve o erro para a request |
-| `useWith` / execução de JS no template | o crate proíbe `script` executável, `style=` e `on*`; executar código no template é o modelo de ameaça que ele evita |
+| `useWith` / execução de JS no template | o crate proíbe `script` executável e `on*`; `style=` existe só como escape hatch auditado, e executar código no template é o modelo de ameaça que ele evita |
 | plugins que reescrevem a AST | a AST é fechada e validada contra `spec/elements.toml`; plugin é uma segunda linguagem para manter |
 | `autoEscape` configurável | escape é contexto, não opção global: `Href`, `Src`, `Text`, `JsonLd` já são o “config” |
 | cache de templates | o `Markup` já é o resultado pré-compilado; cache é do consumidor |
@@ -106,7 +106,7 @@ distinção agora está no nome, não no comentário.
 ## 5. O que ainda não está pronto (e é decisão, não esquecimento)
 
 O `head.html` do demo usa Tailwind CDN e um `<script>` inline. Isso é o que o `EXAMPLE.html`
-original faz e é **incompatível** com `no_inline_script`/CSP do crate. O `audit` do `html` não é
+original faz e é **incompatível** com `no_inline_script`/CSP do crate. O `audit` do `html-auy` não é
 aplicado a esse documento de demonstração; um consumidor de produção usa `Asset::style`/`Asset::script`
 e um CSS compilado. A biblioteca em si continua auditável: os testes de `Page` e de `audit` não
 dependem do demo.

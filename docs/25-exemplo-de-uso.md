@@ -23,7 +23,7 @@ JavaScript, `ETag`/304). Três telas:
 #[derive(Clone, Copy)]
 pub enum Msg { Home, News, LatestNews, ReadNews, Title, Required, InvalidEmail, Submit, EmptyList, BackToTop }
 
-impl html::Msg for Msg {
+impl html_auy::Msg for Msg {
     fn as_str(self) -> &'static str {
         match self {
             Msg::LatestNews => t!("news.latest"),      // `t!` é do consumidor: lê o catálogo do locale
@@ -48,7 +48,7 @@ impl axum::response::IntoResponse for Responder {
 ## 3. A view de lista
 
 ```rust
-use html::{html, Markup, Href, LUrl, Src, SrcSet, Sizes, Alt, WidthPx, HeightPx, Class, Text, Timestamp};
+use html_auy::{html, Markup, Href, LUrl, Src, SrcSet, Sizes, Alt, WidthPx, HeightPx, Class, Text, Timestamp};
 use crate::token::Token;   // enum do consumidor, gerado de `tokens.css` (ClassToken)
 
 // helpers do consumidor (C2): o crate recebe `LUrl`; a tabela de rotas é do app
@@ -119,7 +119,7 @@ pub fn news_detail(ctx: &Ctx, n: &News) -> Page {
 }
 
 // helper do consumidor — o crate recebe DADOS, não conhece locale, tema nem request
-fn shell(ctx: &Ctx, title: impl html::Msg, heading: impl html::Msg, schemas: Vec<JsonLd>) -> ShellData<'static> {
+fn shell(ctx: &Ctx, title: impl html_auy::Msg, heading: impl html_auy::Msg, schemas: Vec<JsonLd>) -> ShellData<'static> {
     ShellData::new(
         Text::msg(title),      // NÃO opcional
         Text::msg(heading),    // NÃO opcional → `<h1>` único por construção
@@ -260,7 +260,7 @@ Propriedades que o consumidor passa a ter **por construção**:
 #[test]
 fn paginas_publicas_passam_no_n4() {
     for page in render_all_fixtures() {
-        let findings = html::audit::check(page.markup().as_str());
+        let findings = html_auy::audit::check(page.markup().as_str());
         assert!(findings.is_empty(), "{:#?}", findings);
     }
 }

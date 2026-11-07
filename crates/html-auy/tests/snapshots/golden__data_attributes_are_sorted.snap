@@ -1,0 +1,5 @@
+---
+source: crates/html-auy/tests/golden.rs
+expression: markup.as_str()
+---
+<div data-alpha="a" data-mid="m" data-zeta="z"></div>

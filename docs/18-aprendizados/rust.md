@@ -159,11 +159,11 @@ exatamente onde mora o risco de escape hatch.
 - Semântica: a tabela `[lints.<tool>]` recebe o nome do lint sem prefixo; `[lints.rust]` com chave `clippy::x` gera `rust::clippy::x`. [INFERENCE: lint desconhecido; a forma correta é `[workspace.lints.clippy]`.]
 - Consequência: copiar `01-toolchain.md`, não `15-cargo-deep.md`; e não ligar `pedantic` em `html-spec` (código gerado).
 - Veredito: conflito interno do corpus — corrigir na cópia.
-#### A25. `publish = false` é o cadeado do D0
+#### A25. `publish = false` era o cadeado do D0 (histórico; D35 o removeu)
 - Citação: `15-cargo-deep.md:21` — "publish = false   # impede publish acidental"
 - Semântica: o manifesto recusa `cargo publish` sem depender de disciplina.
 - Consequência: em **todos** os crates (o root do workspace não tem `[package]`), mais `publish = false` no `cq`. É o que torna "interno" verificável.
-- Veredito: confirma D0.
+- Veredito: histórico; D35 substitui por publicação pública com semver.
 #### A26. `Cargo.lock` versionado é para aplicação, não para biblioteca
 - Citação: `15-cargo-deep.md:393` — "1. **Commit `Cargo.lock`** para aplicações (não para bibliotecas)"
 - Semântica: quem entrega binário fixa a árvore; quem é dependência não impõe versões.
@@ -273,7 +273,7 @@ exatamente onde mora o risco de escape hatch.
 7. **Determinismo de bytes** — A41, A43, A44; e o custo de A42.
 8. **Um parser, três passes, fases no tipo** — A18 (`PhantomData`), A19 (limite de duas fases).
 9. **P7 (erro de compilação com span)** — sem apoio no corpus: A33, A34, A40.
-10. **`publish = false` / lock versionado** — A25, A26.
+10. **publicação versionada / lock versionado** — A25 (histórico), A26.
 11. **Traits pequenos; `dyn` só onde há heterogeneidade real** — A14.
 12. **`repr(transparent)` não é contrato de API** — A20.
 

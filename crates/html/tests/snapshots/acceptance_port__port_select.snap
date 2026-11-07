@@ -1,5 +1,0 @@
----
-source: crates/html/tests/acceptance_port.rs
-expression: drawn.as_str()
----
-<label><select name="secao"><option value="a">A</option><option value="b" selected>B</option></select></label>

@@ -1,0 +1,5 @@
+---
+source: crates/html-auy/tests/field.rs
+expression: drawn.as_str()
+---
+<div><label for="f-sections-0-campo">Nome completo</label><span aria-hidden="true">*</span><input type="text" id="f-sections-0-campo" name="sections[0][campo]" value="ana" required aria-describedby="f-sections-0-campo-help f-sections-0-campo-error" aria-invalid="true"><span id="f-sections-0-campo-help">Como consta no documento</span><span id="f-sections-0-campo-error">Informe o nome</span></div>

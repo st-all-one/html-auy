@@ -153,9 +153,10 @@ passa a ser a execução automática de uma regra que hoje é convenção em doc
 
 | Job | Comando | O que ele pega que os outros não pegam |
 |---|---|---|
-| `check` | `cargo fmt --all -- --check` · `clippy --workspace --all-targets --all-features -- -D warnings` · `test --workspace` · `test -p html --features audit` | estilo, lints, unidade+integração+**doc-tests** (doc-test roda em `cargo test`) |
+| `check` | `fmt --check` · `clippy --workspace --all-targets --all-features -- -D warnings` · `test --workspace` · `test -p html-auy --features audit` · `doc` default/all-features · `package` do núcleo | estilo, lints, doc-tests, documentação da feature e tarball autocontido |
+| `msrv` | `cargo build --workspace --locked` · `test --workspace --lib --locked` com `RUSTUP_TOOLCHAIN=1.92` | MSRV real, distinta do pin de desenvolvimento |
 | `supply-chain` | `cargo deny check` · `cargo audit` · `cargo machete` | licença proibida, advisory, dependência morta (`typos` saiu: dicionário inglês × corpus pt-BR) |
-| `miri` | `cargo miri test -p html --test miri_smoke` (nightly) | UB/leitura inválida no núcleo puro (barato com `forbid(unsafe_code)`) |
+| `miri` | `cargo miri test -p html-auy --test miri_smoke` (nightly) | UB/leitura inválida no núcleo puro (barato com `forbid(unsafe_code)`) |
 | `fuzz` | `cargo +nightly fuzz run parser` (smoke 30 s) | **o parser entrando em pânico com input adverso** — a única falha que o macro não pode ter |
 
 O alvo de fuzz deste crate é o **parser do macro**, não rede: qualquer `TokenStream` malformado deve virar
@@ -167,9 +168,9 @@ pura e total.
 
 Padrão do `sniff` (`crates/sniff-engine/tests/golden.rs`), aplicado aqui:
 
-- os arquivos de ouro são **versionados** (`crates/html/tests/golden/*.html`);
+- os snapshots de ouro são **versionados** (`crates/html-auy/tests/snapshots/`);
 - a comparação é **byte-for-byte** (não normalizada);
-- a regeneração é explícita: `UPDATE_GOLDEN=1 cargo test` — nunca automática;
+- a regeneração é explícita: `INSTA_UPDATE=always cargo test` — nunca automática;
 - a mensagem de falha mostra o diff **e** o comando de regeneração.
 
 O `insta` faz o mesmo com `INSTA_UPDATE=always`; o valor do padrão é a **regra**, não a biblioteca.

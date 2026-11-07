@@ -216,7 +216,7 @@ inválido), `void` que ganhou filho, atributo reordenado pelo navegador, texto q
 | Item | Medida |
 |---|---|
 | `cargo check` por `html!` | aumenta com o tamanho do bloco; blocos de view típicos (< 200 linhas) ficam imperceptíveis |
-| `html::audit` por página | ~5–15 ms (parse `html5ever`); o consumidor roda no CI dele (D30) |
+| `html_auy::audit` por página | ~5–15 ms (parse `html5ever`); o consumidor roda no CI dele (D30) |
 | falso-positivo esperado em N4 | alvo: **zero** nos arquivos de referência (`M3`, [`16`](16-roadmap.md) §2) |
 
 ## 9. O que este esquema **não** promete

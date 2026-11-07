@@ -185,7 +185,7 @@ pub(crate) enum Msg {
     Participation,
 }
 
-impl html::Msg for Msg {
+impl html_auy::Msg for Msg {
     fn as_str(self) -> &'static str {
         match self {
             Self::Search => "Buscar no portal",

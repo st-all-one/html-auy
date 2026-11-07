@@ -1,0 +1,5 @@
+---
+source: crates/html-auy/tests/acceptance_port.rs
+expression: drawn.as_str()
+---
+<picture><img src="/media/capa.avif" alt="capa" width="720" height="480" loading="lazy" decoding="async"></picture>

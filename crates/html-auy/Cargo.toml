@@ -1,0 +1,39 @@
+[package]
+name = "html-auy"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+documentation = "https://docs.rs/html-auy"
+description = "Typed, deterministic HTML generation for Rust with accessibility by construction."
+readme = "README.md"
+keywords = ["html", "template", "accessibility", "ssr", "no-std"]
+categories = ["web-programming", "template-engine", "no-std"]
+
+[lib]
+name = "html_auy"
+
+[lints]
+workspace = true
+
+[dependencies]
+html-auy-macros.workspace = true
+# Opcionais: só a feature `audit` (N4, D30) puxa parser de terceiro. Sem ela, o crate não tem
+# nenhuma dependência normal.
+html5ever = { workspace = true, optional = true }
+markup5ever_rcdom = { workspace = true, optional = true }
+
+[features]
+default = []
+audit = ["dep:html5ever", "dep:markup5ever_rcdom"]
+
+[package.metadata.docs.rs]
+all-features = true
+
+[dev-dependencies]
+insta.workspace = true
+proptest.workspace = true
+toml.workspace = true
+trybuild.workspace = true
+serde_json.workspace = true

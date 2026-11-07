@@ -1,13 +1,16 @@
 # 16 — Roadmap, marcos e critérios de parada
 
+> **Documento histórico.** O desenho abaixo antecede o 0.1.0 público; nomes `html-core`/`html-spec`/`html-macro` referem-se a crates da fase interna. O estado atual está em [`01`](01-arquitetura.md) e D35 em [`13`](13-decisoes.md).
+
+
 ## 1. Escopo de código previsto
 
 | Peça | Conteúdo | LOC (anterior) | LOC (decidido, D27–D32) |
 |---|---|---|---|
-| `html-core` | `Markup`, escaper, `Render`, 15 valores tipados, `Class`/`Tone`, `Msg` (D31) | ~600 | ~600 |
-| `html-core::spec` | tabela dos 111 elementos em Rust, **gerada uma vez** de `spec/elements.toml` | — | ~400 + `tools/gen_spec.py` ~120 |
+| `html-auy` | `Markup`, escaper, `Render`, 15 valores tipados, `Class`/`Tone`, `Msg` (D31) | ~600 | ~600 |
+| `html_auy::spec` | tabela dos 111 elementos em Rust, **gerada uma vez** de `spec/elements.toml` | — | ~400 + `tools/gen_spec.py` ~120 |
 | `html-spec` (`build.rs`) | gerador em tempo de build + esquema | ~300 + gerado | — (D27) |
-| `html-core::shell` | `Page`, `ShellData`, `View` (D24), `Form` (D23), `Field` (D25); sem tema (D29) | ~430 | ~430 |
+| `html_auy::shell` | `Page`, `ShellData`, `View` (D24), `Form` (D23), `Field` (D25); sem tema (D29) | ~430 | ~430 |
 | `html-macro` | parser, validação, codegen (sem `fmt`) | ~1.900 | ~1.650 |
 | `audit` (`N4`) | `html5ever` + as 6 invariantes `output`, atrás de `feature = "audit"` | ~400 (crate + binário) | ~250 |
 | `cq` (binário) | check/fmt/fix/audit/spec | ~700 | — (D28) |
@@ -32,7 +35,7 @@ Referência de esforço: 6–10 semanas de uma pessoa experiente em Rust, com ag
 
 ### M1 — "o vocabulário tipado já vale a pena" (2 semanas)
 
-**Entrega.** `html-core` + `html-spec` geradas + uma página real (lista de notícias) escrita **sem
+**Entrega.** `html-auy` + tabela gerada + uma página real (lista de notícias) escrita **sem
 macro**, com primitivos.
 
 **Critério de sucesso (numérico).**
@@ -42,7 +45,7 @@ macro**, com primitivos.
 4. `SrcSet`, `Alt`, `Href` cobrem 100% dos usos da página.
 
 **Se falhar:** parar o projeto e adotar **maud + camada de valores tipados** (as ~600 LOC de
-`html-core`). Isso já resolve ~70% do problema e é o plano B formal (ver
+`html-auy`). Isso já resolve ~70% do problema e é o plano B formal (ver
 [`14-alternativas.md`](14-alternativas.md) §3).
 
 ### M2 — "o macro paga a própria existência" (3–4 semanas)
@@ -57,7 +60,7 @@ macro**, com primitivos.
 3. O formato do fonte **não altera** a saída: o mesmo corpo com 2, 4 ou 8 espaços gera bytes idênticos.
 4. Nenhum falso-positivo da validação em 30 views convertidas.
 
-**Se falhar:** publicar só `html-core` internamente e usar maud para marcação. O `fmt`/validação
+**Se falhar:** publicar só `html-auy` internamente e usar maud para marcação. O `fmt`/validação
 viram backlog, não bloqueiam o consumidor.
 
 ### M3 — "o lint de página ganha o que o compilador não vê" (2 semanas)
@@ -95,7 +98,7 @@ O projeto é encerrado, sem drama, se qualquer um ocorrer:
    [`14-alternativas.md`](14-alternativas.md) §5).
 
 Ao encerrar, o repositório permanece como **registro de decisão** (este conjunto de documentos) e o
-`html-core` é vendorizado como parte do consumidor, sem macro.
+`html-auy` é vendorizado como parte do consumidor, sem macro.
 
 ## 5. Sequência de implementação (fora dos marcos)
 

@@ -1,16 +1,19 @@
-# 13 — Decisões (D0–D15)
+# 13 — Decisões
 
 Formato: **contexto → decisão → consequência**. Uma decisão por seção; mudar exige nova entrada.
 
 ---
 
-## D0 — Não publicar como crate
+## D0 — Não publicar como crate (SUPERADA por D35)
 
-**Contexto.** O projeto nasce de um consumidor único (portal municipal) com ADRs próprios; a
-publicação criaria semver público e obrigação com consumidores desconhecidos.
-**Decisão.** Repositório aberto, consumo por vendor/cópia, nenhuma publicação em registry.
-**Consequência.** Estabilidade é medida pelo consumidor, não por estranhos; quebra de contrato é
-barata de decidir, mas continua versionada (D15).
+**Contexto.** O projeto nasceu de um consumidor único (portal municipal) com ADRs próprios; naquele
+momento, a publicação criaria semver público e obrigação com consumidores desconhecidos.
+**Decisão original.** Repositório aberto, consumo por vendor/cópia, nenhuma publicação em registry.
+**Consequência.** Estabilidade era medida pelo consumidor, não por estranhos; quebra de contrato era
+barata de decidir, mas continuava versionada (D15).
+
+**Estado em 2026-11-07.** Superada por **D35**: `0.1.0` é publicado como crate público e o projeto
+assume semver, MSRV e suporte a consumidores externos.
 
 ---
 
@@ -35,12 +38,18 @@ renderização nó-a-nó no vocabulário, não por bypass.
 
 ---
 
-## D3 — `style` e `on*` não existem
+## D3 — `style=` é escape hatch; `on*` não existe
 
-**Contexto.** CSP sem inline é requisito; estilo é dado (tokens), comportamento é arquivo.
-**Decisão.** Atributos `style`, `on*`, `srcdoc`, `@*`, `hx-on*`, `x-on:*` não estão no vocabulário e
-não há como adicioná-los em tempo de execução.
-**Consequência.** CSP `'self'` sem `unsafe-inline`/`unsafe-eval`; `ETag` estável; estilo vira token.
+**Contexto.** CSP sem inline é o alvo de produção; estilo deve ser dado (tokens) e comportamento deve
+ser arquivo. O mundo real, porém, ocasionalmente precisa de um valor calculado (barra de progresso,
+transform, variável de layout) que não vira token sem inventar um atributo novo.
+**Decisão.** `style=` é permitido como escape hatch, com valor escapado, sinalização por `audit` e
+contra-recomendação explícita (D34). `on*`, `srcdoc`, `@*`, `hx-on*` e `x-on:*` continuam fora do
+vocabulário, sem construtor em tempo de execução. `<style>` continua proibido; a CSP precisa refletir
+a escolha (`style-src-attr`).
+**Consequência.** O caminho recomendado continua sendo token/CSS externo; o desvio é expressável,
+auditável e visível no documento, em vez de forçar HTML cru. `ETag` continua estável porque o valor
+faz parte dos bytes.
 
 ---
 
@@ -53,7 +62,7 @@ impossíveis.
 
 ---
 
-## D5 — A spec é dado versionado
+## D5 — A spec é dado versionado (emenda: D27)
 
 **Contexto.** 63 elementos cobrem o escopo (medido: 6.765 tags). Regra duplicada em código apodrece.
 **Decisão.** `spec/elements.toml` é a fonte; `build.rs` gera funções e tabelas; `cq spec` valida.
@@ -62,7 +71,7 @@ impossíveis.
 
 ---
 
-## D6 — Um parser, três passes
+## D6 — Um parser, três passes (emenda: D28 removeu o `fmt`)
 
 **Contexto.** Validação, formatação e geração precisam do mesmo entendimento da marcação.
 **Decisão.** Um AST, um parser; `fmt` reemite do AST.
@@ -94,11 +103,11 @@ Lint de saída: `<h1>` único, ordem de heading, `id` global, `aria-*` resolvido
 
 **Contexto.** Macro é posição privilegiada; superfície de dependência é risco.
 **Decisão.** `#![forbid(unsafe_code)]`; produção usa apenas `proc-macro2` e `quote`; parser próprio.
-**Consequência.** Parser de ~1,2k LOC auditável; CI na MSRV/stable/beta; `cargo deny` no pipeline.
+**Consequência.** Parser de ~1,2k LOC auditável; CI na MSRV (1.92) e na stable; beta não é matriz de suporte; `cargo deny` no pipeline.
 
 ---
 
-## D10 — Acessibilidade: tipo primeiro, advisory com ratchet
+## D10 — Acessibilidade: tipo primeiro, advisory com ratchet (emenda: D28)
 
 **Contexto.** Proc-macro stable não emite warning (`proc_macro::Diagnostic` é instável); aviso que
 dispara demais é ignorado.
@@ -144,7 +153,7 @@ determinismo em todas as fixtures.
 
 ---
 
-## D15 — Congelamento por minor; quebra é major
+## D15 — Congelamento por minor; quebra é major (emenda: D28 removeu `cq fix`)
 
 **Contexto.** O consumidor precisa de um ponto único de atualização, com diff legível.
 **Decisão.** Dentro de uma minor só entram adições; qualquer mudança que faça código válido parar de
@@ -253,7 +262,7 @@ convenção. Ao mesmo tempo, `Page` aparecia como se fosse do crate e implementa
 dependência de framework que o desenho proíbe.
 **Decisão.** `html`, `head`, `body`, `title`, `meta`, `link`, `script` e `noscript` marcam
 `only = "shell"` no spec e carregam a invariante `shell_only_elements` (escopo `block`): escrever
-qualquer um deles em `html!` é erro de compilação. A base estrutural vive em `html-core::shell`
+qualquer um deles em `html!` é erro de compilação. A base estrutural vive em `html_auy::shell`
 (`Page::new(&ShellData, main)`), sem `http` e sem `IntoResponse`; o `impl IntoResponse` são 6 linhas
 do consumidor.
 **Consequência.** A promessa estrutural passa a ser do compilador; o crate deixa de ter qualquer
@@ -266,7 +275,7 @@ dependência de framework, e o shell fica testável sem servidor.
 **Contexto.** No corpus de origem são **142 `@csrf` + 57 `@method`** espalhados por views: o token é um
 campo oculto que cada formulário lembra de escrever. Esquecer não quebra layout — quebra segurança.
 **Decisão.** `[element.form]` recebe `only = "component"`: `html!` recusa `<form>`. O único construtor é
-`html-core::form::Form::open(action, method, children)`, com o token dentro do método
+`html_auy::form::Form::open(action, method, children)`, com o token dentro do método
 (`Method::Post(token)`), que emite `_token` e, para `Put`/`Patch`/`Delete`, o `_method` oculto. O crate **não gera** token (sessão é do consumidor); exige um. Invariante
 `form_requires_csrf`, escopo `type` ([`04`](04-validacao.md) §4.1).
 **Consequência.** Formulário sem CSRF deixa de ser possível — não por disciplina, por assinatura.
@@ -319,8 +328,8 @@ O preço é enumerar passthrough; o benefício é que o vocabulário continua fe
 artefato **neutro** — é o **L0** que torna a especificação portável ([`24`](24-exportacao.md) §1).
 **Decisão.** (a) O TOML **continua normativo**: é a especificação, não insumo de build. (b) O gerador sai
 do `build.rs` e vira `tools/gen_spec.py`, rodado **manualmente** quando a spec muda, emitindo
-`crates/html/src/spec/table.rs` **versionado**. (c) Um teste de paridade falha se TOML e tabela
-divergirem: a checagem deixa de ser disciplina e passa a ser teste. (d) `tools/validate_spec.py`
+`crates/html-auy/src/spec/table.rs` e `crates/html-auy-macros-core/src/table.rs`
+**versionados**. (c) Um teste de paridade falha se TOML e tabela divergirem: a checagem deixa de ser disciplina e passa a ser teste. (d) `tools/validate_spec.py`
 permanece o validador da spec até F3 cobri-lo ([`21`](21-implementacao.md) F1).
 **Consequência.** Zero `build.rs`, zero esquema, zero código gerado em tempo de build — e o artefato
 neutro sobrevive. O preço é um comando manual por mudança de spec, coberto pelo teste de paridade:
@@ -331,7 +340,7 @@ esquecer de rodar deixa o CI vermelho, não o produto errado.
 **Contexto.** O `cq` acumulava cinco papéis; quatro (`fmt`, `fix`, `audit`, `spec`) foram cortados na
 revisão e o quinto (`check`) dependia da camada advisory, também cortada (A2–A5).
 **Decisão.** Não há binário. O gate é `cargo fmt --check` + `cargo clippy --all-targets -- -D warnings`
-+ `cargo test`, duas vezes seguidas.
++ `cargo test`; determinismo é teste explícito, não uma segunda execução.
 **Consequência.** −700 LOC e um artefato a menos. O consumidor já tem o próprio `make check`; nada aqui
 compete com ele.
 
@@ -350,8 +359,8 @@ estão em [`26`](26-d29-consumidor.md).
 **Contexto.** O `M3` exige o lint rodando "no CI do consumidor sobre páginas reais"
 ([`16`](16-roadmap.md) §2); um `#[cfg(test)]` interno não é alcançável pelo consumidor, e um crate
 separado é mais um artefato para manter.
-**Decisão.** `html` ganha `[features] audit` com `html5ever` como dependência **opcional**;
-`html::audit::check(&str) -> Vec<Finding>` é a superfície pública. Sem a feature, o crate não tem
+**Decisão.** `html-auy` ganha `[features] audit` com `html5ever` como dependência **opcional**;
+`html_auy::audit::check(&str) -> Vec<Finding>` é a superfície pública. Sem a feature, o crate não tem
 nenhuma dependência.
 **Consequência.** O consumidor roda o lint nas páginas dele sem binário e sem crate novo; a feature fica
 fora do binário de produção por padrão.
@@ -434,3 +443,26 @@ não substitui `Class`/`ClassToken`.
 **Consequência.** O consumidor controla cascata, CDN, tema global e valores calculados sem pedir
 mudança no crate. O preço é assumido: ordem manual pode errar, CDN exige CSP/SRI do consumidor,
 `style=` pode injetar CSS se receber dado não confiável e `ClassList` não conhece o design system.
+
+## D35 — Publicar `0.1.0` como crate público
+
+**Contexto.** Em 2026-11-07 o projeto deixou de ser um artefato interno: o objetivo passou a ser uso
+público. Os nomes `html` e `html-macros` já existem no crates.io; publicar com eles é impossível sem
+transferência de ownership.
+
+**Decisão.** Publicar três pacotes com nomes disponíveis, em ordem de dependência:
+
+| Pacote | Crate Rust | Papel |
+|---|---|---|
+| `html-auy` | `html_auy` | API pública de aplicação |
+| `html-auy-macros` | `html_auy_macros` | proc-macro `html!` |
+| `html-auy-macros-core` | `html_auy_macros_core` | parser/validação/codegen |
+
+O macro emite caminhos absolutos `::html_auy::…`; o crate público faz `extern crate self as html_auy`.
+A aplicação depende de `html-auy`, nunca dos crates internos. Adotar semver público em `0.x`:
+incompatibilidade sobe o minor; MSRV e spec são contratos documentados. O release é por tag `v*`,
+com verificação de versão, publicação ordenada no crates.io e GitHub Release **sem binários**.
+
+**Consequência.** O projeto assume suporte, compatibilidade e changelog. O custo é real: a API
+pública, as mensagens de compilação e a tabela de elementos passam a ter consumidores desconhecidos;
+a mitigação é o gate de CI, o dry-run de empacotamento e a política de D15/D32.

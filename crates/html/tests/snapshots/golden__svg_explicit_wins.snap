@@ -1,5 +1,0 @@
----
-source: crates/html/tests/golden.rs
-expression: markup.as_str()
----
-<svg aria-hidden="false" focusable="false"><circle cx="1" cy="1" r="1"/></svg>

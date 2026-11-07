@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Gerador da tabela Rust do spec (D27).
 
-`spec/elements.toml` é normativo; `crates/html/src/spec/table.rs` é GERADO por este script e
-VERSIONADO. Não há `build.rs`: esquecer de rodar o gerador deixa o teste de paridade vermelho.
+`spec/elements.toml` é normativo. `tools/gen_spec.py` gera duas cópias idênticas de
+`table.rs` (`crates/html-auy/src/spec/` e `crates/html-auy-macros-core/src/`), versionadas. Não há `build.rs`: esquecer de rodar o gerador deixa o teste de paridade vermelho.
 
 A saída é formatada na forma canônica do `rustfmt` (largura 100): arrays inline quando cabem na
 linha, verticais quando não cabem. É o que permite `--check` comparar byte a byte sem chamar
 ferramenta externa.
 
 Uso:
-    python3 tools/gen_spec.py            # escreve crates/html/src/spec/table.rs
+    python3 tools/gen_spec.py            # escreve as duas cópias
     python3 tools/gen_spec.py --check    # regenera em memória e compara byte a byte
     python3 tools/gen_spec.py --stdout   # imprime sem escrever
 
@@ -24,7 +24,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = ROOT / "spec" / "elements.toml"
-TABLE = ROOT / "crates" / "html" / "src" / "spec" / "table.rs"
+TABLES = [
+    ROOT / "crates" / "html-auy" / "src" / "spec" / "table.rs",
+    ROOT / "crates" / "html-auy-macros-core" / "src" / "table.rs",
+]
 WIDTH = 100
 # `array_width` do rustfmt: o corpo do array acima disso nunca fica inline.
 ARRAY_WIDTH = 60
@@ -225,8 +228,8 @@ def generate(data: dict) -> str:
     out: list[str] = [
         "// GERADO por tools/gen_spec.py — NÃO EDITE. Fonte: spec/elements.toml\n",
         "//\n",
-        "// Dois crates incluem este arquivo por `#[path]` (o crate `html` e o `html-macros`),\n",
-        "// por isso ele não tem `use` de nada: só `core` implícito.\n",
+        "// Duas cópias idênticas vivem em `html-auy` e `html-auy-macros-core`; o gerador mantém ambas\n",
+        "// iguais. O arquivo não tem `use` de nada: só `core` implícito.\n",
         "#![allow(\n",
         "    dead_code,\n",
         "    missing_docs,\n",
@@ -467,7 +470,7 @@ def main(argv: list[str]) -> int:
     check = "--check" in argv
     show = "--stdout" in argv
     spec_path = SPEC
-    out_path = TABLE
+    out_paths = list(TABLES)
     index = 0
     while index < len(argv):
         arg = argv[index]
@@ -476,7 +479,7 @@ def main(argv: list[str]) -> int:
             if arg == "--spec":
                 spec_path = target
             else:
-                out_path = target
+                out_paths = [target]
             index += 1
         index += 1
     try:
@@ -490,25 +493,26 @@ def main(argv: list[str]) -> int:
         sys.stdout.write(text)
         return 0
     if check:
-        current = out_path.read_text(encoding="utf-8") if out_path.exists() else ""
-        if current == text:
-            print(f"ok {out_path.name}: tabela em dia com {spec_path.name}")
-            return 0
-        diff = difflib.unified_diff(
-            current.splitlines(keepends=True),
-            text.splitlines(keepends=True),
-            fromfile=str(out_path),
-            tofile="gerado por tools/gen_spec.py",
-            n=2,
-        )
-        sys.stdout.writelines(list(diff)[:80])
-        print(f"\nERROR {out_path} está velho: rode `python3 tools/gen_spec.py`")
-        return 1
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(text, encoding="utf-8")
-    print(f"escrito {out_path}")
-    return 0
+        for out_path in out_paths:
+            current = out_path.read_text(encoding="utf-8") if out_path.exists() else ""
+            if current == text:
+                continue
+            diff = difflib.unified_diff(
+                current.splitlines(),
+                text.splitlines(),
+                fromfile=str(out_path),
+                tofile=f"{out_path} (gerado)",
+                lineterm="",
+            )
+            print("\n".join(diff), file=sys.stderr)
+            return 1
+        print(f"ok {len(out_paths)} tabela(s) em dia com {spec_path.name}")
+        return 0
 
+    for out_path in out_paths:
+        out_path.write_text(text, encoding="utf-8")
+        print(f"escrito {out_path}")
+    return 0
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

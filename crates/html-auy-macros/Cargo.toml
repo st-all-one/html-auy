@@ -1,0 +1,22 @@
+[package]
+name = "html-auy-macros"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+documentation = "https://docs.rs/html-auy-macros"
+description = "Procedural macro html! for html-auy."
+readme = "README.md"
+keywords = ["html", "proc-macro", "template", "accessibility"]
+categories = ["web-programming", "development-tools::procedural-macro-helpers"]
+
+[lib]
+name = "html_auy_macros"
+proc-macro = true
+
+[lints]
+workspace = true
+
+[dependencies]
+html-auy-macros-core.workspace = true

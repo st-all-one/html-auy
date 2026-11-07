@@ -1,5 +1,0 @@
----
-source: crates/html/tests/field.rs
-expression: drawn.as_str()
----
-<div><label for="f-mensagem">Nome completo</label><textarea id="f-mensagem" name="mensagem">&lt;script&gt;alert(1)&lt;/script&gt;</textarea></div>

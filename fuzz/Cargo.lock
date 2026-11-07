@@ -44,20 +44,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "html-fuzz"
-version = "0.0.0"
-dependencies = [
- "html-macros-core",
- "libfuzzer-sys",
- "proc-macro2",
-]
-
-[[package]]
-name = "html-macros-core"
-version = "0.0.0"
+name = "html-auy-macros-core"
+version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
+]
+
+[[package]]
+name = "html-fuzz"
+version = "0.0.0"
+dependencies = [
+ "html-auy-macros-core",
+ "libfuzzer-sys",
+ "proc-macro2",
 ]
 
 [[package]]

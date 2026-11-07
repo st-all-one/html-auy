@@ -1,5 +1,8 @@
 # 18 — Aprendizados extraídos do corpus `_RUST/`
 
+> **Documento histórico.** As referências a D0/publicação interna registram a leitura da época; desde 2026-11-07 o projeto é público (D35, [`13`](../13-decisoes.md)).
+
+
 Este documento registra a leitura sistemática de 14 conjuntos de documentação técnica (≈ 63 mil linhas)
 e o que cada um muda, confirma ou proíbe na proposta.
 
@@ -26,7 +29,7 @@ diz o que mudou no repositório por causa daquele corpus.
 | lit 3 | [`lit.md`](lit.md) | 40 | **sem custom elements** (D20): `attachShadow`/`<slot>`/`part` fora, gate `no-custom-elements` ([`12`](../12-testes.md) §9) |
 | mdn-web-api-docs | [`mdn-web-api-docs.md`](mdn-web-api-docs.md) | 29 | referência por tipo, nunca por slug de string (confirma D8); lacunas declaradas (`<dialog>`, popover, `inert`, `Intl`) |
 | pwa | [`pwa.md`](pwa.md) | 40 | `/sw.js` e manifest **sem hash** e `no-cache`; `skipWaiting` proibido; `theme_color` vem do token de tema ([`07`](../07-js-e-assets.md) §8.1) |
-| rust 1.99 / guide | [`rust.md`](rust.md) | 44 | MSRV **1.92 / edição 2024** fixada com job de CI, lints em `[workspace.lints.clippy]`, `publish = false`, lockfile versionado ([`11`](../11-estabilidade.md) §7.1) |
+| rust 1.99 / guide | [`rust.md`](rust.md) | 44 | MSRV **1.92 / edição 2024** fixada com job de CI, lints em `[workspace.lints.clippy]`, publicação versionada (D0→D35), lockfile versionado ([`11`](../11-estabilidade.md) §7.1) |
 | topcoat | [`topcoat.md`](topcoat.md) | 52 | atributo booleano é presença e o tipo é `bool` (D19); atributos ordenados, nunca `HashMap`; escapes `*_unescaped` recusados |
 | web-accessibility | [`web-accessibility.md`](web-accessibility.md) | 40 | níveis WCAG corrigidos (3.3.7 é **A**, 3.3.8 é **AA**), 2.5.8 = 24 px AA com 44 px como regra interna, 4.1.3 = região viva persistente ([`05`](../05-acessibilidade.md)) |
 | web-performance | [`web-performance.md`](web-performance.md) | 37 | `img` exige `width`+`height`, `script src` exige `defer`, `link` aceita `crossorigin`; ordem fixa do `<head>` e orçamento de 14 KB do prefixo ([`06`](../06-shell-e-tema.md) §1, [`09`](../09-desempenho-e-cache.md) §2.1) |

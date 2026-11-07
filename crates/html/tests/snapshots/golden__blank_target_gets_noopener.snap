@@ -1,5 +1,0 @@
----
-source: crates/html/tests/golden.rs
-expression: markup.as_str()
----
-<a href="https://example.org" rel="noopener noreferrer" target="_blank">Exemplo</a>
