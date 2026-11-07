@@ -1,0 +1,7 @@
+error: `type="texto"` não é válido em `input`
+         = regra: spec:element.input
+         = ajuda: valores aceitos: text, email, tel, url, password, search, number, date, time, datetime-local, month, week, color, file, checkbox, radio, range, hidden, submit, reset, button, image
+ --> tests/ui/enum_input_type.rs:6:40
+  |
+6 |     let _ = html! { label { input type="texto" name=(n); } };
+  |                                        ^^^^^^^

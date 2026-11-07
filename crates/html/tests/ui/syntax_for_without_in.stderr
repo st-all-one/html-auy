@@ -1,0 +1,5 @@
+error: `for` exige `in` e um corpo `{ … }`
+ --> tests/ui/syntax_for_without_in.rs:6:27
+  |
+6 |     let _ = html! { div { for x { } } };
+  |                           ^^^

@@ -1,0 +1,7 @@
+error: `select` exige ao menos uma `option` selecionável
+         = regra: spec:select_has_selectable_option
+         = ajuda: adicione `option value="…"` sem `disabled`
+ --> tests/ui/select_without_option.rs:6:29
+  |
+6 |     let _ = html! { label { select name=(n) { option value="a" disabled=(d) { } } } };
+  |                             ^^^^^^

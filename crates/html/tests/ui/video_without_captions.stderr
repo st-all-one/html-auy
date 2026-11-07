@@ -1,0 +1,7 @@
+error: `video` exige `track kind="captions"`
+         = regra: WCAG 1.2.2 / spec:media_requires_captions
+         = ajuda: adicione `track kind="captions" src=(Src::asset(…)) srclang="pt" label="Português";`
+ --> tests/ui/video_without_captions.rs:6:21
+  |
+6 |     let _ = html! { video { track kind="subtitles" src=(s) srclang="pt" label="P"; } };
+  |                     ^^^^^

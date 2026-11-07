@@ -1,0 +1,7 @@
+error: `aria-label` não aceita literal
+         = regra: D31
+         = ajuda: use `aria_label=(Label::text(Msg::…))`
+ --> tests/ui/aria_label_literal.rs:6:36
+  |
+6 |     let _ = html! { div aria_label="texto" { } };
+  |                                    ^^^^^^^

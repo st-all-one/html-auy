@@ -1,0 +1,23 @@
+[package]
+name = "html-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+proc-macro2 = "1"
+html-macros-core = { path = "../crates/html-macros-core" }
+
+[[bin]]
+name = "parser"
+path = "fuzz_targets/parser.rs"
+test = false
+doc = false
+bench = false
+
+# Workspace próprio: o `cargo fuzz` compila com nightly e não entra no build do workspace.
+[workspace]

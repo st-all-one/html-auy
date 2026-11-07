@@ -1,0 +1,7 @@
+error: o shell emite `meta`; `html!` não o constrói
+         = regra: spec:shell_only_elements
+         = ajuda: use `ShellData::new(Text::msg(Msg::Title), heading, lang)` — `<title>`, `<html>`, `<head>` e `<main>` são do shell
+ --> tests/ui/shell_meta.rs:6:21
+  |
+6 |     let _ = html! { meta charset="utf-8"; };
+  |                     ^^^^

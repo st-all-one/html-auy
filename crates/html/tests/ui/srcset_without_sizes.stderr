@@ -1,0 +1,7 @@
+error: `srcset` exige `sizes` e `width`/`height`
+         = regra: CLS 0 / spec:srcset_requires_sizes_and_dims
+         = ajuda: adicione `sizes=(Sizes::new("…"))`
+ --> tests/ui/srcset_without_sizes.rs:6:21
+  |
+6 |     let _ = html! { img src=(s) alt=(a) width=(w) height=(h) srcset=(ss); };
+  |                     ^^^

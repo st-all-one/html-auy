@@ -1,0 +1,7 @@
+error: `rel` computado não garante `noopener` com `target="_blank"`
+         = regra: spec:blank_target_implies_noopener
+         = ajuda: use `rel="noopener noreferrer"` literal
+ --> tests/ui/blank_target_computed_rel.rs:7:52
+  |
+7 |     let _ = html! { a href=(h) target="_blank" rel=(r) { m } };
+  |                                                    ^^^

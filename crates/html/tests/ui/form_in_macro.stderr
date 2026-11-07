@@ -1,0 +1,7 @@
+error: `<form>` não é elemento de `html!`
+         = regra: spec:form_requires_csrf
+         = ajuda: use `Form::open(&action, Method::Post(csrf), children)`
+ --> tests/ui/form_in_macro.rs:6:21
+  |
+6 |     let _ = html! { form { } };
+  |                     ^^^^

@@ -1,0 +1,7 @@
+error: atributo proibido `onclick` em `div`
+         = regra: spec:element.div
+         = ajuda: estilo é token e comportamento é asset declarado
+ --> tests/ui/forbidden_onclick.rs:6:25
+  |
+6 |     let _ = html! { div onclick="go()" { } };
+  |                         ^^^^^^^

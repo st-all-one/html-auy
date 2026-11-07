@@ -1,11 +1,18 @@
+# checkouts de referência e estado local de ferramentas
+/eta/
+/htmx/
+/sniff-css/
+/.agents/
+/.knudge/
+
 # build
 /target/
+/fuzz/target/
 **/*.rs.bk
 **/*.snap.new
 
 # ferramentas
 /.cq-cache/
-/fuzz/corpus/
 /fuzz/artifacts/
 
 # editores / OS
@@ -13,3 +20,7 @@
 .vscode/
 *.swp
 .DS_Store
+
+# python
+**/__pycache__/
+*.pyc

@@ -1,0 +1,5 @@
+---
+source: crates/html/tests/golden.rs
+expression: markup.as_str()
+---
+<label for="uf">UF</label><select name="uf" id="uf"><optgroup label="Sudeste"><option value="sp">SP</option></optgroup></select>

@@ -1,0 +1,11 @@
+# Só opções ESTÁVEIS: opção unstable em toolchain estável é ignorada com aviso, e configurar
+# o que é ignorado dá a falsa impressão de padrão (docs/22 §5).
+edition = "2024"
+style_edition = "2024"
+max_width = 100
+tab_spaces = 4
+newline_style = "Unix"
+# A caixa do literal hex no fonte é a primeira coisa que denuncia divergência com o byte emitido.
+hex_literal_case = "Lower"
+use_field_init_shorthand = true
+use_try_shorthand = true

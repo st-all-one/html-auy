@@ -1,0 +1,7 @@
+error: `role` não existe em `p`
+         = regra: D4
+         = ajuda: use o papel nativo do elemento
+ --> tests/ui/role_not_allowed.rs:6:23
+  |
+6 |     let _ = html! { p role="note" { m } };
+  |                       ^^^^

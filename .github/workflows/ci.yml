@@ -1,0 +1,95 @@
+# CI do html-auy: cinco jobs, cada um cobrindo o que o outro não vê (docs/22 §8).
+# Toolchain do dia a dia = 1.99 (pin em rust-toolchain.toml). O job `msrv` é o único que usa 1.92.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.99"
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - run: cargo test --workspace
+      - run: cargo test --workspace
+      - run: cargo test -p html --features audit
+      - run: RUSTDOCFLAGS='-D warnings' cargo doc --workspace --no-deps --all-features
+      - name: árvore normal sem a feature
+        run: |
+          cargo tree -p html -e normal > /tmp/tree.txt
+          if grep -Eq 'html5ever|markup5ever' /tmp/tree.txt; then
+            echo "::error::a feature `audit` vazou para a árvore normal"
+            exit 1
+          fi
+      - name: tipografia e spec
+        run: |
+          python3 tools/validate_spec.py
+          python3 tools/gen_spec.py --check
+          python3 -m unittest discover -s tools/tests -v
+
+  msrv:
+    # A MSRV declarada só vale se o compilador da MSRV compila. `--lib` deixa `trybuild` de fora:
+    # os `.stderr` são artefatos do rustc 1.99 e não comparáveis em 1.92.
+    # `RUSTUP_TOOLCHAIN` sobrepõe o `rust-toolchain.toml` (1.99): sem ele, o job testaria 1.99.
+    env:
+      RUSTUP_TOOLCHAIN: "1.92"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.92"
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --workspace --locked
+      - run: cargo test --workspace --lib --locked
+
+  supply-chain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.99"
+      - uses: taiki-e/install-action@v2
+        with:
+          # `typos` fica de fora: dicionário só em inglês, corpus todo em pt-BR (docs/21 §7).
+          tool: cargo-deny,cargo-machete,cargo-audit
+      - run: cargo deny check
+      - run: cargo audit
+      - run: cargo machete
+
+  miri:
+    env:
+      RUSTUP_TOOLCHAIN: nightly
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: miri
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo miri test -p html --test miri_smoke
+
+  fuzz:
+    env:
+      RUSTUP_TOOLCHAIN: nightly
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-fuzz
+      - run: cargo fuzz run parser -- -max_total_time=30

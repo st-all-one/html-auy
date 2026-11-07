@@ -1,0 +1,5 @@
+---
+source: crates/html/tests/golden.rs
+expression: markup.as_str()
+---
+<table><caption>Frota</caption><tbody><tr><td>x</td></tr></tbody></table>

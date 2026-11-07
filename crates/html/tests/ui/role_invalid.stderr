@@ -1,0 +1,7 @@
+error: `role="foo"` não é válido em `dialog`
+         = regra: spec:element.dialog
+         = ajuda: papéis aceitos: alertdialog
+ --> tests/ui/role_invalid.rs:6:33
+  |
+6 |     let _ = html! { dialog role="foo" aria_label=(l) { m } };
+  |                                 ^^^^^

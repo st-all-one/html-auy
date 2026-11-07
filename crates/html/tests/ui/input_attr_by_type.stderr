@@ -1,0 +1,7 @@
+error: `min` não existe em `input type="email"`
+         = regra: spec:attribute_by_input_type
+         = ajuda: remova `min` ou use outro `type`
+ --> tests/ui/input_attr_by_type.rs:6:57
+  |
+6 |     let _ = html! { label { input type="email" name=(n) min="1"; } };
+  |                                                         ^^^

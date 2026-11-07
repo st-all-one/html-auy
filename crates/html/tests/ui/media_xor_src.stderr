@@ -1,0 +1,7 @@
+error: `video` tem `src` e `media_source`; use um dos dois
+         = regra: spec:media_source_xor_src
+         = ajuda: remova o `src` ou os `media_source`
+ --> tests/ui/media_xor_src.rs:6:21
+  |
+6 |     let _ = html! { video src=(s) { media_source src=(s) type="video/mp4"; track kind="captions" src=(s) srclang="pt" label="P"; } };
+  |                     ^^^^^

@@ -1,0 +1,7 @@
+error: `<div>` não é permitido aqui: `<a>` herda o conteúdo de `<p>`
+         = regra: conteúdo-modelo (spec:element.a)
+         = ajuda: use um filho que caiba em `<p>`
+ --> tests/ui/anchor_flow_in_phrasing.rs:8:41
+  |
+8 |     let _ = html! { p { a href=(href) { div { (text) } } } };
+  |                                         ^^^

@@ -1,0 +1,7 @@
+error: `section` sem heading e sem nome acessível
+         = regra: spec:section_has_heading_or_name
+         = ajuda: use `div` ou adicione um heading
+ --> tests/ui/section_without_name.rs:6:21
+  |
+6 |     let _ = html! { section { m } };
+  |                     ^^^^^^^

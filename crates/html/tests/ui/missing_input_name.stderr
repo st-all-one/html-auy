@@ -1,0 +1,7 @@
+error: `input` exige `name`
+         = regra: spec:element.input
+         = ajuda: use `Field::text(FieldName::new("…"), Msg::…, &state)`
+ --> tests/ui/missing_input_name.rs:6:29
+  |
+6 |     let _ = html! { label { input type="text" id="n"; } };
+  |                             ^^^^^

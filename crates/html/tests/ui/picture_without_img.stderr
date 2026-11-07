@@ -1,0 +1,7 @@
+error: `picture` exige `img`
+         = regra: spec:element.picture
+         = ajuda: adicione `img { … }`
+ --> tests/ui/picture_without_img.rs:7:9
+  |
+7 |         picture {
+  |         ^^^^^^^

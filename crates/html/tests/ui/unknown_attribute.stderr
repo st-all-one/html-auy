@@ -1,0 +1,6 @@
+error: atributo desconhecido `hreff` em `p`
+         = ajuda: atributos válidos em `p`: class, id
+ --> tests/ui/unknown_attribute.rs:6:23
+  |
+6 |     let _ = html! { p hreff="x" { } };
+  |                       ^^^^^

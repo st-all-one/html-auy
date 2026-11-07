@@ -1,0 +1,7 @@
+error: `<source>` não é permitido dentro de `<div>`
+         = regra: conteúdo-modelo (spec:element.div)
+         = ajuda: filhos permitidos em `<div>`: flow
+ --> tests/ui/source_outside_picture.rs:8:13
+  |
+8 |             source srcset=(ss) sizes=(sz);
+  |             ^^^^^^

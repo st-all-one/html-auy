@@ -1,0 +1,5 @@
+error: `br` é void: termine com `;`
+ --> tests/ui/syntax_void_semicolon.rs:6:21
+  |
+6 |     let _ = html! { br };
+  |                     ^^

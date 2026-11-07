@@ -1,0 +1,5 @@
+---
+source: crates/html/tests/acceptance_port.rs
+expression: drawn.as_str()
+---
+<picture><source srcset="/media/capa-720.avif 720w" sizes="(min-width: 48em) 50vw, 100vw" type="image/avif" media="(min-width: 48em)" width="1080" height="720"><source srcset="/media/capa-1080.webp 1080w" sizes="(min-width: 48em) 50vw, 100vw" type="image/webp" media="(min-width: 48em)"><img src="/media/capa.avif" srcset="/media/capa-720.avif 720w, /media/capa-1080.webp 1080w" sizes="(min-width: 48em) 50vw, 100vw" alt="capa" width="720" height="480" loading="lazy" decoding="async" fetchpriority="low"></picture>

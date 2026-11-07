@@ -1,0 +1,7 @@
+error: `pattern` não aceita delimitadores nem flags
+         = regra: spec:pattern_flags_forbidden
+         = ajuda: escreva a regex sem `/…/` e sem flags
+ --> tests/ui/pattern_flags.rs:6:64
+  |
+6 |     let _ = html! { label { input type="text" name=(n) pattern="/[a-z]+/i"; } };
+  |                                                                ^^^^^^^^^^^

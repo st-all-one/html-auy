@@ -1,0 +1,7 @@
+error: `<div>` não é permitido dentro de `<p>`
+         = regra: conteúdo-modelo (spec:element.p)
+         = ajuda: use `<span>` (phrasing) ou mova o `<div>` para fora do `<p>`
+ --> tests/ui/illegal_nesting_p_div.rs:6:25
+  |
+6 |     let _ = html! { p { div { } } };
+  |                         ^^^

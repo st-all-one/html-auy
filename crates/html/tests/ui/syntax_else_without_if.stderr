@@ -1,0 +1,5 @@
+error: `@else` sem `@if`
+ --> tests/ui/syntax_else_without_if.rs:6:28
+  |
+6 |     let _ = html! { div { @else { } } };
+  |                            ^^^^

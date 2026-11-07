@@ -1,0 +1,7 @@
+error: `<li>` não é permitido dentro de `<div>`
+         = regra: spec:li_only_in_list
+         = ajuda: use `<ul>` ou `<ol>`
+ --> tests/ui/illegal_nesting_li.rs:6:27
+  |
+6 |     let _ = html! { div { li { } } };
+  |                           ^^

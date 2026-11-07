@@ -1,0 +1,6 @@
+error: atributo desconhecido `aria-live` em `p`
+         = ajuda: atributos válidos em `p`: class, id
+ --> tests/ui/aria_not_allowed_here.rs:6:23
+  |
+6 |     let _ = html! { p aria_live="polite" { } };
+  |                       ^^^^^^^^^

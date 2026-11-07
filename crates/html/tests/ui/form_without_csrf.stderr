@@ -1,0 +1,19 @@
+error[E0308]: mismatched types
+ --> tests/ui/form_without_csrf.rs:6:33
+  |
+6 |     let _ = Form::open(&action, Method::Post, children);
+  |             ----------          ^^^^^^^^^^^^ expected `Method<'_>`, found enum constructor
+  |             |
+  |             arguments to this function are incorrect
+  |
+  = note:          expected enum `Method<'_>`
+          found enum constructor `fn(CsrfToken<'_>) -> Method<'_> {Method::<'_>::Post}`
+note: associated function defined here
+ --> src/form.rs
+  |
+  |     pub fn open(action: &Action<'_>, method: Method<'_>, children: Markup) -> Markup {
+  |            ^^^^
+help: use parentheses to construct this tuple variant
+  |
+6 |     let _ = Form::open(&action, Method::Post(/* CsrfToken<'_> */), children);
+  |                                             +++++++++++++++++++++

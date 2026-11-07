@@ -1,0 +1,5 @@
+# Fixture do caminho feliz: dois nomes declarados, usados e lidos.
+[data.mask]
+values = ["cpf", "cnpj"]
+
+[data.analytics]

@@ -1,0 +1,43 @@
+# spec/data.toml — tabela dos atributos `data-*` do consumidor (docs/07 §3).
+#
+# Não é vocabulário do crate: `data-*` é contrato entre markup e JS do **consumidor**. O gate
+# `tools/data_check.py` cobra três coisas e falha se qualquer uma quebrar:
+#
+#   1. nome usado no markup está declarado aqui (e declarado aparece no markup);
+#   2. nome declarado é lido no JS (`dataset.x`, `dataset["x"]`, `[data-x]`, `getAttribute`);
+#   3. valor usado no markup está na lista `values` quando ela existe.
+#
+# `values` ausente = qualquer valor aceito. Nome ausente = atributo não pode ser usado.
+
+# Contraste alto/baixo escolhido pelo leitor.
+[data."a11y-contrast"]
+values = ["high", "low"]
+
+# Escala de fonte escolhida pelo leitor (valor livre: razão ou passo).
+[data."a11y-font-scale"]
+
+# Máscara de entrada aplicada pelo JS.
+[data.mask]
+values = ["cpf", "cnpj", "phone", "money"]
+
+# Select com busca incremental.
+[data."select-search"]
+
+# Texto de ajuda ligado ao campo.
+[data."field-help"]
+
+# Ações em lote (seleção de linhas).
+[data."content-actions"]
+
+# Upload em lote (fila do navegador).
+[data."batch-upload"]
+
+# Editor de texto rico de um módulo.
+[data.editor]
+values = ["rich", "home"]
+
+# Marcação de telemetria (o valor é o evento).
+[data.analytics]
+
+# Seção semântica vinda do template da aplicação (docs/06).
+[data.section]

@@ -1,0 +1,13 @@
+error[E0308]: mismatched types
+ --> tests/ui/markup_from_str.rs:4:26
+  |
+4 |     let _ = Markup::from("<b>x</b>");
+  |             ------------ ^^^^^^^^^^ expected `Markup`, found `&str`
+  |             |
+  |             arguments to this function are incorrect
+  |
+note: associated function defined here
+ --> $RUST/core/src/convert/mod.rs
+  |
+  |     fn from(value: T) -> Self;
+  |        ^^^^

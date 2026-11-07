@@ -1,0 +1,7 @@
+error: `button` tem texto visível; o nome acessível já é o texto
+         = regra: WCAG 2.5.3 / spec:no_aria_label_over_visible_text
+         = ajuda: remova `aria-label`
+ --> tests/ui/aria_label_visible.rs:6:42
+  |
+6 |     let _ = html! { button type="button" aria_label=(l) { m } };
+  |                                          ^^^^^^^^^^

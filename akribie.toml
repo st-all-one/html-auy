@@ -1,0 +1,13 @@
+# akribie.toml — parâmetros do projeto (gerado por `akr init`).
+# Chaves: layout, direction, theme, fontsize, pad, lang, sketch, font.
+# Valores válidos e defaults: `akr schema`.
+# Precedência: opção no `.akrc` > este arquivo > default do binário.
+# sketch=off + font=sans: traço técnico (linhas exatas) e Liberation Sans.
+layout = flow
+direction = lr
+theme = paper
+fontsize = 20
+pad = 32
+lang = "en"
+sketch = on
+font = hand

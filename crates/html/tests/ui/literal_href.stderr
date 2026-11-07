@@ -1,0 +1,7 @@
+error: `href` não aceita literal em `a`
+         = regra: contexto de escape (D1)
+         = ajuda: use `href=(Href::internal(LUrl::…))`
+ --> tests/ui/literal_href.rs:6:28
+  |
+6 |     let _ = html! { a href="/x" { m } };
+  |                            ^^^^

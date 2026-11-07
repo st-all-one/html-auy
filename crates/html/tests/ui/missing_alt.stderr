@@ -1,0 +1,7 @@
+error: `img` exige `alt`
+         = regra: WCAG 1.1.1 / spec:element.img
+         = ajuda: `Alt::new("Descrição objetiva")` ou `Alt::decorative()`
+ --> tests/ui/missing_alt.rs:6:21
+  |
+6 |     let _ = html! { img src=(s) width=(w) height=(h); };
+  |                     ^^^

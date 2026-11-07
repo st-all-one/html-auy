@@ -1,0 +1,7 @@
+error: `table` exige `caption`
+         = regra: spec:element.table
+         = ajuda: adicione `caption { … }` como primeiro filho
+ --> tests/ui/required_caption.rs:6:21
+  |
+6 |     let _ = html! { table { thead { tr { th scope="col" { m } } } } };
+  |                     ^^^^^

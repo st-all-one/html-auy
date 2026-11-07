@@ -1,0 +1,7 @@
+error: `th scope="row"` não corresponde à seção `thead`
+         = regra: spec:scope_matches_section
+         = ajuda: use `scope="col"` em `thead`
+ --> tests/ui/th_scope_mismatch.rs:6:59
+  |
+6 |     let _ = html! { table { caption { m } thead { tr { th scope="row" { m } } } } };
+  |                                                           ^^^^^

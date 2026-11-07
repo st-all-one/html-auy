@@ -1,0 +1,7 @@
+error: `button` não tem nome acessível
+         = regra: WCAG 4.1.2 / spec:control_has_accessible_name
+         = ajuda: use texto, `Label::text(Msg::…)` ou `aria-labelledby`
+ --> tests/ui/control_without_name.rs:6:21
+  |
+6 |     let _ = html! { button type="button" { } };
+  |                     ^^^^^^

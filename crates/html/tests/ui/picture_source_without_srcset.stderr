@@ -1,0 +1,7 @@
+error: `source` exige `srcset`
+         = regra: spec:element.source
+         = ajuda: adicione `srcset=(…)`
+ --> tests/ui/picture_source_without_srcset.rs:8:13
+  |
+8 |             source type="image/avif" sizes=(sz);
+  |             ^^^^^^

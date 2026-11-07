@@ -1,0 +1,7 @@
+error: `source` precisa ser o primeiro filho de `picture`
+         = regra: spec:element.picture
+         = ajuda: mova `source` para o início
+ --> tests/ui/picture_source_after_img.rs:7:9
+  |
+7 |         picture {
+  |         ^^^^^^^

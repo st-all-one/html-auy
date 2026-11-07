@@ -1,0 +1,5 @@
+error: atributo `class` sem valor; use `class=(…)`
+ --> tests/ui/syntax_attr_no_value.rs:6:25
+  |
+6 |     let _ = html! { div class { } };
+  |                         ^^^^^

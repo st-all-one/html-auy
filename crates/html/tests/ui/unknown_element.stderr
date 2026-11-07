@@ -1,0 +1,6 @@
+error: elemento desconhecido `dev`; você quis dizer `del`?
+         = ajuda: veja `spec/elements.toml` (CONTRIBUTING.md §3) para o vocabulário fechado
+ --> tests/ui/unknown_element.rs:6:21
+  |
+6 |     let _ = html! { dev { } };
+  |                     ^^^

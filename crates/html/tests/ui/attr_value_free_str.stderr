@@ -1,0 +1,25 @@
+error[E0277]: the trait bound `&str: AttrValue` is not satisfied
+ --> tests/ui/attr_value_free_str.rs:5:13
+  |
+5 |     let _ = html! { abbr title=(free) { } };
+  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |             |
+  |             the trait `AttrValue` is not implemented for `&str`
+  |             required by a bound introduced by this call
+  |
+  = help: the following other types implement trait `AttrValue`:
+            Alt<'_>
+            AttrVal<'_>
+            Autocomplete<'_>
+            Class
+            FieldName<'_>
+            HeightPx
+            Href<'_>
+            Integrity<'_>
+          and $N others
+note: required by a bound in `html::__private::Writer::attr`
+ --> src/__private.rs
+  |
+  |     pub fn attr(&mut self, name: &'static str, value: &impl AttrValue) {
+  |                                                             ^^^^^^^^^ required by this bound in `Writer::attr`
+  = note: this error originates in the macro `html` (in Nightly builds, run with -Z macro-backtrace for more info)

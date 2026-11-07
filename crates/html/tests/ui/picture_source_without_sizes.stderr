@@ -1,0 +1,7 @@
+error: `source` exige `sizes`
+         = regra: spec:element.source
+         = ajuda: `Sizes::new("(min-width: 48em) 50vw, 100vw")`
+ --> tests/ui/picture_source_without_sizes.rs:8:13
+  |
+8 |             source type="image/avif" srcset=(ss);
+  |             ^^^^^^

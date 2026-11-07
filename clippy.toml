@@ -1,0 +1,72 @@
+# Valores das lints (os níveis estão em `Cargo.toml` → `[workspace.lints]`).
+#
+# `msrv` é o contrato (`rust-version`), não o pin: com ele o clippy não sugere API mais nova
+# que a 1.92 (docs/22 §2).
+msrv = "1.92"
+
+# Limiares de tamanho: parser aninhado é onde a complexidade se esconde.
+cognitive-complexity-threshold = 15
+type-complexity-threshold = 150
+too-many-arguments-threshold = 5
+# Nesting: 5, não 3. O número de `docs/22` veio de um cliente de rede; num parser/codegen escrito à
+# mão o `for` + `match` de um tokenizador já passa de 3, e a exceção vira ruído de `#[expect]` em
+# toda função. Com 5 a lint ainda pega o aninhamento profundo que esconde complexidade.
+excessive-nesting-threshold = 5
+max-fn-params-bools = 1
+struct-field-name-threshold = 3
+enum-variant-size-threshold = 128
+pass-by-value-size-limit = 128
+array-size-threshold = 4096
+stack-size-threshold = 65536
+future-size-threshold = 8192
+
+# Teste: `.unwrap()`/`assert!` são o mecanismo de falha, não descuido.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+allow-print-in-tests = true
+allow-indexing-slicing-in-tests = true
+allow-expect-in-consts = false
+
+# Nomes genéricos não passam; `..` preserva a lista padrão do clippy.
+disallowed-names = ["foo", "baz", "quux", "tmp", "thing", "stuff", "misc", ".."]
+
+doc-valid-idents = [
+  "html",
+  "HTML",
+  "CSS",
+  "WCAG",
+  "DOM",
+  "ARIA",
+  "SVG",
+  "JSON",
+  "ETag",
+  "URL",
+  "URI",
+  "srcset",
+  "oklch",
+  "BCP-47",
+  "CLDR",
+  "TOML",
+  "MSRV",
+  "TTI",
+  "..",
+]
+
+# Ordem de iteração não determinística = bytes diferentes para a mesma view (ETag instável).
+disallowed-types = [
+  "std::collections::HashMap",
+  "std::collections::HashSet",
+  "std::collections::LinkedList",
+  "alloc::collections::LinkedList",
+]
+
+# O crate não lê relógio nem ambiente: golden sem horário, configuração entra por dado.
+disallowed-methods = [
+  "std::time::SystemTime::now",
+  "std::time::Instant::now",
+  "std::env::var",
+  "std::env::var_os",
+  "std::env::vars",
+  "std::env::vars_os",
+]

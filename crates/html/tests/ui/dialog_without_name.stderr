@@ -1,0 +1,7 @@
+error: `dialog` exige nome acessível
+         = regra: spec:dialog_modal_semantics
+         = ajuda: `aria-labelledby="…"` apontando para o título no bloco
+ --> tests/ui/dialog_without_name.rs:6:21
+  |
+6 |     let _ = html! { dialog { m } };
+  |                     ^^^^^^

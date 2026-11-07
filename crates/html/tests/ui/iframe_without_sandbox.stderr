@@ -1,0 +1,7 @@
+error: `iframe` exige `sandbox` e `referrerpolicy`
+         = regra: spec:cross_origin_requires_sandbox
+         = ajuda: adicione `sandbox="allow-scripts"` e `referrerpolicy="no-referrer"`
+ --> tests/ui/iframe_without_sandbox.rs:6:21
+  |
+6 |     let _ = html! { iframe src=(s) title="vídeo" { } };
+  |                     ^^^^^^

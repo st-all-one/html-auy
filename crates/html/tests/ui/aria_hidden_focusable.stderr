@@ -1,0 +1,7 @@
+error: `button` é focável; `aria-hidden="true"` remove o foco da árvore
+         = regra: WCAG 4.1.2 / spec:no_aria_hidden_on_focusable
+         = ajuda: remova o `aria-hidden`
+ --> tests/ui/aria_hidden_focusable.rs:6:42
+  |
+6 |     let _ = html! { button type="button" aria_hidden="true" { m } };
+  |                                          ^^^^^^^^^^^

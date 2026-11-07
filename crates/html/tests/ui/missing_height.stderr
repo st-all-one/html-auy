@@ -1,0 +1,7 @@
+error: `img` exige `height`
+         = regra: spec:element.img
+         = ajuda: `WidthPx::new(720)` / `HeightPx::new(480)` (CLS 0)
+ --> tests/ui/missing_height.rs:6:21
+  |
+6 |     let _ = html! { img src=(s) alt=(a) width=(w); };
+  |                     ^^^

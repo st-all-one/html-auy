@@ -1,0 +1,7 @@
+error: `<button>` não pode estar dentro de `<a>`
+         = regra: conteúdo-modelo (spec:element.a)
+         = ajuda: remova o `<button>` de dentro do `<a>`
+  --> tests/ui/anchor_nested_interactive.rs:12:21
+   |
+12 |                     button type="button" { (text) }
+   |                     ^^^^^^

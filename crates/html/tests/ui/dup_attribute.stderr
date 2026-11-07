@@ -1,0 +1,7 @@
+error: atributo `id` repetido em `div`
+         = regra: spec:element.div
+         = ajuda: remova a duplicata
+ --> tests/ui/dup_attribute.rs:6:32
+  |
+6 |     let _ = html! { div id="a" id="b" { } };
+  |                                ^^

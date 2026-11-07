@@ -1,0 +1,7 @@
+error: `alt` não aceita literal em `img`
+         = regra: contexto de escape (D1)
+         = ajuda: use `alt=(Alt::new("…"))` ou `Alt::decorative()`
+ --> tests/ui/literal_alt.rs:6:58
+  |
+6 |     let _ = html! { img src=(s) width=(w) height=(h) alt="x"; };
+  |                                                          ^^^

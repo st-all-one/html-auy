@@ -1,0 +1,7 @@
+error: `a` exige `href`
+         = regra: spec:element.a
+         = ajuda: `Href::internal(LUrl::…)` ou `Href::external(…)`
+ --> tests/ui/missing_href.rs:6:21
+  |
+6 |     let _ = html! { a { m } };
+  |                     ^

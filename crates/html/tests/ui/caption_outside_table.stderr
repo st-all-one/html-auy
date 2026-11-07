@@ -1,0 +1,7 @@
+error: `<caption>` não é permitido dentro de `<div>`
+         = regra: conteúdo-modelo (spec:element.div)
+         = ajuda: filhos permitidos em `<div>`: flow
+ --> tests/ui/caption_outside_table.rs:7:27
+  |
+7 |     let _ = html! { div { caption { m } } };
+  |                           ^^^^^^^

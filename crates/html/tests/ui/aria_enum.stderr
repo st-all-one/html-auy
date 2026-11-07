@@ -1,0 +1,7 @@
+error: `aria-live="loud"` não é válido
+         = regra: spec:aria-live
+         = ajuda: valores aceitos: off, polite, assertive
+ --> tests/ui/aria_enum.rs:6:35
+  |
+6 |     let _ = html! { div aria_live="loud" { } };
+  |                                   ^^^^^^

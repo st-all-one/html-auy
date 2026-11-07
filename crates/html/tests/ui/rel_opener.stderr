@@ -1,0 +1,7 @@
+error: `rel="opener"` é proibido
+         = regra: spec:a_rel_enum
+         = ajuda: remova `opener`
+ --> tests/ui/rel_opener.rs:6:36
+  |
+6 |     let _ = html! { a href=(h) rel="opener" { m } };
+  |                                    ^^^^^^^^

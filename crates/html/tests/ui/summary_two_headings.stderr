@@ -1,0 +1,7 @@
+error: `summary` aceita no máximo um heading
+         = regra: spec:summary_single_heading
+         = ajuda: remova o heading extra
+ --> tests/ui/summary_two_headings.rs:6:31
+  |
+6 |     let _ = html! { details { summary { h2 { m } h3 { m } } } };
+  |                               ^^^^^^^

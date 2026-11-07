@@ -1,0 +1,7 @@
+error: `caption` precisa ser o primeiro filho de `table`
+         = regra: spec:element.table
+         = ajuda: mova `caption` para o início
+ --> tests/ui/caption_first.rs:6:21
+  |
+6 |     let _ = html! { table { colgroup { } caption { m } tbody { tr { td { m } } } } };
+  |                     ^^^^^

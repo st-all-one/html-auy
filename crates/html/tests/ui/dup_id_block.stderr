@@ -1,0 +1,7 @@
+error: `id="a"` aparece mais de uma vez no bloco
+         = regra: escopo local (IDs únicos)
+         = ajuda: use ids distintos; o `audit` cobra o documento inteiro
+ --> tests/ui/dup_id_block.rs:6:43
+  |
+6 |     let _ = html! { div id="a" { } div id="a" { } };
+  |                                           ^^^

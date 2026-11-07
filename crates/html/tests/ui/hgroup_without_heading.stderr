@@ -1,0 +1,7 @@
+error: `hgroup` exige `heading`
+         = regra: spec:element.hgroup
+         = ajuda: adicione um filho da categoria `heading`
+ --> tests/ui/hgroup_without_heading.rs:6:21
+  |
+6 |     let _ = html! { hgroup { p { m } } };
+  |                     ^^^^^^

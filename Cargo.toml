@@ -1,0 +1,111 @@
+# Workspace `html-auy`: geração de HTML tipada (crate `html` + proc-macro `html-macros`).
+#
+# Duas regras estruturais vivem aqui:
+#   1. `sniff-css/` e `fuzz/` NÃO são membros (workspace próprio / workspace-excluded);
+#   2. nenhum crate publica (`publish = false`): o produto é interno (D0).
+#
+# O pin do compilador é `rust-toolchain.toml` (1.99); a MSRV é `rust-version` (1.92).
+# São dois números diferentes por decisão (docs/22 §2, D32).
+[workspace]
+members = ["crates/html", "crates/html-macros", "crates/html-macros-core"]
+resolver = "3"
+exclude = ["fuzz"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.92"
+license = "MIT"
+
+[workspace.dependencies]
+html-macros = { path = "crates/html-macros" }
+html-macros-core = { path = "crates/html-macros-core" }
+
+html5ever = "0.27"
+markup5ever_rcdom = "0.3"
+insta = "1"
+proptest = "1"
+toml = "1"
+trybuild = "1"
+serde_json = "1"
+proc-macro2 = "1"
+quote = "1"
+
+# ─────────────────────────── lints ───────────────────────────
+#
+# Níveis (deny/warn) ficam aqui; valores (limiares, allowlists) ficam em `clippy.toml`.
+# Cada crate precisa de `[lints] workspace = true`, senão herda o default e o gate vira ficção.
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+unused_qualifications = "deny"
+unused_lifetimes = "deny"
+elided_lifetimes_in_paths = "deny"
+single_use_lifetimes = "deny"
+trivial_casts = "deny"
+trivial_numeric_casts = "deny"
+unreachable_pub = "warn"
+unsafe_op_in_unsafe_fn = "deny"
+let_underscore_drop = "deny"
+meta_variable_misuse = "deny"
+non_ascii_idents = "deny"
+noop_method_call = "deny"
+unused_import_braces = "deny"
+
+[workspace.lints.rustdoc]
+broken_intra_doc_links = "deny"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+correctness = { level = "deny", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
+style = { level = "deny", priority = -1 }
+complexity = { level = "deny", priority = -1 }
+perf = { level = "deny", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+cargo = { level = "warn", priority = -1 }
+
+# Parser e codegen são iteradores e índices por natureza: estes quatro nascem `allow` no
+# workspace (documentado em docs/22 §4) porque `#[expect]` por arquivo não é viável.
+module_name_repetitions = "allow"
+similar_names = "allow"
+many_single_char_names = "allow"
+min_ident_chars = "allow"
+
+# ── restriction: o que não pode existir neste crate ──
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+unreachable = "deny"
+indexing_slicing = "deny"
+arithmetic_side_effects = "deny"
+as_conversions = "deny"
+cast_possible_truncation = "deny"
+cast_sign_loss = "deny"
+cast_possible_wrap = "deny"
+cast_precision_loss = "deny"
+disallowed_types = "deny"
+disallowed_methods = "deny"
+print_stdout = "deny"
+print_stderr = "deny"
+todo = "deny"
+unimplemented = "deny"
+dbg_macro = "deny"
+mem_forget = "deny"
+allow_attributes_without_reason = "deny"
+let_underscore_must_use = "deny"
+wildcard_imports = "deny"
+multiple_unsafe_ops_per_block = "deny"
+
+[profile.release]
+overflow-checks = true
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
+
+[profile.dev]
+overflow-checks = true
+debug-assertions = true

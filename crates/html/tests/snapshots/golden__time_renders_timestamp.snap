@@ -1,0 +1,5 @@
+---
+source: crates/html/tests/golden.rs
+expression: markup.as_str()
+---
+<time datetime="2024-01-02T03:04:05Z">2 de janeiro</time>

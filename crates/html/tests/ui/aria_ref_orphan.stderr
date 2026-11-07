@@ -1,0 +1,7 @@
+error: `aria-labelledby="nope"` referencia `nope`, que não existe no bloco
+         = regra: WCAG 1.3.1
+         = ajuda: use um id presente no mesmo bloco
+ --> tests/ui/aria_ref_orphan.rs:6:41
+  |
+6 |     let _ = html! { div aria_labelledby="nope" { } };
+  |                                         ^^^^^^

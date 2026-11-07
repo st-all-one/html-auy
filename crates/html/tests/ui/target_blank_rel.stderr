@@ -1,0 +1,7 @@
+error: `target="_blank"` com `rel="external"` não inclui `noopener`
+         = regra: spec:blank_target_implies_noopener
+         = ajuda: use `rel="noopener"`
+ --> tests/ui/target_blank_rel.rs:6:52
+  |
+6 |     let _ = html! { a href=(h) target="_blank" rel="external" { m } };
+  |                                                    ^^^^^^^^^^

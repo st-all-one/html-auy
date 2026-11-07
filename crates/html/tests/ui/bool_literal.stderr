@@ -1,0 +1,7 @@
+error: `disabled` é booleano; use `disabled=(expr)` com `expr: bool`
+         = regra: spec:boolean_attributes (D19)
+         = ajuda: presença = true; `disabled="false"` é verdadeiro em HTML
+ --> tests/ui/bool_literal.rs:6:51
+  |
+6 |     let _ = html! { button type="button" disabled="false" { m } };
+  |                                                   ^^^^^^^

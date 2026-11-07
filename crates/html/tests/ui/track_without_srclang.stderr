@@ -1,0 +1,7 @@
+error: `track kind="subtitles"` exige `srclang`
+         = regra: spec:srclang_required_for_subtitles
+         = ajuda: adicione `srclang="pt"`
+ --> tests/ui/track_without_srclang.rs:6:83
+  |
+6 |     let _ = html! { video { track kind="captions" src=(s) srclang="pt" label="P"; track kind="subtitles" src=(s) label="L"; } };
+  |                                                                                   ^^^^^

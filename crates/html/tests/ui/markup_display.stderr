@@ -1,0 +1,8 @@
+error[E0277]: `Markup` doesn't implement `std::fmt::Display`
+ --> tests/ui/markup_display.rs:5:15
+  |
+5 |     println!("{markup}");
+  |               ^^^^^^^^ `Markup` cannot be formatted with the default formatter
+  |
+  = help: the trait `std::fmt::Display` is not implemented for `Markup`
+  = note: in format strings you may be able to use `{:?}` (or `{:#?}` for pretty-print) instead

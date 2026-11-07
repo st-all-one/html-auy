@@ -1,0 +1,7 @@
+error: `Page` é dono do `<main>`
+         = regra: spec:shell_only_elements
+         = ajuda: use `ShellData::new(Text::msg(Msg::Title), heading, lang)` — `<title>`, `<html>`, `<head>` e `<main>` são do shell
+ --> tests/ui/shell_main.rs:6:21
+  |
+6 |     let _ = html! { main { m } };
+  |                     ^^^^

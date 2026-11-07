@@ -1,7 +1,9 @@
 # spec/elements.toml — vocabulário de elementos do html-auy
 #
-# FONTE DA VERDADE do vocabulário. O crate `html-spec` é GERADO a partir deste arquivo
-# (`build.rs`); não edite o gerado.
+# FONTE DA VERDADE do vocabulário. A tabela Rust do crate (`crates/html/src/spec/table.rs`) é
+# GERADA a partir deste arquivo por `tools/gen_spec.py` e VERSIONADA; não edite o gerado.
+# Não existe `build.rs`: esquecer de rodar o gerador deixa o CI vermelho (teste de paridade),
+# nunca o produto errado.
 #
 # ── Esquema 2 (revisão após auditoria; ver docs/13-decisoes.md D16) ──
 #
@@ -11,13 +13,13 @@
 schema = 2
 
 [meta]
-spec_version = "2.0.0"
+spec_version = "2.1.0"
 # Atributos booleanos = PRESENÇA. `disabled="false"` é `true` em HTML, então o tipo é `bool` e o
 # gerador emite só o nome (`<button disabled>`), nunca `disabled="false"`. `hidden` fica de fora
 # porque aceita o valor `until-found` (ver [globals]).
 # categorias de conteúdo-modelo (usadas em `children`); `svg_shape` é própria de SVG
 categories = ["flow", "phrasing", "sectioning", "heading", "form", "table", "media", "metadata",
-              "interactive", "text", "svg_shape", "json", "none"]
+              "interactive", "text", "ruby_text", "svg_shape", "json", "none"]
 boolean_attributes = [
   "async", "checked", "controls", "default", "defer", "disabled", "loop", "multiple",
   "muted", "open", "playsinline", "readonly", "required", "reversed", "selected",
@@ -51,10 +53,8 @@ closedby_enum = "block"
 cross_origin_requires_sandbox = "block"
 datetime_profile = "block"
 control_has_accessible_name = "block"
-details_name_accordion = "block"
 dialog_modal_semantics = "block"
 document_title_required = "type"
-fold_controls_loading = "block"
 for_matches_id_in_block = "block"
 head_charset_first = "block"
 href_is_typed = "block"
@@ -63,13 +63,13 @@ label_exempt_types = "block"
 label_or_labelledby_in_block = "block"
 heading_levels_no_skips = "output"
 landmark_names_distinct = "output"
+landmark_names_required = "output"
 legend_not_empty = "block"
 li_only_in_list = "block"
 link_rel_enum = "block"
 main_tabindex_minus_one = "block"
 main_unique = "type"
 media_requires_captions = "block"
-media_requires_transcript = "block"
 media_source_xor_src = "block"
 meta_form_exclusive = "block"
 form_requires_csrf = "type"
@@ -98,8 +98,7 @@ script_is_jsonld_only = "block"
 script_src_requires_defer = "block"
 section_has_heading_or_name = "block"
 select_has_selectable_option = "block"
-shell_owns_h1 = "type"
-single_h1 = "type"
+single_h1 = "output"
 source_profile_media_only = "block"
 source_profile_picture_only = "block"
 srclang_required_for_subtitles = "block"
@@ -139,6 +138,7 @@ type_enum = "block"
 [globals]
 # atributos aceitos em qualquer elemento, com valores enumerados (nunca string livre)
 hidden = ["", "until-found"]
+title = "text"                  # dica visual; NÃO é nome acessível (D31)
 dir = ["ltr", "rtl", "auto"]
 translate = ["yes", "no"]
 spellcheck = ["true", "false"]
@@ -224,7 +224,7 @@ only = "shell"                          # só o `Page` emite; `html!` recusa
 category = "metadata"
 void = true
 required = ["rel", "href"]
-allowed = ["as", "type", "media", "integrity", "hreflang", "sizes", "fetchpriority", "crossorigin", "title"]
+allowed = ["as", "type", "media", "integrity", "hreflang", "sizes", "imagesrcset", "imagesizes", "fetchpriority", "crossorigin", "referrerpolicy", "title"]
 accessible_name = "none"
 children = ["none"]
 invariants = ["shell_only_elements", "link_rel_enum", "preload_requires_as_and_crossorigin"]
@@ -265,24 +265,26 @@ children = ["flow"]
 forbidden_children = ["header", "footer"]
 
 [element.main]
+only = "shell"                          # `Page` emite; `html!` recusa (um `main` por página)
 category = ["sectioning"]
 allowed = ["class", "id", "tabindex", "data-*", "aria-*"]
 accessible_name = "optional"
 children = ["flow"]
-invariants = ["main_unique", "main_tabindex_minus_one"]   # alvo do skip link
+invariants = ["main_unique", "main_tabindex_minus_one", "shell_only_elements"]   # alvo do skip link
 
 [element.nav]
 category = ["sectioning"]
 allowed = ["class", "data-*", "aria-*"]
 accessible_name = "required"              # nome obrigatório: 1.3.1 (landmark repetido)
 children = ["flow"]
-invariants = ["landmark_names_distinct"]
+invariants = ["landmark_names_distinct", "landmark_names_required"]
 
 [element.aside]
 category = ["sectioning"]
 allowed = ["class", "data-*", "aria-*"]
 accessible_name = "required"
 children = ["flow"]
+invariants = ["landmark_names_required"]
 
 [element.section]
 category = ["sectioning"]
@@ -333,12 +335,11 @@ invariants = ["no_flow_inside_phrasing"]   # <div> em <p> é erro de compilaçã
 # ─────────────────────────── texto ───────────────────────────
 
 [element.h1]
-only = "shell"                            # o <h1> é o heading da TELA, do shell
 category = ["heading"]
-allowed = ["class", "id", "data-*"]
+allowed = ["class", "id", "data-*", "aria-*"]
 accessible_name = "none"
 children = ["phrasing"]
-invariants = ["shell_only_elements", "single_h1", "shell_owns_h1"]   # só o Page emite
+invariants = ["single_h1"]                # exatamente um no documento (audit)
 
 [element.h2]
 category = ["heading"]
@@ -529,11 +530,12 @@ children = ["flow"]
 
 [element.a]
 category = ["phrasing", "interactive"]
+transparent = true                        # herda o content model do pai; proíbe interativo descendente
 required = ["href"]
-allowed = ["hreflang", "target", "download", "type", "class", "data-*", "aria-*"]   # `rel`/`referrerpolicy` são enums
+allowed = ["rel", "hreflang", "target", "download", "type", "class", "data-*", "aria-*", "referrerpolicy"]
 accessible_name = "required"              # link precisa de nome (texto ou sr-only)
-children = ["phrasing"]
-forbidden_children = ["a", "button", "input", "select", "textarea", "details", "summary", "dialog"]
+children = ["flow"]                       # fallback na raiz; dentro de um pai, herda o pai
+forbidden_children = ["interactive"]              # nenhum interativo em qualquer profundidade
 invariants = ["no_aria_hidden_on_focusable", "control_has_accessible_name", "href_is_typed", "blank_target_implies_noopener", "no_aria_label_over_visible_text",
               "a_rel_enum", "referrer_policy_enum", "no_content_derived_identifiers"]
 
@@ -543,10 +545,13 @@ invariants = ["no_aria_hidden_on_focusable", "control_has_accessible_name", "hre
 category = ["phrasing", "media"]
 void = true
 required = ["src", "alt", "width", "height"]
-allowed = ["loading", "decoding", "fetchpriority", "sizes", "srcset", "class", "data-*"]
+allowed = ["referrerpolicy", "loading", "decoding", "fetchpriority", "sizes", "srcset", "class", "data-*"]
+# Ordem de emissão do exemplo normativo (docs/25 §7). Vale só para `img`: nos demais elementos a
+# ordem é `required ++ allowed ++ globals ++ aria-*`.
+order = ["src", "srcset", "sizes", "alt", "width", "height"]
 accessible_name = "alt"
 children = ["none"]
-invariants = ["srcset_requires_sizes_and_dims", "alt_empty_means_decorative", "fold_controls_loading",
+invariants = ["srcset_requires_sizes_and_dims", "alt_empty_means_decorative",
               "intrinsic_dimensions_required"]
 
 [element.picture]
@@ -560,8 +565,8 @@ first_child = "source"
 [element.source]                          # dentro de <picture>: srcset
 category = ["media"]
 void = true
-required = ["srcset"]
-allowed = ["type", "media", "sizes"]
+required = ["srcset", "sizes"]           # `SrcSet` sempre usa descritor `w`; sizes é obrigatório
+allowed = ["type", "media", "width", "height"]
 accessible_name = "none"
 children = ["none"]
 invariants = ["source_profile_picture_only"]
@@ -581,7 +586,6 @@ required = []                             # `src` OU `media_source` (nunca os do
 allowed = ["src", "controls", "preload", "poster", "muted", "loop", "playsinline", "width", "height", "class"]
 accessible_name = "optional"
 children = ["media_source", "track"]
-required_children = ["track"]
 invariants = ["media_source_xor_src", "media_requires_captions", "captions_kind_required"]   # WCAG 1.2.2
 
 [element.audio]
@@ -590,8 +594,8 @@ required = []                             # `src` OU `media_source` (nunca os do
 allowed = ["src", "controls", "preload", "loop", "class"]
 accessible_name = "optional"
 children = ["media_source", "track"]
-required_children = ["track"]
-invariants = ["media_source_xor_src", "media_requires_transcript"]
+required_children = []
+invariants = ["media_source_xor_src"]
 
 [element.track]
 category = ["media"]
@@ -735,8 +739,8 @@ children = ["phrasing"]
 
 [element.label]
 category = ["form", "phrasing"]
-required = ["for"]
-allowed = ["class", "data-*"]
+required = []                             # `for="id"` OU o controle envolvido (invariante cobre os dois)
+allowed = ["for", "class", "data-*"]
 accessible_name = "none"
 children = ["phrasing"]
 forbidden_children = ["label", "form"]
@@ -748,7 +752,7 @@ void = true
 required = ["type", "name"]
 allowed = ["value", "placeholder", "required", "disabled", "readonly", "autocomplete", "inputmode",
            "enterkeyhint", "pattern", "min", "max", "step", "minlength", "maxlength", "size",
-           "checked", "multiple", "accept", "spellcheck", "aria-*", "data-*"]
+           "checked", "multiple", "accept", "list", "spellcheck", "aria-*", "data-*"]
 accessible_name = "label"                 # exceto type=hidden|submit|button|image
 children = ["none"]
 invariants = ["no_aria_hidden_on_focusable", "control_has_accessible_name", "label_or_labelledby_in_block", "label_exempt_types", "attribute_by_input_type",
@@ -769,7 +773,6 @@ required = ["name"]
 allowed = ["required", "disabled", "multiple", "size", "autocomplete", "aria-*"]
 accessible_name = "label"
 children = ["option", "optgroup"]
-required_children = ["option"]
 invariants = ["label_or_labelledby_in_block", "select_has_selectable_option"]
 
 [element.optgroup]
@@ -818,7 +821,7 @@ children = ["phrasing"]
 # ─────────────────────────── tabela ───────────────────────────
 
 [element.table]
-category = ["table"]
+category = ["flow", "table"]
 allowed = ["class", "data-*"]
 accessible_name = "caption"
 children = ["caption", "colgroup", "thead", "tbody", "tfoot"]   # `tr` só dentro de seção
@@ -895,7 +898,6 @@ accessible_name = "summary"               # o <summary> é o nome do disclosure
 children = ["summary", "flow"]
 required_children = ["summary"]
 first_child = "summary"
-invariants = ["details_name_accordion"]
 
 [element.summary]
 category = ["interactive"]
@@ -913,3 +915,186 @@ roles = ["alertdialog"]                  # só para ação destrutiva; o padrão
 invariants = ["dialog_modal_semantics", "closedby_enum", "no_aria_modal"]
 # `open` = não-modal: sem trap de foco e sem Escape. O primitivo `Dialog` só emite `open`
 # quando o consumidor declara estado estático; abrir/fechar é asset declarado (docs/07 §7).
+
+# ─────────────────────────── valores de atributo ───────────────────────────
+#
+# `elemento.atributo = [valores]` — o literal aceito pelo macro. Atributos cujo valor é uma
+# LISTA de tokens (`rel`, `sandbox`) são validados token a token, sem normalizar a ordem.
+#
+# Atributos globais (`hidden`, `dir`, `translate`, `spellcheck`, `popover`, `aria-*`) NÃO se
+# repetem aqui: os enums deles vêm de [globals] / [globals.aria]. A exceção é `sandbox` (abaixo),
+# que é lista de tokens como `rel`.
+
+# ── elementos semânticos adicionados ao vocabulário ──
+
+[element.bdi]
+category = "phrasing"
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.bdo]
+category = "phrasing"
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.data]
+category = "phrasing"
+required = ["value"]
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.datalist]
+category = ["flow", "phrasing"]
+accessible_name = "none"
+children = ["option"]
+required_children = ["option"]
+
+[element.dfn]
+category = "phrasing"
+allowed = ["title"]
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.hgroup]
+category = "flow"
+accessible_name = "none"
+children = ["heading", "p"]
+required_children = ["heading"]
+
+[element.rp]
+category = "ruby_text"
+accessible_name = "none"
+children = ["text"]
+
+[element.rt]
+category = "ruby_text"
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.ruby]
+category = "phrasing"
+accessible_name = "none"
+children = ["phrasing", "ruby_text"]
+
+[element.samp]
+category = "phrasing"
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.sub]
+category = "phrasing"
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.sup]
+category = "phrasing"
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.var]
+category = "phrasing"
+accessible_name = "none"
+children = ["phrasing"]
+
+[element.wbr]
+category = "phrasing"
+void = true
+accessible_name = "none"
+children = ["none"]
+
+
+[attr_values]
+"a.rel" = ["alternate", "author", "bookmark", "canonical", "dns-prefetch", "external", "help",
+           "icon", "license", "manifest", "modulepreload", "next", "nofollow", "noopener",
+           "noreferrer", "prev", "preconnect", "prefetch", "preload", "search", "stylesheet", "tag"]
+"link.rel" = ["alternate", "author", "bookmark", "canonical", "dns-prefetch", "external", "help",
+              "icon", "license", "manifest", "modulepreload", "next", "nofollow", "noopener",
+              "noreferrer", "prev", "preconnect", "prefetch", "preload", "search", "stylesheet", "tag"]
+"a.target" = ["_self", "_blank", "_parent", "_top"]
+"button.popovertargetaction" = ["toggle", "show", "hide"]
+"a.referrerpolicy" = ["no-referrer", "no-referrer-when-downgrade", "origin",
+                      "origin-when-cross-origin", "same-origin", "strict-origin",
+                      "strict-origin-when-cross-origin"]
+"img.referrerpolicy" = ["no-referrer", "no-referrer-when-downgrade", "origin",
+                        "origin-when-cross-origin", "same-origin", "strict-origin",
+                        "strict-origin-when-cross-origin"]
+"link.referrerpolicy" = ["no-referrer", "no-referrer-when-downgrade", "origin",
+                         "origin-when-cross-origin", "same-origin", "strict-origin",
+                         "strict-origin-when-cross-origin"]
+"iframe.referrerpolicy" = ["no-referrer", "no-referrer-when-downgrade", "origin",
+                           "origin-when-cross-origin", "same-origin", "strict-origin",
+                           "strict-origin-when-cross-origin"]
+"button.type" = ["button", "submit", "reset"]
+"input.type" = ["text", "email", "tel", "url", "password", "search", "number", "date", "time",
+                "datetime-local", "month", "week", "color", "file", "checkbox", "radio", "range",
+                "hidden", "submit", "reset", "button", "image"]
+"input.autocomplete" = ["off", "on", "name", "given-name", "additional-name", "family-name",
+                        "username", "email", "current-password", "new-password", "one-time-code",
+                        "street-address", "address-line1", "address-line2", "address-level1",
+                        "address-level2", "postal-code", "country", "country-name", "tel",
+                        "tel-national", "tel-area-code", "tel-local", "bday", "bday-day",
+                        "bday-month", "bday-year", "sex", "url", "photo", "organization",
+                        "organization-title", "cc-name", "cc-number", "cc-exp", "cc-exp-month",
+                        "cc-exp-year", "cc-csc", "transaction-currency", "transaction-amount",
+                        "language", "impp", "shipping", "billing"]
+"input.inputmode" = ["none", "text", "decimal", "numeric", "tel", "search", "email", "url"]
+"input.enterkeyhint" = ["enter", "done", "go", "next", "previous", "search", "send"]
+"textarea.wrap" = ["soft", "hard"]
+"video.preload" = ["none", "metadata", "auto"]
+"audio.preload" = ["none", "metadata", "auto"]
+"img.loading" = ["eager", "lazy"]
+"iframe.loading" = ["eager", "lazy"]
+"img.decoding" = ["sync", "async", "auto"]
+"img.fetchpriority" = ["high", "low", "auto"]
+"link.fetchpriority" = ["high", "low", "auto"]
+"track.kind" = ["subtitles", "captions", "descriptions", "chapters", "metadata"]
+"th.scope" = ["row", "col", "rowgroup", "colgroup"]
+"dialog.closedby" = ["any", "closerequest", "none"]
+"form.enctype" = ["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"]
+"form.method" = ["get", "dialog", "post"]
+"link.as" = ["audio", "document", "embed", "fetch", "font", "image", "object", "script", "style",
+             "track", "video", "worker"]
+"link.crossorigin" = ["anonymous", "use-credentials"]
+"script.crossorigin" = ["anonymous", "use-credentials"]
+"meta.name" = ["author", "description", "keywords", "robots", "theme-color", "viewport"]
+"svg.fill" = ["currentColor", "none"]
+"svg.stroke" = ["currentColor", "none"]
+"svg.focusable" = ["true", "false"]
+# MIME: `type` de `<source>` não é enum; valida-se a gramática `tipo/subtipo` (lista vazia = sem
+# enum, o validador usa o tipo declarado no gerador).
+"source.type" = []
+"media_source.type" = []
+# `sandbox` é lista de tokens (mesma gramática de `rel`), nunca string livre.
+"iframe.sandbox" = ["allow-forms", "allow-modals", "allow-orientation-lock", "allow-pointer-lock",
+                    "allow-popups", "allow-popups-to-escape-sandbox", "allow-presentation",
+                    "allow-same-origin", "allow-scripts", "allow-top-navigation",
+                    "allow-top-navigation-by-user-activation", "allow-downloads"]
+
+# ─────────────────────────── atributos por tipo de input ───────────────────────────
+#
+# Além de `type`, `name`, `value`, `id`, `class`, `aria-*`, `data-*` e `autocomplete`, que todo
+# input aceita. `attribute_by_input_type` recusa o resto (WCAG 1.3.5 / evita atributo inerte).
+
+[input_attributes]
+text = ["placeholder", "minlength", "maxlength", "pattern", "inputmode", "enterkeyhint", "spellcheck", "list"]
+search = ["placeholder", "minlength", "maxlength", "pattern", "inputmode", "enterkeyhint", "spellcheck", "list"]
+tel = ["placeholder", "minlength", "maxlength", "pattern", "inputmode", "enterkeyhint", "spellcheck", "list"]
+url = ["placeholder", "minlength", "maxlength", "pattern", "inputmode", "enterkeyhint", "spellcheck", "list"]
+email = ["placeholder", "minlength", "maxlength", "pattern", "inputmode", "enterkeyhint", "spellcheck", "list"]
+password = ["placeholder", "minlength", "maxlength", "pattern", "inputmode", "enterkeyhint", "spellcheck"]
+number = ["min", "max", "step", "placeholder", "list"]
+range = ["min", "max", "step", "placeholder", "list"]
+date = ["min", "max", "step", "list"]
+time = ["min", "max", "step", "list"]
+datetime-local = ["min", "max", "step", "list"]
+month = ["min", "max", "step", "list"]
+week = ["min", "max", "step", "list"]
+checkbox = ["checked"]
+radio = ["checked"]
+file = ["accept", "multiple"]
+color = ["list"]
+hidden = []
+submit = []
+reset = []
+button = []
+image = []

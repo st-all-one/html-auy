@@ -18,19 +18,24 @@ from pathlib import Path
 
 CATEGORIES = {
     "flow", "phrasing", "sectioning", "heading", "form",
-    "table", "media", "metadata", "interactive", "text", "none", "json", "svg_shape",
+    "table", "media", "metadata", "interactive", "text", "ruby_text", "none", "json", "svg_shape",
 }
 ACCESSIBLE_NAME_KINDS = {
     "required", "optional", "none",
     "alt", "title", "label", "legend", "caption", "summary",
 }
+ELEMENT_KEYS = {
+    "category", "void", "required", "allowed", "children", "required_children",
+    "first_child", "forbidden_children", "transparent", "accessible_name", "invariants",
+    "roles", "only", "order",
+}
 GLOBALS = {"class", "id", "data-*", "aria-*", "lang", "dir", "hidden",
-           "translate", "spellcheck", "inert", "style", "tabindex"}
+           "translate", "spellcheck", "inert", "tabindex", "title"}
 # atributos cujo NOME coincide com nome de elemento (o validador não deve confundir)
 KNOWN_ATTRS = {
     "title", "label", "cite", "datetime", "for", "scope", "href", "src", "alt", "value", "name",
     "id", "type", "content", "rel", "kind", "srclang", "method", "action", "closedby", "open",
-    "span", "start", "reversed", "as", "media", "sizes", "srcset", "width", "height", "loading",
+    "span", "start", "reversed", "as", "media", "sizes", "imagesrcset", "imagesizes", "srcset", "width", "height", "loading",
     "decoding", "fetchpriority", "poster", "controls", "preload", "muted", "loop", "playsinline",
     "referrerpolicy", "sandbox", "viewbox", "focusable", "colspan", "rowspan", "headers", "rows",
     "cols", "wrap", "dirname", "minlength", "maxlength", "pattern", "min", "max", "step", "size",
@@ -42,6 +47,13 @@ KNOWN_ATTRS = {
     "viewBox", "preserveAspectRatio", "fill", "stroke", "stroke-width",
     "stroke-linecap", "stroke-linejoin", "d", "cx", "cy", "r", "x", "y", "x1", "y1", "x2", "y2",
     "rx", "ry", "points", "transform",
+}
+# Atributos que HTML trata como PRESENÇA. Se o vocabulário usa um deles, ele precisa estar em
+# [meta] boolean_attributes — senão o gerador emite `disabled="false"` (D19).
+HTML_BOOLEAN_ATTRS = {
+    "async", "autofocus", "autoplay", "checked", "controls", "default", "defer", "disabled",
+    "loop", "multiple", "muted", "open", "playsinline", "readonly", "required", "reversed",
+    "selected",
 }
 FORBIDDEN_ATTRS = {
     "style", "srcdoc", "formaction", "ping", "slot", "part", "exportparts",
@@ -128,7 +140,7 @@ def main(path: str) -> int:
         err(f"invariante `{i}` usada mas sem escopo declarado em [invariants]")
     for i, sc in sorted(declared_inv.items()):
         if sc not in ("block", "type", "output"):
-            err(f"[invariants] `{i}`: escopo `{sc}` inválido (block|document|page)")
+            err(f"[invariants] `{i}`: escopo `{sc}` inválido (block|type|output)")
         if i not in spec_inv_names:
             warn(f"[invariants] `{i}` declarada e não usada por nenhum elemento")
 
@@ -148,7 +160,7 @@ def main(path: str) -> int:
     used_bool: set[str] = set()
     for name, spec in els.items():
         for attr in list(spec.get("required", [])) + list(spec.get("allowed", [])):
-            if attr in booleans:
+            if attr in HTML_BOOLEAN_ATTRS:
                 used_bool.add(attr)
     for attr in sorted(used_bool - booleans):
         err(f"atributo booleano `{attr}` usado sem estar em [meta] boolean_attributes")
@@ -163,6 +175,12 @@ def main(path: str) -> int:
             err(f"element `{name}`: nome inválido")
         if name in FORBIDDEN_ELEMENTS:
             err(f"element `{name}`: elemento proibido pelo vocabulário")
+
+    for name, spec in els.items():
+        # Chave desconhecida é erro: um typo (`invariant = [...]`) sumiria da tabela em silêncio.
+        for key in spec:
+            if key not in ELEMENT_KEYS:
+                err(f"element `{name}`: chave desconhecida `{key}`")
 
     for name, spec in els.items():
         cats = spec.get("category")
@@ -188,7 +206,7 @@ def main(path: str) -> int:
             if attr in names and attr not in KNOWN_ATTRS:
                 err(f"element `{name}`: `required` contém o ELEMENTO `{attr}` "
                     f"(use required_children)")
-            if attr in GLOBALS and attr not in ("lang", "id"):
+            if attr in GLOBALS and attr not in ("lang", "id", "title"):
                 warn(f"element `{name}`: `{attr}` é global; não precisa estar em required")
             if attr in FORBIDDEN_ATTRS:
                 err(f"element `{name}`: required contém atributo proibido `{attr}`")
@@ -246,8 +264,8 @@ def main(path: str) -> int:
             return any(c in children for c in child_cats)
 
         for c in req_children:
-            if c not in names:
-                err(f"element `{name}`: required_children contém `{c}`, que não é elemento")
+            if c not in names and c not in CATEGORIES:
+                err(f"element `{name}`: required_children contém `{c}`, que não é elemento nem categoria")
             elif not child_ok(c):
                 err(f"element `{name}`: required_children `{c}` não casa com children {children}")
         if first_child and not child_ok(first_child):
@@ -291,7 +309,7 @@ def main(path: str) -> int:
                 "method", "scope", "caption", "tbody", "details", "closedby", "dialog", "popover",
                 "media", "srclang", "source", "cross", "preload", "link", "meta", "script",
                 "document", "datetime", "preserve", "svg", "section", "landmark", "for", "pattern",
-                "attribute", "autocomplete", "srcset", "fold",
+                "attribute", "autocomplete", "srcset",
             }:
                 warn(f"docs/04 documenta `{inv}`, mas nenhum elemento a declara em invariants")
 

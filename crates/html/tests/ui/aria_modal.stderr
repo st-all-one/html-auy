@@ -1,0 +1,7 @@
+error: `aria-modal` é derivado de `showModal()`; remova
+         = regra: spec:no_aria_modal
+         = ajuda: remova o atributo
+ --> tests/ui/aria_modal.rs:6:28
+  |
+6 |     let _ = html! { dialog aria_modal="true" aria_label=(l) { m } };
+  |                            ^^^^^^^^^^

@@ -1,0 +1,7 @@
+error: `label` exige `for` ou um controle envolvido
+         = regra: WCAG 1.3.1
+         = ajuda: `Field::text(FieldName::new("nome"), Msg::Name, &state)` gera label+id+aria
+ --> tests/ui/label_without_for.rs:6:21
+  |
+6 |     let _ = html! { label { m } };
+  |                     ^^^^^

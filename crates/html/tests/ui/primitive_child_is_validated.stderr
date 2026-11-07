@@ -1,0 +1,7 @@
+error: o shell emite `script`; `html!` não o constrói
+         = regra: spec:shell_only_elements
+         = ajuda: use `ShellData::new(Text::msg(Msg::Title), heading, lang)` — `<title>`, `<html>`, `<head>` e `<main>` são do shell
+ --> tests/ui/primitive_child_is_validated.rs:7:30
+  |
+7 |     let _ = html! { Comp() { script { m } } };
+  |                              ^^^^^^
