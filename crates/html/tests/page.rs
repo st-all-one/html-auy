@@ -1,8 +1,8 @@
 //! Shell: o documento tem uma ordem e ela não é negociável (docs/06, docs/09).
 
 use html::{
-    Alternate, Asset, Dir, ExternalUrl, HtmxConfig, JsonGraph, JsonLd, LUrl, Lang, Msg, OpenGraph,
-    OpenGraphKind, Page, Regions, ShellData, Text, View, html,
+    Alternate, Asset, Class, DataAttr, Dir, ExternalUrl, HtmxConfig, JsonGraph, JsonLd, LUrl, Lang,
+    Msg, OpenGraph, OpenGraphKind, Page, Regions, RootAttributes, ShellData, Text, View, html,
 };
 
 #[derive(Clone, Copy)]
@@ -174,18 +174,54 @@ fn noscript_keeps_skip_link_first_and_precedes_header() {
 }
 
 #[test]
-fn styles_before_scripts_and_deduplicated() {
+fn assets_keep_declaration_order_and_deduplicate() {
     let css = Asset::style("/assets/a.css").expect("css");
     let js = Asset::script("/assets/a.js").expect("js");
-    let view = View::new(html! { p { (Text::new("x")) } })
-        .asset(js)
-        .asset(css);
-    let page = Page::new(&shell(), view);
+    let data = ShellData::new(Text::new("Ordem"), Text::new("Ordem"), lang())
+        .assets([js, css].into_iter().collect());
+    let view = View::new(html! { p { (Text::new("x")) } }).asset(css);
+    let page = Page::new(&data, view);
     let drawn = page.markup().as_str();
-    let style = drawn.find("rel=\"stylesheet\"").expect("estilo");
     let script = drawn.find("type=\"module\"").expect("script");
-    assert!(style < script, "estilo antes de script");
+    let style = drawn.find("rel=\"stylesheet\"").expect("estilo");
+    assert!(script < style, "a ordem é a declarada, não a espécie");
     assert_eq!(drawn.matches("/assets/a.css").count(), 1);
+}
+
+#[test]
+fn external_assets_and_classic_script_are_expressible() {
+    let css = Asset::external_style("https://cdn.example/app.css").expect("css");
+    let js = Asset::external_classic_script("https://cdn.example/bootstrap.js").expect("js");
+    let data = ShellData::new(Text::new("CDN"), Text::new("CDN"), lang())
+        .assets([js, css].into_iter().collect());
+    let drawn = Page::new(&data, View::new(html! { p { (Text::new("x")) } }));
+    let s = drawn.markup().as_str();
+    assert!(s.contains("<script defer src=\"https://cdn.example/bootstrap.js\"></script>"));
+    assert!(s.contains("<link rel=\"stylesheet\" href=\"https://cdn.example/app.css\">"));
+}
+
+#[test]
+fn root_attributes_are_explicit_and_ordered() {
+    let html_attrs = RootAttributes::new()
+        .class(Class::new("dark"))
+        .data(DataAttr::new("data-bs-theme", "dark").expect("data-*"));
+    let body_attrs = RootAttributes::new()
+        .class(Class::new("has-navbar-fixed-top"))
+        .data(DataAttr::new("data-theme", "contrast").expect("data-*"));
+    let data = ShellData::new(Text::new("Tema"), Text::new("Tema"), lang())
+        .html_attributes(html_attrs)
+        .body_attributes(body_attrs);
+    let drawn = Page::new(&data, View::new(html! { p { (Text::new("x")) } }));
+    let s = drawn.markup().as_str();
+    assert!(s.contains("<html lang=\"pt-BR\" class=\"dark\" data-bs-theme=\"dark\"><head>"));
+    assert!(s.contains("<body class=\"has-navbar-fixed-top\" data-theme=\"contrast\">"));
+}
+
+#[test]
+fn data_attr_rejects_invalid_names() {
+    assert!(DataAttr::new("bs-theme", "dark").is_none());
+    assert!(DataAttr::new("data-BS", "dark").is_none());
+    assert!(DataAttr::new("data-bs-theme", "dark").is_some());
 }
 
 #[test]

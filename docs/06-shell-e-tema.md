@@ -57,10 +57,11 @@ O `Page` emite essa sequência; cada bloco só aparece quando o dado existe. `ca
 deduplicados; `manifest` é emitido quando `ShellData::manifest(LUrl)` recebe um caminho interno
 validado. Esses `link` são `only = "shell"` no spec, então não há escape pelo `html!`.
 
-A ordem não é estilo: `charset` nas primeiras 1024 posições é detectado mais cedo, e o CSS antes do
-script evita FOUC. O **prefixo do `<head>`** (até o último `<script>` do head, já com CSS inline se
-houver) tem limite absoluto de **14 KB comprimidos**: acima disso o primeiro pacote TCP se divide e o
-ganho de streaming se perde.
+A ordem não é estilo: `charset` nas primeiras 1024 posições é detectado mais cedo. Assets seguem
+**estritamente** a ordem declarada (CSS e scripts misturados, sem inferência); para evitar FOUC,
+declare o CSS antes dos scripts. O **prefixo do `<head>`** (até o último `<script>` do head) tem
+limite absoluto de **14 KB comprimidos**: acima disso o primeiro pacote TCP se divide e o ganho de
+streaming se perde.
 
 ### O que o shell resolve (uma vez por request)
 
@@ -72,6 +73,10 @@ ganho de streaming se perde.
 | `preset` + `regions` | dados ([ADR-016] equivalente) | presença de header/footer/aside, grid |
 | `theme` | tokens resolvidos (ver §3) | `data-theme`, link do `/theme.css` |
 | `a11y` | cookies | `data-a11y-*` no `<html>` (sem FOUC) |
+
+`ShellData::html_attributes` e `ShellData::body_attributes` recebem `RootAttributes` com `class`
+(ex.: `dark` do Tailwind) e `data-*` validados (ex.: `data-bs-theme`). A ordem é classe e depois os
+`data-*` na ordem de declaração; o shell não aceita atributo arbitrário no root.
 | `nav` | manifesto de módulos | `nav` nomeado, um `aria-current` |
 | `meta` | SEO (title/description/canonical/hreflang/Open Graph) | `<head>` |
 | `jsonld` | `JsonLd` | `<script type="application/ld+json">` |
@@ -97,7 +102,7 @@ cabeçalho HTTP.
 ### Gate que fecha o cerco (`layout-contract`)
 
 Todo corpo renderizado tem: exatamente um `<main>`, um `<header>`, `<html lang>` válido, `<title>`
-não vazio; nada de `<html>`/`<head>`/`<style>`/`style=` dentro do `<main>`; nenhum `<script>` sem
+não vazio; nada de `<html>`/`<head>`/`<style>` dentro do `<main>`; `style=` inline é escape hatch auditado; nenhum `<script>` sem
 `src` (exceto `application/ld+json`).
 
 ## 2. Precedência de layout
@@ -194,7 +199,7 @@ html! { div(class: Class::of(&[Token::Card]), data_tone: Tone::Primary) { … } 
 
 - `Tone` é enum fechado; `SectionId` é enum por módulo.
 - O mapa `seção → token` é dado, validado; o CSS é derivado e entra no mesmo `/theme.css`.
-- Tentar `style="background:#ff0"` **não compila** (o atributo não existe).
+- `style="background:#ff0"` é permitido como escape hatch, mas não é o caminho de tema: `audit` sinaliza e CSP muda.
 - Hex vindo do banco é rejeitado no schema e o valor é ignorado (fail-safe).
 
 Ganho de manutenção: "cor do bloco da home", "acento dos cards", "cor do rodapé" são três chaves de um
@@ -232,7 +237,7 @@ mapa — não N folhas inline, não cache fragmentado por página.
 3. `lang`/`dir`/`canonical` do locale ativo; `hreflang` alternates e Open Graph quando declarados.
 4. Um único `<h1>` (o `Page` o emite por padrão; um shell próprio pode declará-lo, e o `audit` cobra a contagem).
 5. Ordem do DOM = ordem visual (sidebar por CSS lógico).
-6. `<script>`/`<link>` só com `src`/`href`; ordem determinística por `BTreeSet`.
+6. `<script>`/`<link>` só com `src`/`href`; ordem **de declaração**, sem inferência.
 7. `ETag` do corpo calculável a partir do `Markup` final (o cabeçalho é do consumidor).
 8. Somente o shell conhece `Ctx`; módulos recebem apenas os dados do seu domínio.
 

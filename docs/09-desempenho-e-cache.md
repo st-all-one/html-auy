@@ -27,7 +27,7 @@ Metas declaradas (não dogmas):
   - ordem de atributos = ordem declarada na spec;
   - `SrcSet`: largura crescente, tipo MIME em ordem lexical;
   - classes: deduplicadas e em ordem estável (`Class` ordena por `Token` derivado);
-  - assets: `BTreeSet`;
+  - assets: lista na ordem de declaração, com dedupe;
   - tokens de tema e regras de CSS: `BTreeMap`.
 - `304` quando `If-None-Match` casa. `Cache-Control: public, no-cache` para HTML com formulário em
   área própria; HTML público pode ser cacheável (decisão do consumidor).

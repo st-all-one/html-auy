@@ -130,7 +130,7 @@ type_enum = "block"
 #     deprecated        motivo; advisory e mantém compilação por uma minor.
 #
 # Atributos NUNCA permitidos em nenhum elemento (não aparecem em `allowed`):
-#   style, on*, srcdoc, formaction, ping, @*, hx-on*, x-on:*, slot=, shadowrootmode, part=,
+#   on*, srcdoc, formaction, ping, @*, hx-on*, x-on:*, slot=, shadowrootmode, part=,
 #   exportparts, is=, xlink:href  (docs/03 §5, docs/08 §2)
 #
 # A ordem dos atributos neste arquivo é a ordem de emissão na saída (determinismo de bytes, D14).
@@ -138,6 +138,7 @@ type_enum = "block"
 [globals]
 # atributos aceitos em qualquer elemento, com valores enumerados (nunca string livre)
 hidden = ["", "until-found"]
+style = "text"                  # inline: permitido, mas contra-recomendado; `audit` sinaliza
 title = "text"                  # dica visual; NÃO é nome acessível (D31)
 dir = ["ltr", "rtl", "auto"]
 translate = ["yes", "no"]

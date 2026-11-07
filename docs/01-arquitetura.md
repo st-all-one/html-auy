@@ -132,7 +132,7 @@ O módulo pode:
 
 O módulo **não pode**:
 
-- emitir `<html>`, `<head>`, `<style>`, `style=`, `on*`, `<script>` inline;
+- emitir `<html>`, `<head>`, `<style>`, `on*`, `<script>` inline; `style=` só como escape hatch auditado;
 - resolver rota por string (só `LUrl`);
 - escrever texto literal visível (só `Msg`/`Text::new`, para garantir 4 locales).
 

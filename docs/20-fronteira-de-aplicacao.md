@@ -57,7 +57,7 @@ um lugar.
 ### 3.2 `View` — a pilha vira valor devolvido
 
 ```rust
-pub struct View { main: Markup, modals: Vec<Markup>, assets: BTreeSet<Asset> }
+pub struct View { main: Markup, modals: Vec<Markup>, assets: Assets }
 
 impl View {
     pub fn new(main: impl Into<Markup>) -> Self;

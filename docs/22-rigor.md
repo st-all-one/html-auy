@@ -42,7 +42,7 @@ inimigo é o mesmo: **comportamento não determinístico e falha sem diagnóstic
 | Lint | Nível | Por que aqui |
 |---|---|---|
 | `unwrap_used`, `expect_used`, `panic`, `unreachable`, `indexing_slicing` | `deny` | **um panic dentro de proc-macro não é erro útil**: vira mensagem genérica sem span. Toda falha tem de ser `compile_error!` com span. `indexing_slicing` fecha a porta mais comum (`.get()`/`split_at`/`first()` no parser) |
-| `disallowed_types`: `HashMap`, `HashSet`, `LinkedList` | `deny` | ordem de iteração não determinística → **bytes diferentes** para a mesma view, ETag instável, golden flaky. Tudo `BTreeMap`/`BTreeSet` |
+| `disallowed_types`: `HashMap`, `HashSet`, `LinkedList` | `deny` | ordem de iteração não determinística → **bytes diferentes** para a mesma view, ETag instável, golden flaky. Ordem explícita de declaração ou `BTreeMap`/`BTreeSet` |
 | `disallowed_methods`: `SystemTime::now`, `Instant::now` | `deny` | golden sem horário; nada no crate precisa de relógio (se precisar, é injetado) |
 | `disallowed_methods`: `std::env::var*` | `deny` | o macro **não lê ambiente**: configuração entra por `ShellData`/feature/registro, nunca por `cfg!(env)` |
 | `as_conversions` + `cast_possible_truncation` / `cast_sign_loss` / `cast_possible_wrap` / `cast_precision_loss` | `deny` | conversão de pixel/percentual com saturação **auditada** num único módulo (`numeric`), como no `sniff`; `as` silencioso em `usize → u32` é bug de largura |

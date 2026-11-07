@@ -11,7 +11,7 @@ e nenhuma depende de disciplina.
 | **valor de atributo** | `"` em `alt`/`title` | `AttrVal` escapa os 5 + `\r\n\t` |
 | **URL** | `javascript:alert(1)`, `data:text/html,…` | `Href` só constrói `https?`, `mailto`, `tel`, `LUrl`, `Fragment`; esquema normalizado |
 | **script/data** | `</script>` dentro de JSON-LD | `JsonLd` escapa `<` `>` `&` `'` para `\uXXXX` |
-| **CSS** | cor/classe controlada pelo usuário | `Token`/`Tone`/`SectionId` são enums; `style=` não existe |
+| **CSS** | cor/classe controlada pelo usuário | `Token`/`Tone`/`SectionId` são enums; `style=` inline é escape hatch auditado, nunca com dado não confiável |
 
 ## 2. Nome de elemento e de atributo nunca vêm de dado
 
@@ -49,7 +49,7 @@ pub enum Href {
 |---|---|---|
 | classe | `Token` (enum fechado), `Class::new`, `class="a b"` estático | classe vinda de string não estática |
 | cor | `Tone`/`SectionId` → token do tema | hex, `rgb()`, nome de cor |
-| estilo inline | — | `style=`, `<style>` |
+| estilo inline | `style=` com dado confiável, contra-recomendado e auditado | `<style>` |
 | tema | tokens validados por schema, `oklch` | CSS, HTML, `url()`, `@import` |
 
 `url()` no tema é recusado explicitamente: é o vetor clássico de exfiltração via CSS.
@@ -84,14 +84,17 @@ form-action 'self';
 frame-ancestors 'none';
 ```
 
-- Sem `nonce`: não há inline, e página cacheável não pode carregar nonce.
+- Sem `nonce`: o caminho padrão não tem inline, e página cacheável não pode carregar nonce.
+- `style=` inline quebra a política padrão: exige `style-src-attr 'unsafe-inline'` (fraco) ou
+  `'unsafe-hashes'` com hashes dos valores. É escape hatch, não o caminho recomendado.
 - Sem `unsafe-eval`: nenhum caminho no vocabulário exige avaliação dinâmica (htmx só com atributos
   declarativos — ver [`07`](07-js-e-assets.md) §7).
 - Trusted Types: como não há `innerHTML` no markup gerado e scripts são módulos próprios, a política
   pode ser `require-trusted-types-for 'script'` no consumidor — e com `default` policy **proibida**
   (uma `default` policy sanitiza em silêncio e esconde a origem do HTML não confiável).
 - Diretivas que faltam nos guias e entram aqui: `script-src-attr 'none'` (bloqueia `on*` por atributo
-  mesmo se algo escapar), `style-src-attr 'none'`, `frame-src 'none'` quando não há iframe permitido,
+  mesmo se algo escapar), `style-src-attr 'none'` (só enquanto não houver `style=` inline),
+  `frame-src 'none'` quando não há iframe permitido,
   `form-action 'self'` (já acima) e `upgrade-insecure-requests`.
 - Fetch Metadata: aceitar `Sec-Fetch-Site: same-origin`, **não** `same-site` — subdomínio comprometido
   é same-site e passaria na checagem.
@@ -120,7 +123,7 @@ O crate garante que **nada do que ele emite** vira injeção. O resto é frontei
 | escape dos 5 caracteres em texto | property test (proptest) sobre alfabeto hostil |
 | escape de JSON-LD | fixture com `</script>` e `<` em título |
 | `javascript:` recusado | `trybuild` + teste de unidade em `Href` |
-| nenhum `style=`/`on*` no vocabulário | teste de conformidade da spec |
+| nenhum `on*` no vocabulário; `style=` só escape hatch | teste de conformidade da spec + `audit` |
 | nenhum `<script>` inline na saída | `html-lint` (N4) |
 | nenhuma origem externa fora da allowlist | `html-lint` + gate de assets |
 | `Cargo.lock` sem `unsafe` novo em dep | `cargo geiger`/`cargo deny` no CI |

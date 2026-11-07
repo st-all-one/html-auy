@@ -2,80 +2,106 @@
 //!
 //! Aqui vivem os únicos elementos que `html!` recusa: `<html>`, `<head>`, `<title>`, `<link>`,
 //! `<script>`, `<h1>` e `<main>` (invariante `shell_only_elements`). O `Page` os emite numa ordem
-//! fixa — é essa ordem que mantém o prefixo do `<head>` pequeno e o CSS antes do JS.
+//! fixa — é essa ordem que mantém o prefixo do `<head>` pequeno; assets seguem a ordem declarada.
 
 use crate::value::AttrValue;
-use alloc::collections::BTreeSet;
-use core::cmp::Ordering;
+use alloc::vec::Vec;
 
 /// Espécie de asset declarado pelo consumidor.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum AssetKind {
     /// `link rel="stylesheet"`.
     Style,
-    /// `script type="module" defer`.
+    /// `script` (módulo ou clássico).
     Script,
 }
 
-impl AssetKind {
-    /// Rank de emissão: estilo antes de script (sem FOUC).
-    const fn rank(self) -> u8 {
-        match self {
-            Self::Style => 0,
-            Self::Script => 1,
-        }
-    }
-}
-
-/// Asset declarado: caminho validado e ordem canônica por `(espécie, caminho)`.
+/// Asset declarado: caminho validado e ordem de emissão preservada.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Asset {
     kind: AssetKind,
     href: &'static str,
     media: Option<crate::value::Media<'static>>,
+    module: bool,
 }
 
 impl Asset {
     /// Folha de estilo do próprio site (`/assets/app.css`).
     #[must_use]
     pub fn style(href: &'static str) -> Option<Self> {
-        if crate::value::valid_path(href) {
-            Some(Self {
-                kind: AssetKind::Style,
-                href,
-                media: None,
-            })
-        } else {
-            None
-        }
+        Self::internal(AssetKind::Style, href, None, false)
     }
 
     /// Folha de estilo condicionada por `media` (por exemplo `print`), sem bloquear a tela.
     #[must_use]
     pub fn style_media(href: &'static str, media: crate::value::Media<'static>) -> Option<Self> {
-        if crate::value::valid_path(href) && !media.is_empty() {
+        if media.is_empty() {
+            return None;
+        }
+        Self::internal(AssetKind::Style, href, Some(media), false)
+    }
+
+    /// Módulo JavaScript do próprio site (`/assets/app.js`).
+    #[must_use]
+    pub fn script(href: &'static str) -> Option<Self> {
+        Self::internal(AssetKind::Script, href, None, true)
+    }
+
+    /// Script clássico do próprio site (sem `type="module"`).
+    #[must_use]
+    pub fn classic_script(href: &'static str) -> Option<Self> {
+        Self::internal(AssetKind::Script, href, None, false)
+    }
+
+    /// Folha de estilo externa (`https://cdn.example/...`), para CDN.
+    #[must_use]
+    pub fn external_style(href: &'static str) -> Option<Self> {
+        Self::external(AssetKind::Style, href, None, false)
+    }
+
+    /// Módulo JavaScript externo, para CDN.
+    #[must_use]
+    pub fn external_script(href: &'static str) -> Option<Self> {
+        Self::external(AssetKind::Script, href, None, true)
+    }
+
+    /// Script clássico externo (Bootstrap/Foundation via CDN).
+    #[must_use]
+    pub fn external_classic_script(href: &'static str) -> Option<Self> {
+        Self::external(AssetKind::Script, href, None, false)
+    }
+
+    fn internal(
+        kind: AssetKind,
+        href: &'static str,
+        media: Option<crate::value::Media<'static>>,
+        module: bool,
+    ) -> Option<Self> {
+        if crate::value::valid_path(href) {
             Some(Self {
-                kind: AssetKind::Style,
+                kind,
                 href,
-                media: Some(media),
+                media,
+                module,
             })
         } else {
             None
         }
     }
 
-    /// Módulo JavaScript do próprio site (`/assets/app.js`).
-    #[must_use]
-    pub fn script(href: &'static str) -> Option<Self> {
-        if crate::value::valid_path(href) {
-            Some(Self {
-                kind: AssetKind::Script,
-                href,
-                media: None,
-            })
-        } else {
-            None
-        }
+    fn external(
+        kind: AssetKind,
+        href: &'static str,
+        media: Option<crate::value::Media<'static>>,
+        module: bool,
+    ) -> Option<Self> {
+        crate::value::ExternalUrl::parse(href)?;
+        Some(Self {
+            kind,
+            href,
+            media,
+            module,
+        })
     }
 
     /// A espécie.
@@ -95,28 +121,180 @@ impl Asset {
     pub const fn media(&self) -> Option<crate::value::Media<'static>> {
         self.media
     }
-}
 
-impl PartialOrd for Asset {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
+    /// `true` para script com `type="module"`.
+    #[must_use]
+    pub const fn is_module(&self) -> bool {
+        self.module
     }
 }
 
-impl Ord for Asset {
-    fn cmp(&self, other: &Self) -> Ordering {
-        match self.kind.rank().cmp(&other.kind.rank()) {
-            Ordering::Equal => match self.href.cmp(other.href) {
-                Ordering::Equal => self.media.cmp(&other.media),
-                other => other,
-            },
-            other => other,
+/// Assets declarados, sem repetição e **na ordem em que foram definidos**.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Assets {
+    items: Vec<Asset>,
+}
+
+impl Assets {
+    /// Conjunto vazio.
+    #[must_use]
+    pub const fn new() -> Self {
+        Self { items: Vec::new() }
+    }
+
+    /// Adiciona no fim; repetido não muda a ordem.
+    pub fn insert(&mut self, asset: Asset) {
+        if !self.items.contains(&asset) {
+            self.items.push(asset);
+        }
+    }
+
+    /// Acrescenta os assets de outro conjunto, preservando a ordem.
+    pub fn extend(&mut self, assets: impl IntoIterator<Item = Asset>) {
+        for asset in assets {
+            self.insert(asset);
+        }
+    }
+
+    /// Itera na ordem declarada.
+    pub fn iter(&self) -> core::slice::Iter<'_, Asset> {
+        self.items.iter()
+    }
+
+    /// Quantidade.
+    #[must_use]
+    pub const fn len(&self) -> usize {
+        self.items.len()
+    }
+
+    /// `true` se vazio.
+    #[must_use]
+    pub const fn is_empty(&self) -> bool {
+        self.items.is_empty()
+    }
+
+    /// `true` se o asset já foi declarado.
+    #[must_use]
+    pub fn contains(&self, asset: &Asset) -> bool {
+        self.items.contains(asset)
+    }
+}
+
+impl FromIterator<Asset> for Assets {
+    fn from_iter<T: IntoIterator<Item = Asset>>(iter: T) -> Self {
+        let mut assets = Self::new();
+        assets.extend(iter);
+        assets
+    }
+}
+
+impl<'a> IntoIterator for &'a Assets {
+    type Item = &'a Asset;
+    type IntoIter = core::slice::Iter<'a, Asset>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.items.iter()
+    }
+}
+
+impl IntoIterator for Assets {
+    type Item = Asset;
+    type IntoIter = alloc::vec::IntoIter<Asset>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.items.into_iter()
+    }
+}
+
+/// Atributo `data-*` de configuração global do documento.
+///
+/// O nome é validado porque o shell não passa pelo `html!`; o valor é escapado na emissão.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DataAttr {
+    name: &'static str,
+    value: &'static str,
+}
+
+impl DataAttr {
+    /// Cria `data-…`; o nome precisa ser `data-` + segmentos `[a-z0-9]` separados por `-`.
+    #[must_use]
+    pub fn new(name: &'static str, value: &'static str) -> Option<Self> {
+        let rest = name.strip_prefix("data-")?;
+        if rest.is_empty()
+            || !rest.split('-').all(|segment| {
+                !segment.is_empty()
+                    && segment
+                        .chars()
+                        .all(|ch| ch.is_ascii_lowercase() || ch.is_ascii_digit())
+            })
+        {
+            return None;
+        }
+        Some(Self { name, value })
+    }
+
+    /// O nome completo (`data-…`).
+    #[must_use]
+    pub const fn name(&self) -> &'static str {
+        self.name
+    }
+}
+
+/// Atributos globais de `<html>` ou `<body>`: classe e `data-*`.
+///
+/// A ordem é a de declaração: primeira a classe, depois os `data-*` na ordem em que entraram.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct RootAttributes {
+    class: crate::value::Class,
+    data: Vec<DataAttr>,
+}
+
+impl RootAttributes {
+    /// Sem atributos.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Classe global (ex.: `dark` do Tailwind).
+    #[must_use]
+    pub fn class(mut self, class: crate::value::Class) -> Self {
+        self.class = class;
+        self
+    }
+
+    /// Um `data-*`; repetir o mesmo nome substitui o valor.
+    #[must_use]
+    pub fn data(mut self, attr: DataAttr) -> Self {
+        if let Some(existing) = self.data.iter_mut().find(|item| item.name == attr.name) {
+            *existing = attr;
+        } else {
+            self.data.push(attr);
+        }
+        self
+    }
+
+    /// `true` se não há classe nem `data-*`.
+    #[must_use]
+    pub const fn is_empty(&self) -> bool {
+        self.class.is_empty() && self.data.is_empty()
+    }
+
+    fn write(&self, out: &mut alloc::string::String) {
+        if !self.class.is_empty() {
+            out.push_str(" class=\"");
+            self.class.write_attr(out);
+            out.push('"');
+        }
+        for attr in &self.data {
+            out.push(' ');
+            out.push_str(attr.name);
+            out.push_str("=\"");
+            crate::escape::attr(out, attr.value);
+            out.push('"');
         }
     }
 }
-
-/// Assets declarados, sem repetição e em ordem canônica.
-pub type Assets = BTreeSet<Asset>;
 
 /// Versão do documento em outro idioma (`<link rel="alternate" hreflang="…">`).
 ///
@@ -289,15 +467,17 @@ pub struct ShellData<'a> {
     pub(crate) canonical: Option<crate::value::ExternalUrl<'a>>,
     pub(crate) manifest: Option<crate::value::LUrl<'a>>,
     pub(crate) dir: Option<crate::value::Dir>,
-    pub(crate) schemas: alloc::vec::Vec<crate::value::JsonLd>,
+    pub(crate) schemas: Vec<crate::value::JsonLd>,
     pub(crate) assets: Assets,
+    pub(crate) html_attributes: RootAttributes,
+    pub(crate) body_attributes: RootAttributes,
     pub(crate) regions: Regions,
     pub(crate) skip: Option<crate::msg::Text<'a>>,
     pub(crate) noscript: Option<crate::Markup>,
-    pub(crate) alternates: alloc::vec::Vec<Alternate<'a>>,
+    pub(crate) alternates: Vec<Alternate<'a>>,
     pub(crate) open_graph: Option<OpenGraph<'a>>,
     pub(crate) htmx_config: Option<HtmxConfig>,
-    pub(crate) hints: alloc::vec::Vec<crate::hint::Hint<'a>>,
+    pub(crate) hints: Vec<crate::hint::Hint<'a>>,
 }
 
 impl<'a> ShellData<'a> {
@@ -316,15 +496,17 @@ impl<'a> ShellData<'a> {
             canonical: None,
             manifest: None,
             dir: None,
-            schemas: alloc::vec::Vec::new(),
+            schemas: Vec::new(),
             assets: Assets::new(),
+            html_attributes: RootAttributes::new(),
+            body_attributes: RootAttributes::new(),
             regions: Regions::new(),
             skip: None,
             noscript: None,
-            alternates: alloc::vec::Vec::new(),
+            alternates: Vec::new(),
             open_graph: None,
             htmx_config: None,
-            hints: alloc::vec::Vec::new(),
+            hints: Vec::new(),
         }
     }
 
@@ -360,7 +542,7 @@ impl<'a> ShellData<'a> {
 
     /// Resource hints do documento (`preconnect`, `preload`, ...), deduplicados.
     #[must_use]
-    pub fn hints(mut self, hints: alloc::vec::Vec<crate::hint::Hint<'a>>) -> Self {
+    pub fn hints(mut self, hints: Vec<crate::hint::Hint<'a>>) -> Self {
         for hint in hints {
             if !self.hints.contains(&hint) {
                 self.hints.push(hint);
@@ -398,7 +580,7 @@ impl<'a> ShellData<'a> {
 
     /// Blocos JSON-LD, emitidos no fim do `<head>`.
     #[must_use]
-    pub fn schemas(mut self, schemas: alloc::vec::Vec<crate::value::JsonLd>) -> Self {
+    pub fn schemas(mut self, schemas: Vec<crate::value::JsonLd>) -> Self {
         self.schemas = schemas;
         self
     }
@@ -407,7 +589,7 @@ impl<'a> ShellData<'a> {
     ///
     /// Sem chamada, nenhum `link rel="alternate"` é emitido: i18n é opcional.
     #[must_use]
-    pub fn alternates(mut self, alternates: alloc::vec::Vec<Alternate<'a>>) -> Self {
+    pub fn alternates(mut self, alternates: Vec<Alternate<'a>>) -> Self {
         self.alternates = alternates;
         self
     }
@@ -430,6 +612,20 @@ impl<'a> ShellData<'a> {
     #[must_use]
     pub fn assets(mut self, assets: Assets) -> Self {
         self.assets = assets;
+        self
+    }
+
+    /// Atributos globais de `<html>` (classe e `data-*`).
+    #[must_use]
+    pub fn html_attributes(mut self, attributes: RootAttributes) -> Self {
+        self.html_attributes = attributes;
+        self
+    }
+
+    /// Atributos globais de `<body>` (classe e `data-*`).
+    #[must_use]
+    pub fn body_attributes(mut self, attributes: RootAttributes) -> Self {
+        self.body_attributes = attributes;
         self
     }
 
@@ -477,6 +673,7 @@ impl Page {
             crate::escape::attr(&mut out, dir.as_str());
             out.push('"');
         }
+        data.html_attributes.write(&mut out);
         out.push_str("><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>");
         crate::escape::text(&mut out, data.title.as_str());
         out.push_str("</title>");
@@ -520,7 +717,11 @@ impl Page {
                     out.push('>');
                 }
                 AssetKind::Script => {
-                    out.push_str("<script type=\"module\" defer src=\"");
+                    out.push_str("<script");
+                    if asset.is_module() {
+                        out.push_str(" type=\"module\"");
+                    }
+                    out.push_str(" defer src=\"");
                     crate::escape::attr(&mut out, asset.href());
                     out.push_str("\"></script>");
                 }
@@ -530,7 +731,9 @@ impl Page {
             schema.render_to(&mut out);
         }
 
-        out.push_str("</head><body>");
+        out.push_str("</head><body");
+        data.body_attributes.write(&mut out);
+        out.push('>');
         if let Some(skip) = &data.skip {
             out.push_str("<a class=\"skip-link\" href=\"#main\">");
             crate::escape::text(&mut out, skip.as_str());

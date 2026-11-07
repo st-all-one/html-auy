@@ -1,6 +1,6 @@
 //! Vocabulário semântico: marcação de texto, grupos de títulos e `datalist`.
 
-use html::{Fragment, Href, Text, html};
+use html::{ClassList, Fragment, Href, Text, html};
 
 #[test]
 fn inline_semantics_emit_native_tags() {
@@ -145,6 +145,25 @@ fn nested_list_is_allowed_inside_li() {
 fn text_new_is_escaped() {
     let drawn = html! { p { (Text::new("a < b & c")) } };
     assert_eq!(drawn.as_str(), "<p>a &lt; b &amp; c</p>");
+}
+
+#[test]
+fn inline_style_is_allowed_and_escaped() {
+    let drawn = html! { div style="color: red; content: \"x\"" { } };
+    assert_eq!(
+        drawn.as_str(),
+        "<div style=\"color: red; content: &quot;x&quot;\"></div>"
+    );
+}
+
+#[test]
+fn dynamic_class_list_is_opt_in_and_canonical() {
+    let classes = ClassList::try_new(["b".to_owned(), "a".to_owned(), format!("col-{}", 6)])
+        .expect("tokens válidos");
+    let drawn = html! { div class=(classes) { } };
+    assert_eq!(drawn.as_str(), "<div class=\"a b col-6\"></div>");
+    assert!(ClassList::try_new(["a b"]).is_none());
+    assert!(ClassList::try_new(["a", " "]).is_none());
 }
 
 #[test]

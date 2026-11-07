@@ -2399,6 +2399,11 @@ pub static GLOBALS: &[GlobalValue] = &[
         values: &["", "until-found"],
     },
     GlobalValue {
+        name: "style",
+        kind: ValueKind::Text,
+        values: &[],
+    },
+    GlobalValue {
         name: "title",
         kind: ValueKind::Text,
         values: &[],

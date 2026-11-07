@@ -3,44 +3,61 @@
 ## 1. Regra única
 
 **JavaScript nunca mora no markup.** Vive em arquivo estático, compilado com hash de conteúdo, e é
-**declarado por tipo** pelo Rust. O vocabulário do `html-auy` só sabe emitir
-`<script type="module" defer src=…>` e
-`<link rel=stylesheet href=…>`; `<script>` inline, `on*` e `style=` **não existem**.
+**declarado por tipo** pelo Rust. O vocabulário do `html-auy` emite
+`<script type="module" defer src=…>` (ou clássico, sem `type="module"`) e
+`<link rel=stylesheet href=…>`. `<script>` inline e `on*` continuam inexistentes. `style=` inline
+existe como **escape hatch** (ver §5): `audit` sinaliza e o CSP precisa de `style-src` compatível.
 
-Consequência: CSP `script-src 'self'` sem `unsafe-inline` e sem `unsafe-eval`, página cacheável e
-`ETag` estável.
+Consequência: CSP `script-src 'self'` sem `unsafe-inline`/`unsafe-eval`; com `style=` inline, a
+política de estilo deixa de ser `'none'` e passa a exigir uma decisão explícita.
 
 ## 2. Tipos
 
 ```rust
-// html::shell — asset é (tipo, caminho interno validado); hash e CDN são do consumidor
+// html::shell — asset é (tipo, URL validada, ordem de declaração); hash é do consumidor
 pub struct Asset { /* privado */ }
 impl Asset {
-    pub fn style(href: &'static str) -> Option<Asset>;   // `/assets/app.css`
+    pub fn style(href: &'static str) -> Option<Asset>;             // `/assets/app.css`
     pub fn style_media(href: &'static str, media: Media<'static>) -> Option<Asset>; // `media="print"`
-    pub fn script(href: &'static str) -> Option<Asset>;  // `/assets/app.js`
+    pub fn script(href: &'static str) -> Option<Asset>;            // `/assets/app.js`, módulo
+    pub fn classic_script(href: &'static str) -> Option<Asset>;    // `/assets/app.js`, clássico
+    pub fn external_style(href: &'static str) -> Option<Asset>;    // `https://cdn…/app.css`
+    pub fn external_script(href: &'static str) -> Option<Asset>;   // CDN, módulo
+    pub fn external_classic_script(href: &'static str) -> Option<Asset>; // CDN, clássico
 }
-pub type Assets = BTreeSet<Asset>;
+pub struct Assets { /* Vec na ordem declarada, com dedupe */ }
 
-// consumidor: a antiga enumeração vira função que devolve os assets que a view pede
+// consumidor: a ordem é a do código, não a do tipo nem a do alfabeto
 fn base() -> Assets {
-    [Asset::style("/assets/app.css"), Asset::script("/assets/app.js")]
-        .into_iter()
-        .flatten()
-        .collect()
+    [
+        Asset::external_style("https://cdn.example/reset.css"),
+        Asset::style("/assets/app.css"),
+        Asset::external_classic_script("https://cdn.example/bootstrap.js"),
+        Asset::script("/assets/app.js"),
+    ]
+    .into_iter()
+    .flatten()
+    .collect()
 }
 ```
 
-O shell emite, ao final, apenas os assets exigidos durante a montagem — e o faz em ordem canônica.
-Mídia de conteúdo (`<img>`, `<picture>`, `<video>`, `<audio>`) **não** é `Asset`: ela carrega dados do
-documento e usa `Src`/`SrcSet`/`Alt` em [`media`](../crates/html/src/media.rs), sem hash de build.
+O shell emite os assets **na ordem em que foram definidos**, misturando `link` e `script` sem
+inferência. Se a cascata exige reset → tema → componentes → utilities, essa é a ordem da lista (ou
+um único CSS com `@layer`). Dedupe é por igualdade de `(tipo, URL, media, módulo)`: repetir não
+move a posição.
 
 ```rust
 let view = home_editor(&data)                // a view declara o que exige…
     .asset(Asset::script("/assets/home.js").expect("asset")); // …e o `View` deduplica
 let shell = ShellData::new(title, heading, lang).assets(base()); // base do documento
-Page::new(&shell, view)                      // `BTreeSet` ordena; bytes determinísticos
+Page::new(&shell, view)                      // shell primeiro, depois assets da view, na ordem
 ```
+
+CDN é aceito por construtor próprio (`external_style`/`external_script`, `http`/`https` validados)
+e é **desencorajado** em produção: self-host dá CSP estrita, SRI e cache sob seu controle.
+
+Mídia de conteúdo (`<img>`, `<picture>`, `<video>`, `<audio>`) **não** é `Asset`: ela carrega dados do
+documento e usa `Src`/`SrcSet`/`Alt` em [`media`](../crates/html/src/media.rs), sem hash de build.
 
 ## 3. Onde o JS passa a ler o estado
 
@@ -82,12 +99,15 @@ montagem, não empurrado por `@push` em qualquer view.
 |---|---|---|
 | `<script src defer>` de asset com hash | `<script>` inline | CSP, `ETag`, cache |
 | `<link rel=stylesheet href>` de asset com hash | `<style>` | CSP, cache |
+| `style=` inline confiável | `style=` com dado não confiável | escape hatch auditado; CSP muda |
 | `<script type="application/ld+json">` | script com conteúdo executável | dado ≠ script |
 | `addEventListener` em módulo | `onclick=`/`hx-on=`/`js:` filters | exige `eval`/inline |
 | `fetch`/`form` nativos | `Function`/`eval` | CSP |
 
 `script-src 'self'`; `style-src 'self'`; `object-src 'none'`; `base-uri 'none'`. Sem `nonce`, porque
-não há inline — e uma página cacheável não pode carregar nonce.
+o caminho padrão não tem inline — e uma página cacheável não pode carregar nonce. CDN externo exige
+`script-src`/`style-src` com o host explícito; `style=` inline exige `style-src-attr`
+(`'unsafe-inline'` ou `'unsafe-hashes'`).
 
 - **`new Function`/compilação de template no cliente é proibido.** Template que vira código em
   runtime exige `'unsafe-eval'` e foge do hash de asset: o mesmo arquivo passa a ter comportamento
@@ -199,7 +219,7 @@ icons (svg inline)        ─┘
 /sw.js  ·  /manifest.webmanifest   ──▶ URL FIXA, sem hash, com ETag
 ```
 
-- Sem CDN. Sem `latest`. Tudo vendorizado no repositório do consumidor.
+- O shell aceita CDN por construtor explícito, mas o pipeline recomendado é vendorizar: sem `latest`, tudo com hash no repositório do consumidor.
 - **Dois assets não levam hash no nome**, e o motivo é técnico: `/sw.js` é atualizado por
   *diferença de bytes na mesma URL* (o navegador só troca o worker se o byte a byte do script mudou) e
   o manifest tem `start_url`/`scope` resolvidos contra a URL dele — hashear mudaria a base relativa.

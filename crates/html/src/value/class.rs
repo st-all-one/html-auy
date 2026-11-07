@@ -1,5 +1,6 @@
 //! Classes CSS: o enum de tokens é do consumidor, o conjunto é do crate.
 
+use alloc::string::String;
 use alloc::vec::Vec;
 
 /// Token de classe gerado do vocabulário de design (`tokens.css`) do consumidor.
@@ -54,6 +55,55 @@ impl Class {
     /// Os tokens na ordem canônica.
     #[must_use]
     pub fn tokens(&self) -> &[&'static str] {
+        &self.tokens
+    }
+}
+
+/// Lista de classes **dinâmica**, opt-in: aceita `String`/`&str` em runtime.
+///
+/// Diferente de [`Class`] (tokens `&'static str`), esta lista existe para valores calculados
+/// (`col-6`, tema escolhido pelo usuário). Cada item é um único token; espaços, controles e vazios
+/// são recusados. O crate não conhece o vocabulário do consumidor: se o token vier de entrada não
+/// confiável, valide-o contra uma allowlist antes de construir a lista.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ClassList {
+    tokens: Vec<String>,
+}
+
+impl ClassList {
+    /// Constrói a lista, ordena e deduplica; `None` se algum item não for um token válido.
+    #[must_use]
+    pub fn try_new<I, S>(tokens: I) -> Option<Self>
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        let mut list = Vec::new();
+        for token in tokens {
+            let token = token.into();
+            if token.is_empty()
+                || token
+                    .chars()
+                    .any(|ch| ch.is_control() || ch.is_whitespace())
+            {
+                return None;
+            }
+            list.push(token);
+        }
+        list.sort_unstable();
+        list.dedup();
+        Some(Self { tokens: list })
+    }
+
+    /// `true` se não há token (o atributo `class` então não é emitido).
+    #[must_use]
+    pub const fn is_empty(&self) -> bool {
+        self.tokens.is_empty()
+    }
+
+    /// Os tokens na ordem canônica.
+    #[must_use]
+    pub fn tokens(&self) -> &[String] {
         &self.tokens
     }
 }

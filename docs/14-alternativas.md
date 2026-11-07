@@ -47,8 +47,8 @@ compila, publica e o defeito chega ao cidadão.
 | `img` sem `alt` | passa | passa (`alt?: string`) | recusa | macro (`required`) |
 | `img` sem `width`/`height` | passa | passa | recusa | macro + tipo `WidthPx`/`HeightPx` |
 | `href="javascript:alert(1)"` | passa | passa (`href?: string`) | não é expressável | tipo `Href` |
-| `class` montada de dado (`"btn {{x}}"`) | passa | passa | não é expressável | tipo `Class` (tokens fechados) |
-| `style=` / `onclick="…"` | passa | passa (`style={{}}`, index signature) | não existe | vocabulário (não há atributo) |
+| `class` montada de dado (`"btn {{x}}"`) | passa | passa | opt-in `ClassList` | `Class` estático ou `ClassList` validado |
+| `style=` / `onclick="…"` | passa | passa (`style={{}}`, index signature) | `style=` só escape hatch auditado | vocabulário + `audit` |
 | `aria-*`/`role` inválido ou contraditório | passa | passa (`string`) | recusa | macro (enums + invariantes) |
 | `label` sem `for`/`id` pareado | passa | passa | recusa | macro (`Field::text` gera os dois) |
 | link ambíguo ("leia mais") | passa | passa | recusa | macro (por variante de `Msg`) |

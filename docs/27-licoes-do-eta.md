@@ -64,6 +64,8 @@ Além disso, a superfície do `html!` ficou mais próxima do `eta` no caso comum
   as formas.
 - texto visível continua rigoroso: `Msg` para catálogo/i18n e `Text::new` para dado dinâmico; o
   parser recusa literal `"Olá"` no `html!`.
+- classes dinâmicas têm porta opt-in em `ClassList::try_new`; assets preservam a ordem declarada,
+  aceitam CDN por construtor explícito e `html`/`body` recebem classe/`data-*` via `RootAttributes`.
 - os dados estáticos saíram de `page.rs` para `content.rs` (`SERVICES`, `CONTROLS`, `NAV`,
   `EXEC_QUICK`, `LEG_QUICK`, `GAZETTE`, `Msg`); `page.rs` é só marcação + loops.
 

@@ -11,8 +11,7 @@ use crate::table::{self, Only, ValueKind};
 use proc_macro2::Span;
 
 /// Atributos que nenhum elemento aceita (docs/03 §5, docs/08 §2).
-const FORBIDDEN_ATTRS: [&str; 13] = [
-    "style",
+const FORBIDDEN_ATTRS: [&str; 12] = [
     "srcdoc",
     "formaction",
     "ping",

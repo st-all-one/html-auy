@@ -105,8 +105,10 @@ html! { div class=(Class::of(&[Token::Card, Token::Flat])) { … } }
 - `class="a b"`, `Class::new("a b")` e `Class::of(&[Token::…])` são equivalentes: todos produzem
   a mesma lista canônica. O literal é canonicalizado no codegen; `Class::new` faz o mesmo em
   runtime e `Class::of` continua sendo o caminho do enum gerado de `tokens.css`.
-- O que não existe é `class` vindo de dado não estático: a lista é `&'static str` ou `Class`; o
-  escape e a ordem são do crate.
+- `class` dinâmico é opt-in por `ClassList::try_new`: aceita `String`/`&str`, recusa espaço/controle,
+  ordena e deduplica. Não conhece o design system; se o token vier de entrada não confiável, valide
+  contra uma allowlist. Para o caso estático, `Class` continua sendo o caminho sem alocação extra.
+- O escape e a ordem são sempre do crate; a diferença é só a origem do token.
 
 ## 6. Texto, i18n e nomes acessíveis
 
@@ -154,11 +156,13 @@ em `spec/elements.toml` → `[meta] boolean_attributes`; atributo booleano fora 
 | Ausente | Motivo |
 |---|---|
 | `Raw`, `PreEscaped`, `unsafe_html` | bypass de escape é o defeito que o projeto elimina |
-| `style=` | CSP sem inline; estilo é token |
 | `on*` (event handlers) | CSP; comportamento é arquivo JS declarado |
 | atributo arbitrário `attrs(…)` | validação que aceita "qualquer coisa" não valida |
 | `String` como conteúdo | quebra o invariante de `Markup` |
 | `f64` para dinheiro | precisão e determinismo |
+
+`style=` inline **existe** como escape hatch: permitido, contra-recomendado e sinalizado por `audit`;
+classe/token continua sendo o caminho de estilo ([`08`](08-seguranca.md) §4).
 
 ## 9. Erros de tipo: mensagens (todas cobertas por `trybuild`)
 

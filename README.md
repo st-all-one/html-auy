@@ -73,7 +73,7 @@ linhas e tempo de correção contra o Blade. Os testes de aceitação de leitura
 ## Não-objetivos (resumo executivo)
 
 - Não é um framework: não conhece HTTP, banco, sessão, i18n de domínio nem roteamento.
-- Não aceita template em runtime, HTML vindo de banco ou `style=`/`on*`.
+- Não aceita template em runtime, HTML vindo de banco ou `on*`; `style=` inline existe só como escape hatch auditado.
 - Não é publicado como crate; não há semver público.
 - Não substitui `axe`, `sniffCSS` ou testes de teclado — ele reduz o custo de chegar até eles.
 

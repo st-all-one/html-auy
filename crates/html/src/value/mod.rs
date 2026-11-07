@@ -14,7 +14,7 @@ pub(crate) mod url;
 use alloc::string::String;
 
 pub use autocomplete::Autocomplete;
-pub use class::{Class, ClassToken, Tone};
+pub use class::{Class, ClassList, ClassToken, Tone};
 pub use image::{Alt, HeightPx, Sizes, SrcSet, Variant, WidthPx};
 pub use integrity::Integrity;
 pub use jsonld::{JsonGraph, JsonLd};
@@ -36,6 +36,11 @@ use crate::numeric;
 pub trait AttrValue {
     /// Escreve o valor escapado em `out`.
     fn write_attr(&self, out: &mut String);
+
+    /// `true` quando o atributo deve ser omitido (lista vazia).
+    fn is_empty_attr(&self) -> bool {
+        false
+    }
 }
 
 /// Implementa [`AttrValue`] para um tipo que já garante o próprio vocabulário.
@@ -76,6 +81,27 @@ impl AttrValue for Class {
             out.push(' ');
             escape::attr(out, token);
         }
+    }
+
+    fn is_empty_attr(&self) -> bool {
+        self.is_empty()
+    }
+}
+
+impl AttrValue for ClassList {
+    fn write_attr(&self, out: &mut String) {
+        let mut tokens = self.tokens().iter();
+        if let Some(first) = tokens.next() {
+            escape::attr(out, first);
+        }
+        for token in tokens {
+            out.push(' ');
+            escape::attr(out, token);
+        }
+    }
+
+    fn is_empty_attr(&self) -> bool {
+        self.is_empty()
     }
 }
 

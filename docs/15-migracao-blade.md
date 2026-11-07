@@ -31,7 +31,7 @@ origem, não estimados.
 | `@php` com defaults | 130 arquivos | `Default` nos props + builder | mecânico |
 | `app()` / `Blade::render()` | ~30 arquivos | `ShellCtx`/`WidgetCtx` (assembler) | **julgamento** |
 | `<x-slot:…>` | 62 | parâmetro do componente | mecânico |
-| `@push`/`@stack` | 2 | `Ctx::require(Asset)` → `BTreeSet` | trivial |
+| `@push`/`@stack` | 2 | `Ctx::require(Asset)` → `Assets` ordenado | trivial |
 | `<x-dynamic-component>` | 1 | `match` | trivial |
 | `@vite` | 2 | registro de asset com hash | mecânico |
 | `@csrf` | 69 arquivos | campo tipado do primitivo `Form` | mecânico |

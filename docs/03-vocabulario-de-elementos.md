@@ -142,9 +142,11 @@ Regras verificadas no macro (dentro de um bloco):
 
 ## 5. Atributos nunca permitidos (em nenhum elemento)
 
+`style` **não** está nesta lista: inline é permitido como escape hatch, contra-recomendado e
+sinalizado por `audit` ([`08`](08-seguranca.md) §4). Prefira classe/token.
+
 | Atributo | Motivo |
 |---|---|
-| `style` | CSP sem inline; estilo é token ([`06`](06-shell-e-tema.md)) |
 | `on*` (`onclick`, `onload`, …) | CSP; comportamento é arquivo JS declarado ([`07`](07-js-e-assets.md)) |
 | `srcdoc` | HTML aninhado como string — bypass de escape |
 | `@*` (Alpine) | framework cliente não faz parte do vocabulário |

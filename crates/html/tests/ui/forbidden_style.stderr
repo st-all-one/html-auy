@@ -1,7 +1,0 @@
-error: atributo proibido `style` em `div`
-         = regra: spec:element.div
-         = ajuda: estilo é token e comportamento é asset declarado
- --> tests/ui/forbidden_style.rs:6:25
-  |
-6 |     let _ = html! { div style="color: red" { } };
-  |                         ^^^^^

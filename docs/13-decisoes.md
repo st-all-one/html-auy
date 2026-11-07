@@ -130,7 +130,7 @@ verificado no save.
 
 **Contexto.** Parcial autocontido tende a "carregar o script junto".
 **Decisão.** Componente declara `const ASSETS: &[Asset]`; quem emite é o shell, via
-`Ctx::require` (dedup + ordem canônica). Estado vai por `data-*` tipado.
+`Ctx::require` (dedup + ordem de declaração). Estado vai por `data-*` tipado.
 **Consequência.** Coesão preservada sem inline; CSP e `ETag` intactos; JS genérico e sem domínio.
 
 ---
@@ -280,8 +280,8 @@ níveis abaixo apareça no rodapé do shell. Em Rust, a tradução literal seria
 cadeia ou um `thread_local` — ordem de flush implícita e estado global.
 **Decisão.** `View { main, modals, assets }`, combinável (`View::merge`); o fragmento devolve
 `View::new(f) .modal(d)`; `Page::new(&ShellData, View)` consome uma vez, na ordem do shell. `assets` é
-`BTreeSet<Asset>` (dedupe e ordem determinística).
-**Consequência.** A ordem de emissão passa a ser derivada do tipo; `assert!(view.modals.len() == 1)` é
+`Assets` (dedupe e ordem de declaração, sem inferência).
+**Consequência.** A ordem de emissão é a declarada; `assert!(view.modals.len() == 1)` é
 teste; `Page` continua função pura.
 
 ---
@@ -415,3 +415,22 @@ codegen; `Class::new("a b")` cobre o valor estático. Texto visível continua ex
 destino. O preço é explícito: o `h1` único deixa de ser garantia de tipo e vira auditoria de
 documento (`audit`); um consumidor que usa `Page` mantém a garantia, um shell próprio assume a
 contagem. A versão do vocabulário sobe para `2.1.0`; o crate entra em `0.1.0`.
+
+## D34 — Assets, root e `style` controláveis sem quebrar o contrato
+
+**Contexto.** O mundo real ordena CSS/JS manualmente, usa CDN, precisa de `class`/`data-*` no
+`<html>`/`<body>` (dark mode, `data-bs-theme`) e, ocasionalmente, de `style=` inline. O crate tratava
+tudo como se só existisse asset interno e CSS antes de JS.
+
+**Decisão.** (a) `Assets` é uma lista na **ordem de declaração**, com dedupe; `Page` emite shell
+primeiro e depois os assets da view, sem inferir espécie. (b) `Asset` ganha `external_style`,
+`external_script`, `external_classic_script` e `classic_script`; CDN é aceito, mas documentado como
+não recomendado. (c) `RootAttributes` permite `class` e `data-*` validados no `<html>` e no `<body>`.
+(d) `style=` inline é permitido como escape hatch: o valor é escapado, `audit` sinaliza e o CSP deixa
+de ser `style-src-attr 'none'`. `style` continua sem virar `Token`; a contra-recomendação é explícita.
+(e) `ClassList::try_new` é a porta opt-in para classes dinâmicas; valida token, ordena, deduplica e
+não substitui `Class`/`ClassToken`.
+
+**Consequência.** O consumidor controla cascata, CDN, tema global e valores calculados sem pedir
+mudança no crate. O preço é assumido: ordem manual pode errar, CDN exige CSP/SRI do consumidor,
+`style=` pode injetar CSS se receber dado não confiável e `ClassList` não conhece o design system.

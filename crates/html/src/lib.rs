@@ -69,13 +69,13 @@ pub use media::{Audio, Img, Loading, MediaPreload, Picture, Source, Track, Track
 pub use msg::{Msg, Text};
 pub use response::{MainSwap, Partial, RegionUpdate, RequestClass, Swap, Sync};
 pub use shell::{
-    Alternate, Asset, AssetKind, Assets, HtmxConfig, OpenGraph, OpenGraphKind, Page, Regions,
-    ShellData,
+    Alternate, Asset, AssetKind, Assets, DataAttr, HtmxConfig, OpenGraph, OpenGraphKind, Page,
+    Regions, RootAttributes, ShellData,
 };
 pub use value::{
-    Alt, AttrVal, AttrValue, Autocomplete, Class, ClassToken, Dir, ExternalUrl, FieldName,
-    Fragment, HeightPx, Href, Hreflang, Id, Integrity, JsonGraph, JsonLd, LUrl, Label, Lang,
-    MailAddr, Media, MediaPath, Offset, PhoneNumber, Sizes, Src, SrcSet, Timestamp, Tone, Variant,
-    WidthPx,
+    Alt, AttrVal, AttrValue, Autocomplete, Class, ClassList, ClassToken, Dir, ExternalUrl,
+    FieldName, Fragment, HeightPx, Href, Hreflang, Id, Integrity, JsonGraph, JsonLd, LUrl, Label,
+    Lang, MailAddr, Media, MediaPath, Offset, PhoneNumber, Sizes, Src, SrcSet, Timestamp, Tone,
+    Variant, WidthPx,
 };
 pub use view::View;

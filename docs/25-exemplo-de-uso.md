@@ -250,7 +250,7 @@ Propriedades que o consumidor passa a ter **por construção**:
 | CSP sem `inline` | não há `style=`, `on*` nem `<script>` inline no vocabulário |
 | prefixo do `<head>` ≤ 14 KB | ordem fixa de `docs/06` §1; `Link`/`preload` só do que está no caminho crítico |
 | HTML válido | o aninhamento é validado antes de gerar código |
-| sem `FOUC` | CSS antes de `script type="module"` |
+| sem `FOUC` | assets na ordem declarada; recomenda-se CSS antes de `script` |
 | funciona sem JS | nada no vocabulário depende de JS para render |
 
 ## 8. O teste que roda no CI do consumidor

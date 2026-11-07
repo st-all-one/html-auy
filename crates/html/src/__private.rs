@@ -6,9 +6,7 @@
 use crate::escape;
 use crate::markup::{Markup, Render};
 use crate::msg::Msg;
-use crate::value::{
-    Alt, AttrValue, Class, FieldName, Href, Id, Label, Sizes, Src, SrcSet, Timestamp,
-};
+use crate::value::{Alt, AttrValue, FieldName, Href, Id, Label, Sizes, Src, SrcSet, Timestamp};
 use alloc::string::String;
 
 /// Buffer de saída com as operações que o macro emite.
@@ -87,8 +85,8 @@ impl Writer {
     }
 
     /// `class`, omitido quando o conjunto está vazio.
-    pub fn attr_class(&mut self, value: &Class) {
-        if !value.is_empty() {
+    pub fn attr_class(&mut self, value: &impl AttrValue) {
+        if !value.is_empty_attr() {
             self.attr("class", value);
         }
     }
