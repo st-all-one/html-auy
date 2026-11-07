@@ -24,9 +24,10 @@ restantes são de representação:
 - `askama` usa `{% raw %}` somente para o CSS e o JSON de configuração do Tailwind; é a porta de
   escape que o projeto critica, aqui necessária para o demo estático.
 - `maud` usa `PreEscaped` para esses mesmos blocos.
-- `html-auy` não usa mais `Render` de consumidor: `SERVICES`/`CONTROLS` são dados e
+- `html-auy` não usa mais `Render` de consumidor: `SERVICES`/`CONTROLS`/`NAV`/`GAZETTE` vivem em `content.rs` e
   `service_grid()`/`header_controls()` são `html!` com `for`. `div` dentro de `a` (transparente) e
   `title` global são válidos no `spec`; `href="#"`/`href="#id"` usam `Href::Fragment`.
+- O corpo do `html-auy` tem 1.130 linhas contra 1.389 do maud; `content.rs` guarda os dados.
 - O `<head>` dos três continua sendo o `head.html` do exemplo (Tailwind CDN + config inline),
   concessionária do demo, não do crate.
 

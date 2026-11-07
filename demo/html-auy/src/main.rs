@@ -1,3 +1,4 @@
+mod content;
 mod page;
 
 use axum::{Router, response::Html, routing::get};

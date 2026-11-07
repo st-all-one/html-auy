@@ -57,6 +57,15 @@ O demo tinha quatro implementações de `Render` (`HeroTitle`, `ServiceGrid`, `H
 - `Marker` virou `div title="…"`;
 - `HeroTitle` virou `h1`.
 
+Além disso, a superfície do `html!` ficou mais próxima do `eta` no caso comum:
+
+- `class="a b"` é aceito como lista **estática** e o codegen divide, ordena e deduplica; `Class::of`
+  continua para o enum de `tokens.css` e `Class::new("a b")` cobre o meio-termo.
+- texto literal `"Olá"` no `html!` é `Item::Child` escapado; `&str`/`String` também são `Render`
+  escapado. `Text::new`/`Msg` continuam para o dado dinâmico e para i18n.
+- os dados estáticos saíram de `page.rs` para `content.rs` (`SERVICES`, `CONTROLS`, `NAV`,
+  `EXEC_QUICK`, `LEG_QUICK`, `GAZETTE`, `Msg`); `page.rs` é só marcação + loops.
+
 Resultado no corpo: nenhum `Render` de consumidor, nenhum `<a href="#">` sem passar pelo tipo e
 nenhum `/#` na saída. O `<head>` continua sendo o `head.html` do exemplo (Tailwind CDN + config
 inline), uma concessão **do demo**, não do crate; ele é o único trecho fora da validação.
@@ -81,9 +90,12 @@ distinção agora está no nome, não no comentário.
 
 | Métrica | Antes | Depois |
 |---|---:|---:|
-| `demo/html-auy/src/page.rs` | 101,2 KB | 95,5 KB (com 3 testes novos) |
+| `demo/html-auy/src/page.rs` | 95,5 KB / 1.415 linhas | **70,1 KB / 1.130 linhas** |
+| `demo/html-auy/src/content.rs` | — | 7,5 KB / 200 linhas (dados) |
 | HTML cru no corpo | 8,6 KB | 0 |
 | `impl Render` no demo | 4 | 0 |
+| fonte total do demo | 95,5 KB / 1.415 linhas | 77,6 KB / 1.330 linhas |
+| comparação | — | maud: 86,8 KB / 1.389 linhas; askama: 58,7 KB (template de 2 linhas + main de 53) |
 | `href="/#…"` na saída | 52 | 0 |
 | `<div>` dentro de `<a>` no demo | string crua | validado pelo macro |
 | erros iniciais ao portar o exemplo | 20 | 0 |
