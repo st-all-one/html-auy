@@ -142,6 +142,7 @@ binary artifacts.
 | [`docs/03-vocabulario-de-elementos.md`](docs/03-vocabulario-de-elementos.md) | `spec/elements.toml`, per-element invariants |
 | [`docs/04-validacao.md`](docs/04-validacao.md) | validation levels and their limits |
 | [`docs/05-acessibilidade.md`](docs/05-acessibilidade.md) | WCAG 2.2 AA → mechanism |
+| [`docs/acessibility.md`](docs/acessibility.md) | English accessibility architecture, guarantees, audit rules, and consumer gates |
 | [`docs/06-shell-e-tema.md`](docs/06-shell-e-tema.md) | shell, theme tokens, `/theme.css` |
 | [`docs/07-js-e-assets.md`](docs/07-js-e-assets.md) | JavaScript, bundles, CSP, JSON-LD |
 | [`docs/08-seguranca.md`](docs/08-seguranca.md) | HTML threat model, URLs, supply chain |

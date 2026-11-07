@@ -740,6 +740,8 @@ Workspace members are only the three public crates. `fuzz/` and `sniff-css/` are
 Primary references:
 
 - [README](https://github.com/st-all-one/html-auy/blob/main/README.md)
+- [Accessibility architecture (English)](https://github.com/st-all-one/html-auy/blob/main/docs/acessibility.md)
+- [LLM usage skill](https://github.com/st-all-one/html-auy/blob/main/SKILL.md)
 - [Usage wiki](https://github.com/st-all-one/html-auy/blob/main/docs/usage/README.md)
 - [Installation](https://github.com/st-all-one/html-auy/blob/main/docs/usage/01-instalacao.md)
 - [First page](https://github.com/st-all-one/html-auy/blob/main/docs/usage/02-primeira-pagina.md)

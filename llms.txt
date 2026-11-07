@@ -192,6 +192,8 @@ python3 tools/check_links.py
 - [Element vocabulary](https://github.com/st-all-one/html-auy/blob/main/docs/03-vocabulario-de-elementos.md)
 - [Validation](https://github.com/st-all-one/html-auy/blob/main/docs/04-validacao.md)
 - [Accessibility](https://github.com/st-all-one/html-auy/blob/main/docs/05-acessibilidade.md)
+- [Accessibility architecture (English)](https://github.com/st-all-one/html-auy/blob/main/docs/acessibility.md)
+- [LLM usage skill](https://github.com/st-all-one/html-auy/blob/main/SKILL.md)
 - [Shell and theme](https://github.com/st-all-one/html-auy/blob/main/docs/06-shell-e-tema.md)
 - [Security](https://github.com/st-all-one/html-auy/blob/main/docs/08-seguranca.md)
 - [Testing](https://github.com/st-all-one/html-auy/blob/main/docs/12-testes.md)
