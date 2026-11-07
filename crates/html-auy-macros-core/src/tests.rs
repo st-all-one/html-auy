@@ -1,6 +1,6 @@
 //! Parser: formas válidas parseiam, formas inválidas viram diagnóstico com a mensagem certa.
 
-use crate::ast::{AttrValue, Block, Item};
+use crate::ast::{AttrValue, Block, Item, Otherwise};
 use crate::diagnostic::Diag;
 use crate::parser::parse;
 use proc_macro2::TokenStream;
@@ -107,13 +107,10 @@ fn if_chain_nests() {
     let [Item::If(node)] = block.items.as_slice() else {
         panic!("esperava @if");
     };
-    let Some(crate::ast::Otherwise::If(inner)) = &node.otherwise else {
+    let Some(Otherwise::If(inner)) = &node.otherwise else {
         panic!("esperava @else if");
     };
-    assert!(matches!(
-        inner.otherwise,
-        Some(crate::ast::Otherwise::Block(_))
-    ));
+    assert!(matches!(inner.otherwise, Some(Otherwise::Block(_))));
 }
 
 #[test]

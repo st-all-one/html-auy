@@ -3,10 +3,10 @@
 //! Tudo o que a tabela já responde (allowlist, obrigatórios, conteúdo-modelo, enums, booleanos)
 //! fica em [`crate::validate`]; aqui só entra a invariante que precisa de código.
 
-use crate::ast::{AttrValue, Block, Element, Item};
+use crate::ast::{AttrValue, Block, Element, IfNode, Item, Otherwise};
 use crate::diagnostic::Diag;
 use crate::table::{self, Element as Spec};
-use crate::validate::Ctx;
+use crate::validate::{Control, Ctx, input_base_attr};
 
 /// `input type` que dispensa nome acessível próprio (`label_exempt_types`).
 const EXEMPT_INPUT_TYPES: [&str; 5] = ["hidden", "submit", "reset", "button", "image"];
@@ -185,7 +185,7 @@ fn check_named_control(element: &Element, ancestors: &[&'static Spec], ctx: &mut
     let has_aria =
         element.attr("aria-label").is_some() || element.attr("aria-labelledby").is_some();
     let id = element.literal("id").map(str::to_owned);
-    ctx.controls.push(crate::validate::Control {
+    ctx.controls.push(Control {
         name: element.name.clone(),
         span: element.span,
         exempt: false,
@@ -326,7 +326,7 @@ fn check_input_attributes(element: &Element, ctx: &mut Ctx) {
         let global = table::GLOBALS.iter().any(|global| global.name == key);
         let aria = key.starts_with("aria-");
         let data = key.starts_with("data-");
-        let base = crate::validate::input_base_attr(&key);
+        let base = input_base_attr(&key);
         let extra = extras.contains(&key.as_str());
         if !(global || aria || data || base || extra) {
             ctx.error(
@@ -541,10 +541,10 @@ fn collect<'a>(block: &'a Block, found: &mut Vec<&'a Element>) {
             }
             Item::If(node) => {
                 collect(&node.then, found);
-                if let Some(crate::ast::Otherwise::Block(block)) = &node.otherwise {
+                if let Some(Otherwise::Block(block)) = &node.otherwise {
                     collect(block, found);
                 }
-                if let Some(crate::ast::Otherwise::If(inner)) = &node.otherwise {
+                if let Some(Otherwise::If(inner)) = &node.otherwise {
                     collect_if(inner, found);
                 }
             }
@@ -555,11 +555,11 @@ fn collect<'a>(block: &'a Block, found: &mut Vec<&'a Element>) {
     }
 }
 
-fn collect_if<'a>(node: &'a crate::ast::IfNode, found: &mut Vec<&'a Element>) {
+fn collect_if<'a>(node: &'a IfNode, found: &mut Vec<&'a Element>) {
     collect(&node.then, found);
     match &node.otherwise {
-        Some(crate::ast::Otherwise::Block(block)) => collect(block, found),
-        Some(crate::ast::Otherwise::If(inner)) => collect_if(inner, found),
+        Some(Otherwise::Block(block)) => collect(block, found),
+        Some(Otherwise::If(inner)) => collect_if(inner, found),
         None => {}
     }
 }
@@ -590,10 +590,10 @@ fn block_has_text(block: &Block) -> bool {
     })
 }
 
-fn block_has_text_if(node: &crate::ast::Otherwise) -> bool {
+fn block_has_text_if(node: &Otherwise) -> bool {
     match node {
-        crate::ast::Otherwise::Block(block) => block_has_text(block),
-        crate::ast::Otherwise::If(inner) => {
+        Otherwise::Block(block) => block_has_text(block),
+        Otherwise::If(inner) => {
             block_has_text(&inner.then) || inner.otherwise.as_ref().is_some_and(block_has_text_if)
         }
     }

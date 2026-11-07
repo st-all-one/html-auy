@@ -5,9 +5,11 @@
 //! referências acessíveis, estrutura de tabela e mídia) mora em [`crate::rules`].
 
 use crate::ast::{Attr, AttrValue, Block, Element, IfNode, Item, Otherwise};
+use crate::attrs::{is_boolean, is_typed};
 use crate::diagnostic::Diag;
 use crate::rules;
 use crate::table::{self, Only, ValueKind};
+use core::mem;
 use proc_macro2::Span;
 
 /// Atributos que nenhum elemento aceita (docs/03 §5, docs/08 §2).
@@ -600,7 +602,7 @@ fn check_attr_value(element: &Element, spec: &'static table::Element, attr: &Att
         return;
     }
 
-    if crate::attrs::is_boolean(&key) {
+    if is_boolean(&key) {
         if let AttrValue::Literal { span, .. } = attr.value {
             ctx.error(
                 Diag::new(
@@ -625,7 +627,7 @@ fn check_attr_value(element: &Element, spec: &'static table::Element, attr: &Att
         return;
     }
 
-    if crate::attrs::is_typed(spec.name, &key) {
+    if is_typed(spec.name, &key) {
         if let AttrValue::Literal { span, .. } = attr.value {
             ctx.error(literal_rejected(spec.name, &key, span));
         }
@@ -1018,7 +1020,7 @@ fn edit_distance(left: &str, right: &str) -> usize {
                 *slot = value;
             }
         }
-        core::mem::swap(&mut previous, &mut current);
+        mem::swap(&mut previous, &mut current);
     }
     previous.get(right.len()).copied().unwrap_or(0)
 }

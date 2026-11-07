@@ -2,7 +2,7 @@
 
 > `html-auy` is a typed HTML vocabulary for Rust: compile-time attribute validation, context-aware escaping, deterministic bytes, and accessibility by construction. HTML is the artifact, not a projection of a reactive tree.
 
-Version `0.1.0`. Rust 1.92+ (edition 2024). `#![no_std]` + `alloc`. No framework, HTTP, router, runtime, or embedded JavaScript. The public crate is `html-auy`; the `html!` macro is implemented by `html-auy-macros` and `html-auy-macros-core`.
+Version `0.1.1`. Rust 1.92+ (edition 2024). `#![no_std]` + `alloc`. No framework, HTTP, router, runtime, or embedded JavaScript. The public crate is `html-auy`; the `html!` macro is implemented by `html-auy-macros` and `html-auy-macros-core`.
 
 ## Canonical facts
 

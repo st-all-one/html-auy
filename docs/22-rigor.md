@@ -51,6 +51,14 @@ inimigo é o mesmo: **comportamento não determinístico e falha sem diagnóstic
 | `allow_attributes_without_reason` | `deny` | exceção sem justificativa é supressão silenciosa |
 | `todo`, `unimplemented`, `dbg_macro`, `mem_forget` | `deny` | não há "depois"; `mem_forget` é vazamento |
 | `let_underscore_must_use`, `let_underscore_drop` | `deny` | descarte explícito com `drop(…)`, não `let _ =` |
+| `let_underscore_untyped` | `warn` | `let _ = expr` esconde um valor sem tipo; nomes `_foo` ou `drop` explícito |
+| `disallowed_names` | `deny` | `foo`/`tmp`/`thing` escondem o domínio; a lista está em `clippy.toml` |
+| `fn_params_excessive_bools`, `struct_excessive_bools` | `deny` | flags viram enum ou tipos de estado; `max-fn-params-bools = 1` |
+| `exit` | `deny` | o crate não encerra processo; erro volta como `Diag`/`compile_error!` |
+| `absolute_paths` | `warn` | import no topo em vez de `crate::…::…` no meio da função; 3 segmentos é o teto |
+| `await_holding_lock`, `await_holding_refcell_ref` | `deny` | guarda ativa mesmo sem `async`; impede regressão se um dia houver `await` |
+| `large_enum_variant`, `large_stack_arrays` | `deny` | tamanho de enum/array é decisão de API, não detalhe invisível |
+| `result_large_err`, `large_types_passed_by_value`, `large_stack_frames`, `large_futures` | `warn` | erro/frame/future grande é custo de ABI e pilha |
 | `wildcard_imports`, `unused_qualifications`, `trivial_casts` | `deny` | leitura previsível |
 | `unsafe_code` | **`forbid`** (mais forte que o `deny` do `sniff`) | não existe motivo para `unsafe` aqui; `forbid` impede até `#[allow]` local |
 | `missing_docs` + `broken_intra_doc_links` | `warn`/`deny` | a documentação é o produto (mensagens de erro citam regras); link quebrado é doc quebrada |
@@ -65,25 +73,30 @@ msrv = "1.92"          # = rust-version; o pin do toolchain é outro número
 cognitive-complexity-threshold = 15
 type-complexity-threshold = 150
 too-many-arguments-threshold = 5
-excessive-nesting-threshold = 3         # parser aninhado é onde a complexidade se esconde
+excessive-nesting-threshold = 5         # parser aninhado é onde a complexidade se esconde
 max-fn-params-bools = 1                 # >1 bool vira enum
 struct-field-name-threshold = 3
 enum-variant-size-threshold = 128
 pass-by-value-size-limit = 128
 array-size-threshold = 4096
 stack-size-threshold = 65536
-failure-size-threshold = 8192
+future-size-threshold = 8192
 allow-unwrap-in-tests = true            # `.unwrap()` no teste é o mecanismo de falha
+allow-expect-in-tests = true
+allow-panic-in-tests = true
 allow-print-in-tests = true
 allow-indexing-slicing-in-tests = true
 allow-expect-in-consts = false
 disallowed-names = ["foo", "baz", "quux", "tmp", "thing", "stuff", "misc", ".."]
+absolute-paths-allowed-crates = ["std", "core", "alloc", "crate"]
+absolute-paths-max-segments = 3
 doc-valid-idents = ["html", "HTML", "CSS", "WCAG", "DOM", "ARIA", "SVG", "JSON", "ETag", "URL", "URI",
                     "srcset", "oklch", "BCP-47", "CLDR", "TOML", "MSRV", "TTI", ".."]
 ```
 
-Divergência deliberada em relação ao `sniff`: **não** banimos `vec!`/`format!` em teste, e não usamos
-`await_holding_*` (não há `async` no crate — e isso também é uma proibição: ver §7).
+Divergência deliberada em relação ao `sniff`: **não** banimos `vec!`/`format!` em teste. As lints
+`await_holding_*` ficam ativas mesmo sem `async` hoje: são guarda para quando houver `await`, não uma
+dependência de runtime.
 
 ## 5. `rustfmt.toml` — só opções estáveis
 
@@ -139,6 +152,7 @@ confidence-threshold = 0.8
 multiple-versions = "warn"
 wildcards = "deny"
 allow-wildcard-paths = true
+deny = ["tokio", "reqwest", "hyper", "axum"]
 
 [sources]
 unknown-registry = "deny"
@@ -188,7 +202,7 @@ O `insta` faz o mesmo com `INSTA_UPDATE=always`; o valor do padrão é a **regra
 
 | Item do `sniff` | Por que não |
 |---|---|
-| `tokio`, async, `await_holding_*` | o crate não faz I/O; `async` aqui seria dependência sem uso |
+| `tokio`, async | o crate não faz I/O; `async` aqui seria dependência sem uso |
 | CDP/Flutter/MCP, `serde`, `clap`, `tracing` | domínio do `sniff`; o crate não tem CLI nem transporte |
 | faseamento de débito (`docs/phase-3.md`) | não há débito: o crate nasce no padrão final |
 | `criterion` como gate | benchmark informativo; orçamento de bytes é teste, tempo de parede não é contrato |

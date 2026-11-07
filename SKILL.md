@@ -5,7 +5,7 @@ description: >
   Markup, compile-time vocabulary validation, accessible shell/forms/media, and
   final-document audit. Load when writing, reviewing, or migrating html-auy code.
 category: rust
-version: "0.1.0"
+version: "0.1.1"
 tags: [rust, html, accessibility, a11y, templates, security]
 license: "MIT OR Apache-2.0"
 ---

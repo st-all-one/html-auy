@@ -16,15 +16,15 @@ resolver = "3"
 exclude = ["fuzz"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 rust-version = "1.92"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/st-all-one/html-auy"
 
 [workspace.dependencies]
-html-auy-macros = { version = "0.1.0", path = "crates/html-auy-macros" }
-html-auy-macros-core = { version = "0.1.0", path = "crates/html-auy-macros-core" }
+html-auy-macros = { version = "0.1.1", path = "crates/html-auy-macros" }
+html-auy-macros-core = { version = "0.1.1", path = "crates/html-auy-macros-core" }
 
 html5ever = "0.27"
 markup5ever_rcdom = "0.3"
@@ -53,10 +53,12 @@ trivial_numeric_casts = "deny"
 unreachable_pub = "warn"
 unsafe_op_in_unsafe_fn = "deny"
 let_underscore_drop = "deny"
+macro_use_extern_crate = "deny"
 meta_variable_misuse = "deny"
 non_ascii_idents = "deny"
 noop_method_call = "deny"
 unused_import_braces = "deny"
+variant_size_differences = "warn"
 
 [workspace.lints.rustdoc]
 broken_intra_doc_links = "deny"
@@ -101,8 +103,25 @@ dbg_macro = "deny"
 mem_forget = "deny"
 allow_attributes_without_reason = "deny"
 let_underscore_must_use = "deny"
+let_underscore_untyped = "warn"
 wildcard_imports = "deny"
 multiple_unsafe_ops_per_block = "deny"
+undocumented_unsafe_blocks = "deny"
+exit = "deny"
+disallowed_names = "deny"
+absolute_paths = "warn"
+fn_params_excessive_bools = "deny"
+struct_excessive_bools = "deny"
+await_holding_lock = "deny"
+await_holding_refcell_ref = "deny"
+
+# Tamanho: enum/erro/array grande é decisão de API, não detalhe invisível.
+large_enum_variant = "deny"
+result_large_err = "warn"
+large_types_passed_by_value = "warn"
+large_stack_arrays = "deny"
+large_stack_frames = "warn"
+large_futures = "warn"
 
 [profile.release]
 overflow-checks = true

@@ -2,14 +2,14 @@
 
 > `html-auy` is a typed HTML vocabulary for Rust. It validates element/attribute vocabulary at compile time, chooses escaping from the value type, emits deterministic bytes, and treats accessibility as an API and validation property. HTML is an artifact; there is no VDOM, hydration, runtime template, or embedded JavaScript.
 
-This document is the dense, full reference for an LLM working on or with this repository. It is current for `0.1.0` and the working tree described by the repository docs. When this file and code disagree, inspect the code and `spec/elements.toml`; when this file and the normative docs disagree, inspect the docs listed at the end.
+This document is the dense, full reference for an LLM working on or with this repository. It is current for `0.1.1` and the working tree described by the repository docs. When this file and code disagree, inspect the code and `spec/elements.toml`; when this file and the normative docs disagree, inspect the docs listed at the end.
 
 ## 1. Identity, status, and constraints
 
 - Repository: <https://github.com/st-all-one/html-auy>
 - Public crate: `html-auy` (Rust name `html_auy`)
 - Macro crates: `html-auy-macros` (proc-macro) and `html-auy-macros-core` (parser/validator/codegen)
-- Version: `0.1.0`
+- Version: `0.1.1`
 - License: MIT OR Apache-2.0
 - Edition: 2024
 - MSRV: Rust 1.92
@@ -20,7 +20,7 @@ This document is the dense, full reference for an LLM working on or with this re
 - No `unsafe` in the workspace (`#![forbid(unsafe_code)]`).
 - No binary, CLI, `build.rs`, HTTP server, router, ORM, session store, or `IntoResponse`.
 - No runtime HTML templates and no public raw-HTML sink.
-- Spec size at `0.1.0`: 111 elements, 71 invariants: 59 `block`, 4 `type`, 8 `output`.
+- Spec size at `0.1.1`: 111 elements, 71 invariants: 59 `block`, 4 `type`, 8 `output`.
 - `audit` exposes 13 final-document rules.
 
 The project is not a web framework. It does not perform I/O, read environment variables, resolve locale, access clocks, parse request bodies, manage cookies, or measure rendered CSS. The consumer owns those concerns.

@@ -4,6 +4,10 @@
 # que a 1.92 (docs/22 §2).
 msrv = "1.92"
 
+# Caminhos absolutos: `crate::` e `core/alloc::` até 3 segmentos são aceitos; acima disso, `use`.
+absolute-paths-allowed-crates = ["std", "core", "alloc", "crate"]
+absolute-paths-max-segments = 3
+
 # Limiares de tamanho: parser aninhado é onde a complexidade se esconde.
 cognitive-complexity-threshold = 15
 type-complexity-threshold = 150

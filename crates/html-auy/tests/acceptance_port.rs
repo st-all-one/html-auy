@@ -1,7 +1,7 @@
 //! Porte de componentes de `docs/20` §5: `picture` e `select` em `html!`.
 
 use html_auy::{
-    Alt, Asset, FieldName, HeightPx, LUrl, MediaPath, Sizes, Src, SrcSet, Variant, WidthPx, html,
+    Alt, FieldName, HeightPx, LUrl, MediaPath, Sizes, Src, SrcSet, Variant, WidthPx, html,
 };
 
 struct Media(LUrl<'static>);
@@ -35,7 +35,6 @@ impl Variant for Avif {
 
 #[test]
 fn picture_with_source_and_sizes() {
-    let asset = Asset::style("/assets/a.css").expect("asset");
     let variants = [Avif];
     let drawn = html! {
         picture {
@@ -43,7 +42,6 @@ fn picture_with_source_and_sizes() {
             img src=(Src::media(&media())) alt=(Alt::new("capa")) width=(WidthPx::new(720)) height=(HeightPx::new(480));
         }
     };
-    let _ = asset;
     insta::assert_snapshot!("port_picture", drawn.as_str());
 }
 

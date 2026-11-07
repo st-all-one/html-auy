@@ -4,6 +4,19 @@ All notable changes to `html-auy` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow the policy in
 [`docs/11-estabilidade.md`](docs/11-estabilidade.md).
 
+## [0.1.1] - 2026-11-07
+
+Lint and supply-chain hardening only. No public API or emitted-byte change.
+
+### Changed
+
+- Workspace lints now enforce `disallowed_names`, `fn_params_excessive_bools`,
+  `struct_excessive_bools`, `exit`, `absolute_paths`, `let_underscore_untyped`,
+  `await_holding_*`, and enum/array/error size checks.
+- `clippy.toml` caps absolute paths at three segments and documents the active test exceptions.
+- `deny.toml` bans `tokio`, `reqwest`, `hyper`, and `axum` so the `no_std` crate cannot acquire an
+  HTTP runtime by accident.
+
 ## [0.1.0] - 2026-11-07
 
 First public release. This release incorporates all work completed through the `0.1.0` preparation:

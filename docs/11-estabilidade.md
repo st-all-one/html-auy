@@ -71,7 +71,7 @@ O processo é por tag:
 
 1. Atualizar `version` em `Cargo.toml` e [`CHANGELOG.md`](../CHANGELOG.md).
 2. Rodar o gate local da seção 7.
-3. Commitar, criar tag anotada `v0.1.0` e enviar a tag.
+3. Commitar, criar tag anotada `v0.1.1` e enviar a tag.
 4. O workflow [`release.yml`](../.github/workflows/release.yml) verifica que a tag coincide com a
    versão do workspace e publica, nesta ordem:
    - `html-auy-macros-core`

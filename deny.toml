@@ -31,6 +31,13 @@ multiple-versions = "warn"
 wildcards = "deny"
 # Deps internas de workspace (path, sem versão de registry) não são wildcards de supply chain.
 allow-wildcard-paths = true
+# O crate é `no_std` + `alloc` e não faz I/O: runtime/framework HTTP não pode entrar por acidente.
+deny = [
+    "tokio",
+    "reqwest",
+    "hyper",
+    "axum",
+]
 
 [sources]
 unknown-registry = "deny"

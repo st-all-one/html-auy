@@ -7,6 +7,7 @@
 use crate::ast::{
     Attr, AttrValue, Block, Child, Element, ForNode, IfNode, Item, Message, Otherwise, Primitive,
 };
+use crate::attrs::is_boolean;
 use crate::table;
 use proc_macro2::{Delimiter, Group, Ident, Literal, Punct, Spacing, Span, TokenStream, TokenTree};
 use quote::{format_ident, quote, quote_spanned};
@@ -176,7 +177,7 @@ fn emit_attr(element: &Element, attr: &Attr, name: &str, writer: &Ident) -> Toke
     let name_literal = Literal::string(name);
     match &attr.value {
         AttrValue::Literal { text, span } => {
-            if crate::attrs::is_boolean(name) {
+            if is_boolean(name) {
                 // O validador recusa; sem codegen para não emitir `disabled="false"`.
                 return TokenStream::new();
             }
@@ -194,7 +195,7 @@ fn emit_attr(element: &Element, attr: &Attr, name: &str, writer: &Ident) -> Toke
         }
         AttrValue::Computed { expr, span } => {
             let at = *span;
-            if crate::attrs::is_boolean(name) {
+            if is_boolean(name) {
                 let flag = quote_spanned! {at=> #writer.attr_flag(#name_literal, #expr); };
                 return if attr.optional {
                     quote_spanned! {at=> if let Some(__v) = &(#expr) { #writer.attr_flag(#name_literal, *__v); } }

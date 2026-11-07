@@ -6,8 +6,8 @@ Vocabulário HTML tipado para Rust — atributos validados em compilação, esca
 
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-2b3a42?style=for-the-badge)](./LICENSE-MIT)
 [![Rust](https://img.shields.io/badge/rust-1.92%2B-DEA584?style=for-the-badge&logo=rust&logoColor=000)](https://www.rust-lang.org/)
-[![crates.io](https://img.shields.io/badge/crates.io-0.1.0-009739?style=for-the-badge)](https://crates.io/crates/html-auy)
-[![Version](https://img.shields.io/badge/version-0.1.0-6E56CF?style=for-the-badge)](CHANGELOG.md)
+[![crates.io](https://img.shields.io/badge/crates.io-0.1.1-009739?style=for-the-badge)](https://crates.io/crates/html-auy)
+[![Version](https://img.shields.io/badge/version-0.1.1-6E56CF?style=for-the-badge)](CHANGELOG.md)
 
 </div>
 
