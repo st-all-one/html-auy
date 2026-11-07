@@ -1,0 +1,808 @@
+# html-auy — full LLM context
+
+> `html-auy` is a typed HTML vocabulary for Rust. It validates element/attribute vocabulary at compile time, chooses escaping from the value type, emits deterministic bytes, and treats accessibility as an API and validation property. HTML is an artifact; there is no VDOM, hydration, runtime template, or embedded JavaScript.
+
+This document is the dense, full reference for an LLM working on or with this repository. It is current for `0.1.0` and the working tree described by the repository docs. When this file and code disagree, inspect the code and `spec/elements.toml`; when this file and the normative docs disagree, inspect the docs listed at the end.
+
+## 1. Identity, status, and constraints
+
+- Repository: <https://github.com/st-all-one/html-auy>
+- Public crate: `html-auy` (Rust name `html_auy`)
+- Macro crates: `html-auy-macros` (proc-macro) and `html-auy-macros-core` (parser/validator/codegen)
+- Version: `0.1.0`
+- License: MIT
+- Edition: 2024
+- MSRV: Rust 1.92
+- Development toolchain: pinned separately in `rust-toolchain.toml` (1.99); do not confuse pinned toolchain and MSRV.
+- Public crate: `#![no_std]` + `alloc`
+- Default external runtime dependencies: none; the macro crates are implementation dependencies.
+- Optional feature: `audit`, which adds `html5ever` + `markup5ever_rcdom` for final-document checks.
+- No `unsafe` in the workspace (`#![forbid(unsafe_code)]`).
+- No binary, CLI, `build.rs`, HTTP server, router, ORM, session store, or `IntoResponse`.
+- No runtime HTML templates and no public raw-HTML sink.
+- Spec size at `0.1.0`: 111 elements, 71 invariants: 59 `block`, 4 `type`, 8 `output`.
+- `audit` exposes 13 final-document rules.
+
+The project is not a web framework. It does not perform I/O, read environment variables, resolve locale, access clocks, parse request bodies, manage cookies, or measure rendered CSS. The consumer owns those concerns.
+
+## 2. Core guarantees
+
+1. **HTML is the artifact.** Output is bytes. There is no reactive tree, VDOM, hydration marker, or serialized state.
+2. **Escape context is a type.** `Text`, `AttrVal`, `Href`, `Src`, `SrcSet`, `JsonLd`, and related values choose escaping. `Markup` has no public constructor from `String`.
+3. **Accessibility is absence of API.** Missing required semantics fail to compile where the local block can decide them.
+4. **Errors are compile errors.** `html!` validation runs in the proc-macro and reports a span and actionable message. `trybuild` covers diagnostics.
+5. **No runtime, no embedded JavaScript.** The core crate is `no_std + alloc`; `audit` is optional and std-oriented.
+6. **Bytes are canonical.** Attribute, class, `srcset`, asset, and date output are stable, so ETag can be trustworthy.
+7. **The boundary is explicit.** The macro sees one fragment; `audit` sees the assembled page; browser gates see computed style and interaction.
+
+## 3. Crate architecture
+
+Dependency order:
+
+```text
+html-auy-macros-core   parser, validation, codegen; no proc_macro
+        |
+html-auy-macros        html! proc-macro; minimal surface
+        |
+html-auy               public API: Markup, values, shell, components, optional audit
+```
+
+- An application should depend only on `html-auy`.
+- `html-auy-macros` is published because a proc-macro cannot export the public crate's types.
+- `html-auy-macros-core` is independent of the public crate and is testable/fuzzable as a normal library.
+- `html-auy` uses `extern crate self as html_auy` so absolute paths emitted by the macro resolve in tests and doctests.
+- Without `audit`, the public crate has no third-party parser in its normal dependency tree.
+- `tools/gen_spec.py` generates two identical tables: `crates/html-auy/src/spec/table.rs` and `crates/html-auy-macros-core/src/table.rs`.
+- `spec_parity` tests compare generated tables and `spec/elements.toml`.
+
+The parser ignores source whitespace and formatting. The AST is used for validation and code generation. A new rule is implemented once in validation, not in two printers.
+
+## 4. Data flow
+
+```text
+domain data
+  -> html! / primitives / components
+  -> Markup
+  -> View (main + modals + assets)
+  -> Page(ShellData, View)
+  -> complete document bytes
+  -> consumer HTTP response
+```
+
+Boundaries:
+
+- The crate receives already-decided data. It never queries a database, reads a clock, or reads configuration.
+- The crate receives `LUrl`/`ExternalUrl` and does not know routes.
+- The crate does not set status codes or headers. The consumer builds `IntoResponse`.
+- The crate emits the document structure; the consumer supplies header/footer regions, theme classes, CSP, and cache policy.
+- `Page` is the only document constructor. `html`/`head`/`body`/`title`/`meta`/`link`/`script`/`noscript`/`main` are `only = "shell"`.
+
+## 5. `html!` grammar and semantics
+
+### 5.1 Basic form
+
+```rust
+use html_auy::{html, Href, LUrl, Markup, Text};
+
+fn card(title: &str, href: LUrl<'_>) -> Markup {
+    html! {
+        article class="card" data_kind="news" {
+            h2 { Text::new(title) }
+            a href=(Href::internal(href)) { Text::new("Read") }
+        }
+    }
+}
+```
+
+- An element is `tag attributes { children }`.
+- A void element ends with `;`: `br;`, `img ...;`.
+- The macro returns `Markup`, never `String`.
+- The macro validates the local block at compile time.
+- Attribute names in Rust use `_`; HTML output uses `-`.
+- The output order is defined by the spec, not by source order.
+
+### 5.2 Text, messages, and composition
+
+The macro distinguishes three inputs:
+
+| Input | Syntax | Semantics |
+|---|---|---|
+| translated message | `p { M::Title }` | `Msg` expression; escaped as text |
+| dynamic text | `p { Text::new(&value) }` | `Text`; escaped as text |
+| prebuilt markup | `div { (card) }` | expression in parentheses; composed as `Render`/`Markup` |
+
+A literal string is not valid inside `html!`:
+
+```rust
+html! { p { "Hello" } } // error: literal text is not allowed
+```
+
+Use `Msg` for static translated text, `Text` for external dynamic text, and `(markup)` for trusted already-rendered markup.
+
+Several adjacent `Markup` expressions are parsed as calls; separate them with an element or a loop when needed.
+
+### 5.3 Control flow
+
+```rust
+html! {
+    @if items.is_empty() {
+        p { M::Empty }
+    } @else if loading {
+        p { M::Loading }
+    } @else {
+        ul {
+            for item in &items {
+                li { a href=(Href::internal(route(&item.slug))) { Text::new(&item.title) } }
+            }
+        }
+    }
+}
+```
+
+- Supported: `@if`, `@else if`, `@else`, `for`.
+- `for` is normal Rust iteration.
+- No `@match`, `@let`, runtime template, or dynamic tag/attribute names.
+- Use Rust `match` outside the macro to choose a `Markup`.
+
+### 5.4 Attributes
+
+- `attr="literal"`: only for vocabulary-approved literal attributes.
+- `attr=(value)`: value must implement `AttrValue`; `&str` and `String` do not.
+- `attr?=(Option<T>)`: emits only for `Some`; `None` emits nothing.
+- Boolean attributes use presence: `disabled=(true)` emits `disabled`; `false` omits it. There is no `disabled="false"`.
+- `target="_blank"` automatically adds `rel="noopener noreferrer"`; an explicit `rel` that omits `noopener` is rejected.
+- `class="a b"` is accepted but canonicalized: sorted and deduplicated.
+- `class=(Class)` or `class=(ClassList)` is also canonicalized.
+- `aria_label=(Label::text(M::X))` is the normal ARIA label path; a raw `&str` is invalid.
+- `data-*` names and values are validated; do not serialize JSON into a data attribute.
+- `style=` exists as an escape hatch, is escaped as an attribute, is reported by `audit`, and requires CSP accommodation.
+- Forbidden core attributes include `on*`, `srcdoc`, `@*`, `hx-on*`, `hx-*`, `formaction`, `ping`, `slot`/`part`/`exportparts`/`is`, `xlink:href`, `accesskey`, and `draggable`.
+- The optional htmx profile is documented separately; do not assume `hx-*` is part of the core vocabulary.
+
+### 5.5 Nesting and local invariants
+
+The macro checks content models and local coherence. Common examples:
+
+| Source | Result |
+|---|---|
+| `p { div { ... } }` | error: flow inside phrasing |
+| `a { button { ... } }` | error: interactive inside interactive |
+| `table { tr { ... } }` | error: `tr` needs `thead`/`tbody`/`tfoot` |
+| `picture { img ... }` | error if sources are missing or the fallback is not final |
+| `select { option value="x" { ... } }` | allowed; options require values |
+| `button { ... }` | error without `type` |
+| `th { ... }` | error without `scope` |
+| `label for="x"` without `id="x"` in the block | error |
+| `main { ... }` | error: `main` belongs to `Page` |
+| `form { ... }` | error: use `Form::open` |
+
+`h1` is allowed in the vocabulary but `Page` normally emits it. A view should use `h2`–`h6`; `audit` enforces exactly one `h1` in the assembled document.
+
+### 5.6 Canonical output
+
+```rust
+html! {
+    div data_zeta="z" data_alpha="a" data_mid="m" class="b a" { }
+}
+```
+
+```html
+<div class="a b" data-alpha="a" data-mid="m" data-zeta="z"></div>
+```
+
+Whitespace in the macro is ignored. Attribute order, class order, and `srcset` order are deterministic. Do not write code that depends on source formatting.
+
+## 6. Values and escaping
+
+Every context has a type. There is no public arbitrary HTML string.
+
+| Context | Type | Constructor | Main guarantee |
+|---|---|---|---|
+| text content | `Text<'a>` | `Text::new(&str)`, `Text::msg(M)` | escapes `& < > " '` and NUL |
+| ordinary attribute | `AttrVal<'a>` | `AttrVal::new(&str)` | escapes the five + CR/LF/TAB |
+| internal route | `LUrl<'a>` | `LUrl::new`, `from_string`, `with_segments` | starts with `/`; rejects `//`, `:`, `..`, controls |
+| absolute URL | `ExternalUrl<'a>` | `ExternalUrl::parse` | only `http`/`https`; scheme normalized |
+| link | `Href<'a>` | `internal`, `fragment`, `external`, `mailto`, `tel` | only allowed destinations |
+| fragment | `Fragment<'a>` | `Fragment::new` | `#` or safe `#id` |
+| email | `MailAddr<'a>` | `MailAddr::parse` | conservative `local@domain.tld` |
+| phone | `PhoneNumber<'a>` | `PhoneNumber::parse` | E.164 (`+` + 1..15 digits) |
+| media source | `Src<'a>` | `Src::media`, `Src::asset`, `Src::parse` | validated path or `http(s)` |
+| `srcset` | `SrcSet<'a>` | `SrcSet::from_variants` | sorts by width, deduplicates, validates each `src` |
+| `sizes` | `Sizes<'a>` | `Sizes::new`, `try_new` | grammar; invalid becomes empty |
+| alt text | `Alt<'a>` | `Alt::new`, `decorative` | empty only by explicit decoration |
+| dimension | `WidthPx` / `HeightPx` | `new(u32)` | never zero; 0 saturates to 1 |
+| date/time | `Timestamp` | `new(unix_seconds, Offset)` | RFC 3339 with offset |
+| offset | `Offset` | `UTC`, `from_seconds`, `from_hms`, `parse` | up to ±23:59, in minutes |
+| language | `Lang` | `Lang::parse`, `Lang::EN` | canonical BCP-47 (`pt-BR`) |
+| direction | `Dir` | `Ltr`, `Rtl`, `Auto` | closed enum |
+| accessible name | `Label<'a>` | `Label::text(M)`, `Label::sr_only(M)` | translated text; never empty from a `Msg` |
+| id | `Id<'a>` | `Id::new`, `try_new` | normalizes to `[A-Za-z0-9_-]` |
+| field name | `FieldName<'a>` | `FieldName::new`, `try_new` | normalizes and derives `f-...` |
+| static classes | `Class` | `Class::of`, `new` | sorts/deduplicates; empty omitted |
+| dynamic classes | `ClassList` | `ClassList::try_new` | one token per item; sorts/deduplicates |
+| design token | `Tone` | enum variants | semantic identity, not hex |
+| media query | `Media<'a>` | `print`, `screen`, `new`, `try_new` | validated structure; empty omitted |
+| SRI | `Integrity<'a>` | `Integrity::parse` | `sha256/384/512` + base64 |
+| autocomplete | `Autocomplete<'a>` | `Autocomplete::parse` | closed HTML token vocabulary, including `username webauthn` and `webauthn` |
+| JSON-LD | `JsonLd` | `JsonLd::graph(&G)` | serializes and escapes `< > & '` |
+
+### 6.1 Escaping details
+
+| Context | Escaped characters | Form |
+|---|---|---|
+| text (`Text`) | `& < > " '` + NUL | `&amp; &lt; &gt; &quot; &#x27;` |
+| attribute (`AttrVal`, typed values) | five + `\r \n \t` | five + numeric entities |
+| JSON-LD (`JsonLd`) | `< > & '` + U+2028/U+2029 | `\u003c` etc. |
+| URL (`LUrl`) | path segments | `%XX` uppercase |
+| class | tokens | validated, not escaped |
+| comment | none | comments are not in the vocabulary |
+
+There is no double escaping: `Text` is already escaped when written. `/` is not escaped in text/attributes; `JsonLd` handles the dangerous `</script>` case by escaping `<`.
+
+### 6.2 URL rules
+
+```rust
+use html_auy::{ExternalUrl, Href, LUrl};
+
+assert!(ExternalUrl::parse("javascript:alert(1)").is_none());
+assert!(ExternalUrl::parse("data:text/html,<script>").is_none());
+assert!(LUrl::new("//evil.example").is_none());
+assert!(LUrl::new("/../etc/passwd").is_none());
+assert!(LUrl::new("/a/%2e%2e/b").is_none());
+
+let href = Href::external(ExternalUrl::parse("https://example.org").expect("https"));
+```
+
+- `ExternalUrl` only permits `http`/`https`.
+- `LUrl` is an internal path beginning with `/`; it rejects `//`, `:`, `\`, control characters, spaces, `"`, `<`, `>`, backticks, and `..`/`%2e%2e` segments.
+- `Src` permits a validated path or `http(s)`, never `javascript:`/`data:`.
+- `Href` unifies internal, fragment, external, mailto, and tel destinations.
+- There is no `Href::new(&str)`.
+
+### 6.3 Optional and empty values
+
+- `attr?=(Option<T>)` emits only for `Some`; `None` is not rendered as an empty attribute.
+- `Class::default()` omits `class`.
+- `Sizes::new("invalid")` omits `sizes`.
+- `Media::new("(")` omits `media`.
+- `AttrVal::new("")` emits an empty attribute; it is not “absent”.
+- `Text::new("")` emits empty text content; it is not “absent”.
+
+### 6.4 Extensions
+
+`Render` writes trusted HTML into a `String`; `AttrValue` writes an already-escaped attribute value. Implementing either is a trust boundary. A `Render` implementation that writes foreign `&str` directly can reintroduce injection. Use `Text`, `escape::text`, or typed values instead.
+
+## 7. Page, shell, regions, assets, and theme
+
+### 7.1 Page is the only document type
+
+```rust
+let data = ShellData::new(title, heading, lang);
+let view = View::new(html! { p { M::Hello } });
+let page = Page::new(&data, view);
+let html = page.markup();
+```
+
+- `Page::new(&ShellData, View) -> Page`.
+- `Page::markup() -> &Markup`.
+- `Page` emits the full document and one `<main id="main" tabindex="-1">`.
+- `Page` emits one persistent `<div role="status" aria-atomic="true"></div>`.
+- `Page` emits one `<h1>` from `ShellData`; do not add another in the view.
+- The consumer owns status codes, headers, ETag, cookies, and `IntoResponse`.
+
+### 7.2 ShellData builders
+
+`ShellData::new(title: Text, heading: Text, lang: Lang)` requires non-optional title, heading, and language.
+
+Builders:
+
+| Builder | Effect |
+|---|---|
+| `.skip(Text)` | skip link to `#main`; first focusable element |
+| `.help(Markup)` | fixed help block after header and before `<main>` |
+| `.description(Text)` | `<meta name="description">` |
+| `.canonical(ExternalUrl)` | `<link rel="canonical">` and `og:url` |
+| `.manifest(LUrl)` | `<link rel="manifest">` |
+| `.dir(Dir)` | `dir` on `<html>` |
+| `.schemas(Vec<JsonLd>)` | JSON-LD at the end of `<head>`; replaces the list |
+| `.alternates(Vec<Alternate>)` | `link rel="alternate"`; replaces the list |
+| `.open_graph(OpenGraph)` | derived `og:*` metadata |
+| `.hints(Vec<Hint>)` / `.hint(Hint)` | resource hints; append and deduplicate |
+| `.htmx_config(HtmxConfig)` | safe htmx config meta |
+| `.assets(Assets)` | document assets; replaces the set |
+| `.html_attributes(RootAttributes)` | root class/`data-*` |
+| `.body_attributes(RootAttributes)` | body class/`data-*` |
+| `.regions(Regions)` | header/before_main/after_main/footer |
+| `.noscript(Markup)` | no-JS fallback near the start of `<body>` |
+
+`hints`/`hint` append and deduplicate; `schemas`, `alternates`, `assets`, and `regions` replace the previous value.
+
+### 7.3 Regions
+
+`Regions` fields:
+
+- `header: Option<Markup>`
+- `before_main: Option<Markup>`
+- `after_main: Option<Markup>`
+- `footer: Option<Markup>`
+
+Empty slots emit nothing. Regions are the consumer's composition boundary for landmarks; `audit` checks repeated unnamed `nav`/`aside` and landmark name collisions.
+
+### 7.4 View
+
+`View::new(main)` carries the `<main>` content. Additional methods:
+
+- `.modal(Markup)`: appends a modal after the footer, in order.
+- `.asset(Asset)`: appends a required asset; deduplicates.
+- `.merge(other)`: sums modals and assets; `self`'s main wins.
+
+### 7.5 Document order
+
+`Page` emits:
+
+```text
+<!DOCTYPE html>
+<html lang="..." [dir] [class] [data-*]>
+  <head>
+    charset -> viewport -> title -> description -> og:* -> canonical -> manifest
+    -> alternates -> hints -> htmx-config -> assets -> JSON-LD
+  </head>
+  <body [class] [data-*]>
+    skip link -> role=status -> noscript -> header -> help -> before_main
+    -> main#main[h1 + view] -> after_main -> footer -> modals
+  </body>
+</html>
+```
+
+- `charset` is first and early in the first 1024 bytes.
+- `Assets` preserve declaration order; duplicates do not move position.
+- CSS before scripts if the cascade requires it; the crate does not infer.
+- `help` is between header and `before_main`.
+- `modals` are after the footer and outside `<main>`.
+
+### 7.6 Root attributes
+
+`RootAttributes` accepts a class and `data-*` only. It does not accept arbitrary attributes.
+
+```rust
+let html_attrs = RootAttributes::new().class(Class::new("dark"));
+let body_attrs = RootAttributes::new()
+    .class(Class::new("app"))
+    .data(DataAttr::new("data-bs-theme", "dark").expect("valid name"));
+```
+
+- Order is class then data attributes in insertion order.
+- `DataAttr::new` requires `data-` followed by `[a-z0-9]` segments separated by `-`.
+- Values are `&'static str` and escaped.
+- Dynamic values must be mapped to a finite set of constants before construction.
+
+### 7.7 Assets and hints
+
+Asset constructors:
+
+| Constructor | Emits |
+|---|---|
+| `Asset::style("/...")` | `<link rel="stylesheet" href="/...">` |
+| `Asset::style_media("/...", Media)` | stylesheet with `media` |
+| `Asset::script("/...")` | `<script type="module" defer src="/..."></script>` |
+| `Asset::classic_script("/...")` | `<script defer src="/..."></script>` |
+| `Asset::external_style("https://...")` | external stylesheet |
+| `Asset::external_script("https://...")` | external module |
+| `Asset::external_classic_script("https://...")` | external classic script |
+
+- Internal paths must start with `/`.
+- External assets require explicit `https`/`http` constructors.
+- Paths are `&'static str`; build-hashed names should be Rust constants.
+- `Asset` does not carry `integrity` in `0.1`; SRI is not emitted for `link`/`script` by this type.
+- `Hint` covers preconnect, dns-prefetch, preload, modulepreload, and prefetch.
+- Hints are emitted by species order, independent of vector order.
+- `Preload::font` includes `type="font/woff2"` and `crossorigin="anonymous"`.
+
+### 7.8 Theme belongs to the consumer
+
+The crate does not emit CSS, resolve design tokens, or produce `/theme.css`. The consumer owns:
+
+- design tokens and CSS;
+- semantic classes via `ClassToken`/`Tone`;
+- CSS assets via `Assets`;
+- theme state via `RootAttributes`;
+- contrast and palette validation.
+
+The page remains deterministic: the same `ShellData` produces the same bytes.
+
+## 8. Forms and fields
+
+### 8.1 Form
+
+`<form>` is not in `html!`. Use `Form::open`:
+
+```rust
+let action = Action::new(LUrl::new("/requests").expect("constant route"));
+let token = CsrfToken::new(csrf).expect("non-empty token");
+
+let form = Form::open(
+    &action,
+    Method::Post(token),
+    html! {
+        (Field::text(FieldName::new("name"), M::Name, &state.name))
+        button type="submit" { M::Send }
+    },
+);
+```
+
+Methods:
+
+| Method | `method` | CSRF | `_method` |
+|---|---|---|---|
+| `Method::Get` | `get` | no | no |
+| `Method::Post(token)` | `post` | yes (`_token`) | no |
+| `Method::Put(token)` | `post` | yes | `put` |
+| `Method::Patch(token)` | `post` | yes | `patch` |
+| `Method::Delete(token)` | `post` | yes | `delete` |
+
+- `CsrfToken::new("")` returns `None`.
+- The crate emits the token field; the server validates it.
+- `Form::open_with_submit(action, method, &SubmitKey, children)` adds `_submit` for non-GET methods.
+- `Form::open` accepts only `Action` (`LUrl` internal route); no external form destinations.
+- `Form::open` does not accept class/id/extra attributes; wrap it in an element.
+
+### 8.2 FieldState
+
+```rust
+let name = FieldState::new(AttrVal::new(&state.name))
+    .required(true)
+    .help(Text::new("As in the document"))
+    .error(Text::new("Enter the full name"));
+```
+
+| Builder | Effect |
+|---|---|
+| `FieldState::new(AttrVal)` | current value; empty when absent |
+| `.required(bool)` | `required` + `*` outside the `<label>` |
+| `.checked(bool)` | `checked` for checkbox/radio |
+| `.autocomplete(Autocomplete)` | validated `autocomplete` token |
+| `.error(Text)` | `aria-invalid="true"` + `aria-describedby` + `<span id="...-error">` |
+| `.help(Text)` | `aria-describedby` + `<span id="...-help">` |
+
+The required `*` is outside the label so it does not enter the accessible name. Error and help are `Text`, not raw strings.
+
+### 8.3 Field constructors
+
+- `Field::text(name, label, state)` is `Field::input(..., InputType::Text, ...)`.
+- `Field::input(name, label, InputType, state)`.
+- `InputType` covers `Text`, `Email`, `Tel`, `Url`, `Search`, `Password`, `Number`, `Date`, `Time`, `DateTimeLocal`, `Month`, `Week`, `Color`, `Range`.
+- `Field::textarea(name, label, state)`: value is child text, not `value`.
+- `Field::select(name, label, &[SelectOption], state) -> Option<Markup>`.
+- `Field::file(name, label, accept: Option<AttrVal>, multiple: bool, state)`: never emits `value`.
+- `Field::checkbox`, `Field::checkbox_group`, `Field::radio_group`.
+
+Canonical field shape:
+
+```html
+<div><label for="f-name">Name</label><span aria-hidden="true">*</span><input type="text" id="f-name" name="name" value="Ana" required aria-describedby="f-name-help f-name-error"><span id="f-name-help">...</span><span id="f-name-error">...</span></div>
+```
+
+- `FieldName::new("name")` normalizes the submission name and derives `id="f-..."`.
+- `aria-describedby` connects help/error in order; do not hand-write those ids.
+- `autocomplete` only comes from `Autocomplete::parse`; no free-form string.
+- Passkey support accepts `username webauthn` and `webauthn`.
+
+### 8.4 Select and groups
+
+- `SelectOption::new(AttrVal, Text).selected(bool)`.
+- All fields are option properties; the initial state is not `FieldState.value`.
+- `Field::select` returns `None` if the list is empty or every option is disabled.
+- `Field::checkbox` uses `FieldState::checked`; an empty value is omitted.
+- `Field::checkbox_group` and `Field::radio_group` emit `fieldset` + `legend`, ids such as `f-name-0`, `name[]` for checkboxes, and group-level `aria-describedby`/`aria-invalid`/`aria-required`.
+- `ChoiceOption::new(AttrVal, Text)` represents group options.
+
+## 9. Media
+
+### 9.1 Images
+
+`Img::new(Src, Alt, WidthPx, HeightPx)` requires all four. There is no untyped `alt` and no missing intrinsic dimensions.
+
+- `Img::responsive(SrcSet, Sizes)` emits responsive attributes only when both are non-empty.
+- `Img::lazy()` and `Img::fetchpriority(...)`.
+- `SrcSet::from_variants` sorts by width, deduplicates, and validates each `src`.
+- `Sizes` grammar is validated; invalid values become empty.
+- `Alt::decorative()` is the only empty alt.
+- `WidthPx::new(0)` saturates to 1.
+- `Picture::new(fallback_img).source(...)` orders `source` before the fallback image.
+- `Source::new(SrcSet, Sizes)` returns `None` when either part is empty.
+
+### 9.2 Video and audio
+
+- `Video::new(Src, Track::captions(...))` requires a captions track.
+- `Track::captions`, `Track::subtitles`, `Track::descriptions`, `Track::new`.
+- `Track::subtitles` requires a `Lang` for `srclang`.
+- `Video::track(...)`, `.controls(bool)`, `.preload(MediaPreload)`, `.poster(Src)`, `.muted(bool)`, `.looping(bool)`, `.playsinline(bool)`, `.dimensions(WidthPx, HeightPx)`, `.fallback(Text)`, `.transcript(Transcript)`.
+- `Audio::new(Src)`, `.track(...)`, `.controls(bool)`, `.preload(MediaPreload)`, `.looping(bool)`, `.fallback(Text)`, `.transcript(Transcript)`.
+- `Track::descriptions(Src, Text)` is the typed audio-description track.
+- `Transcript::new(Href, Text)` is a link to a textual alternative.
+- `Audio::transcript`/`Video::transcript` wrap the media in `<figure>` and `<figcaption>` with the transcript link.
+- `Video::transcript` is an alternative for WCAG 1.2.3 when no audio-description track exists; it does not replace the requirement for 1.2.5 descriptions.
+- `Audio::transcript` addresses the textual alternative for prerecorded audio (1.2.1).
+
+## 10. Accessibility model
+
+Target: WCAG 2.2 AA in the project context. The crate provides mechanisms; browser and content review remain consumer gates.
+
+### 10.1 What is enforced or typed
+
+- `Img` requires `Alt`; empty alt only via `Alt::decorative()`.
+- `Video::new` requires captions.
+- `a`/`button`/`input` require an accessible name where the local block can know it.
+- `Field` derives label/id/`aria-describedby`/`aria-invalid`/`required`.
+- `Form` requires CSRF for state-changing methods.
+- `Page` emits one `<main>`, one persistent status region, and one `<h1>`.
+- `Page` emits `tabindex="-1"` on `main` for the skip link.
+- `ShellData::skip` emits the first-focusable skip link.
+- `ShellData::help(Markup)` fixes the help slot.
+- `aria_label` accepts `Label` (translated) or sr-only labels, not `&str`.
+- `th` requires `scope`.
+- `Dialog` and other primitives derive names where implemented.
+- `target="_blank"` adds `rel="noopener noreferrer"`.
+- `svg` can be decorative or explicitly named.
+- `aria-hidden="true"` on a focusable control is rejected in the block.
+- `autocomplete` is a closed vocabulary; passkey tokens are accepted.
+- `Track::descriptions` and `Transcript` cover media alternatives.
+- `popover="hint"` is in the global vocabulary.
+
+### 10.2 Document-wide audit rules
+
+`audit::check` (feature `audit`) returns findings with rule, message, and node index. Rules:
+
+1. `main_unique` — exactly one `<main>`.
+2. `single_h1` — exactly one `<h1>`.
+3. `heading_levels_no_skips` — no skipped heading levels.
+4. `ids_unique` — no duplicate `id`.
+5. `landmark_names_distinct` — same-type landmarks need distinct names.
+6. `landmark_names_required` — repeated `nav`/`aside` need names.
+7. `aria_current_unique_per_nav` — at most one current `aria-current` per `<nav>`; `false`/`FALSE` is ignored.
+8. `aria_refs_resolve` — `aria-labelledby`/`describedby`/`controls` resolve.
+9. `popover_target_resolves` — `popovertarget` points to a `popover`.
+10. `no_content_derived_identifiers` — `id`/`name` follow the stable alphabet.
+11. `no_inline_script` — `<script>` has `src` or is `application/ld+json`.
+12. `no_style_attribute` — any `style=`.
+13. `no_event_handler` — any `on*`.
+
+`audit` is deterministic and reports in document pre-order with rule-order tie-breaking. It is not a sanitizer and does not measure computed style.
+
+### 10.3 Consumer/browser gates
+
+The crate does not measure:
+
+- contrast with composited backgrounds;
+- target size;
+- focus visibility or occlusion;
+- text spacing/reflow;
+- `prefers-reduced-motion`, forced colors, or transparency preferences;
+- tab order inside dialogs/popovers;
+- post-swap htmx behavior;
+- whether alt text is useful (only that it exists).
+
+Use `axe`, `sniffCSS`, keyboard/e2e, and content review for those.
+
+### 10.4 `Alt+1`
+
+`accesskey` is forbidden because activation differs by browser/screen reader and can conflict with native shortcuts. The crate provides a skip link and landmarks; `Alt+1` is a product-level choice, not a crate feature. A consumer may add its own keyboard listener if the product requires it.
+
+## 11. Security model
+
+### 11.1 Threat model
+
+| Vector | Mechanism |
+|---|---|
+| text | `Text` escapes five characters + NUL; no `String`-to-`Markup` |
+| attribute value | `AttrVal`/typed values escape five + CR/LF/TAB |
+| URL | `Href`/`ExternalUrl`/`LUrl`/`Src` constrain schemes and shapes |
+| JSON-LD | `JsonLd` escapes `< > & '` and U+2028/U+2029 |
+| CSS | `Class`/token; `style=` is audited and not CSS-sanitized |
+| element/attribute name | names come from macro source and spec, not runtime data |
+
+### 11.2 Forbidden and escaped
+
+- Forbidden: `on*`, `srcdoc`, `@*`, `hx-on*`, `hx-*`, `formaction`, `ping`, `slot`/`part`/`is`, `xlink:href`, `accesskey`, `draggable`.
+- `style` is allowed only as `style=`; its value is attribute-escaped, not CSS-sanitized.
+- `audit` reports `no_style_attribute`.
+- CSP without inline script is the intended baseline; a `style=` use requires `style-src-attr` accommodation.
+- `<style>` and inline `<script>` are not in the vocabulary; scripts are external `Asset`s.
+- JSON-LD is emitted as `application/ld+json` at the end of `<head>` and is escaped.
+
+### 11.3 Trust extensions
+
+`Render` and `AttrValue` are public extension traits. Implementing them bypasses the typed value path. They must write only trusted bytes and must use `Text`/`escape::text` for foreign data. `Markup::from_render` trusts the `Render` implementation.
+
+### 11.4 CSP reference
+
+```text
+default-src 'self';
+script-src 'self';
+style-src 'self';
+img-src 'self' data:;
+font-src 'self';
+connect-src 'self';
+object-src 'none';
+base-uri 'none';
+form-action 'self';
+frame-ancestors 'none';
+script-src-attr 'none';
+```
+
+- The default path has no inline script and needs no nonce.
+- `style=` requires an explicit `style-src-attr` change.
+- CDN use requires explicit source allowlisting.
+- `Asset` does not emit SRI in `0.1`; `Integrity` is available for `Preload`.
+- Headers such as HSTS, `X-Content-Type-Options`, and `Referrer-Policy` belong to the consumer.
+
+## 12. HTTP and application integration
+
+The crate is framework-agnostic:
+
+- No `http`, `axum`, `IntoResponse`, request parsing, or response conversion.
+- `Page` exposes `markup()`; the consumer builds status and headers.
+- State-changing `POST` should respond with `303 See Other` + `Location` on success, or re-render a `422`/`400` form with errors.
+- ETag can be computed over canonical `page.markup()` bytes; the crate does not compute or cache it.
+- Partial responses are consumer-defined; `Markup` can be composed, but the crate does not implement htmx transport.
+- The optional htmx profile and `HtmxConfig` are documented separately; core HTML does not depend on htmx.
+
+## 13. Testing, spec, and tooling
+
+### 13.1 Source of truth
+
+- `spec/elements.toml` declares elements, categories, allowed attributes, children, accessible-name requirements, invariants, and global vocabularies.
+- `spec/data.toml` declares consumer `data-*` names used by `tools/data_check.py`.
+- `tools/gen_spec.py` generates the two Rust tables from the TOML spec.
+- `tools/validate_spec.py` checks spec/docs consistency, scopes, counts, and invariant traceability.
+- `tools/check_links.py` checks relative documentation links.
+- `tools/tests/` contains Python unit tests for tools.
+- Generated tables must remain byte-identical across the public crate and macro core.
+
+### 13.2 Test layers
+
+- Unit/integration tests in `crates/*/tests`.
+- Golden/snapshot tests for canonical bytes.
+- `trybuild` UI tests for diagnostics, with committed `.stderr` snapshots.
+- Property tests for value invariants and parser robustness.
+- Fuzz target for the parser in `fuzz/`.
+- `audit` tests behind `feature = "audit"` over complete pages.
+- Spec parity and docs traceability tests.
+- CI also runs MSRV with `cargo test --workspace --lib`; the `.stderr` snapshots are rustc-1.99 artifacts and are not compared under MSRV.
+
+### 13.3 Verification commands
+
+```bash
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace
+cargo test -p html-auy --features audit
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features
+python3 tools/gen_spec.py --check
+python3 tools/validate_spec.py
+python3 tools/check_links.py
+python3 -m unittest discover -s tools/tests
+```
+
+MSRV:
+
+```bash
+cargo +1.92 test --workspace --lib --locked
+```
+
+## 14. Validation scopes and invariant counts
+
+`spec/elements.toml` assigns every invariant a scope:
+
+| Scope | Enforced by | Promise | Count |
+|---|---|---|---|
+| `block` | `html!` macro | compile error with source span | 59 |
+| `type` | public constructors (`Page`, `Form`, etc.) | cannot compile without the datum | 4 |
+| `output` | `audit` over final HTML | test failure | 8 |
+
+The eight `output` invariants:
+
+- `landmark_names_distinct`
+- `landmark_names_required`
+- `no_content_derived_identifiers`
+- `ids_unique`
+- `heading_levels_no_skips`
+- `popover_target_resolves`
+- `aria_current_unique_per_nav`
+- `single_h1`
+
+The four `type` invariants are `banner_unique_at_root`, `document_title_required`, `main_unique`, and `form_requires_csrf`; `main_tabindex_minus_one` is `block`. The constructors enforce a non-optional title, exactly one `View`, banner uniqueness at the body root, and CSRF for state-changing forms. When in doubt, inspect the actual scope table rather than inferring from a rule name.
+
+## 15. Repository map
+
+| Path | Contents |
+|---|---|
+| `crates/html-auy/` | public library: values, `Markup`, shell, components, optional `audit` |
+| `crates/html-auy-macros/` | `html!` proc-macro |
+| `crates/html-auy-macros-core/` | parser, validator, code generator |
+| `spec/elements.toml` | normative vocabulary and invariants |
+| `spec/data.toml` | consumer `data-*` table |
+| `tools/` | spec generator, validator, link checker, tests |
+| `docs/` | design, decisions, accessibility, security, testing, migration |
+| `docs/usage/` | operational wiki, current API |
+| `demo/` | comparison examples, not published |
+| `fuzz/` | parser fuzz target, separate workspace |
+| `htmx/` | optional htmx profile assets/experiments |
+| `sniff-css/` | separate CSS/browser gate workspace |
+| `EXAMPLE.html` | rendered example |
+| `CHANGELOG.md` | release history |
+
+Workspace members are only the three public crates. `fuzz/` and `sniff-css/` are separate workspaces. `demo/` is not released.
+
+## 16. Documentation map
+
+Primary references:
+
+- [README](https://github.com/st-all-one/html-auy/blob/main/README.md)
+- [Usage wiki](https://github.com/st-all-one/html-auy/blob/main/docs/usage/README.md)
+- [Installation](https://github.com/st-all-one/html-auy/blob/main/docs/usage/01-instalacao.md)
+- [First page](https://github.com/st-all-one/html-auy/blob/main/docs/usage/02-primeira-pagina.md)
+- [`html!` macro](https://github.com/st-all-one/html-auy/blob/main/docs/usage/03-macro-html.md)
+- [Typed values](https://github.com/st-all-one/html-auy/blob/main/docs/usage/04-valores-tipados.md)
+- [Text and i18n](https://github.com/st-all-one/html-auy/blob/main/docs/usage/05-texto-e-i18n.md)
+- [Forms](https://github.com/st-all-one/html-auy/blob/main/docs/usage/06-formularios.md)
+- [Media](https://github.com/st-all-one/html-auy/blob/main/docs/usage/07-midia.md)
+- [Shell, assets, theme](https://github.com/st-all-one/html-auy/blob/main/docs/usage/08-shell-assets-e-tema.md)
+- [Dynamic content](https://github.com/st-all-one/html-auy/blob/main/docs/usage/09-conteudo-dinamico.md)
+- [Security](https://github.com/st-all-one/html-auy/blob/main/docs/usage/10-seguranca.md)
+- [Accessibility](https://github.com/st-all-one/html-auy/blob/main/docs/usage/11-acessibilidade.md)
+- [HTTP and integrations](https://github.com/st-all-one/html-auy/blob/main/docs/usage/12-http-e-integracoes.md)
+- [Testing and diagnostics](https://github.com/st-all-one/html-auy/blob/main/docs/usage/13-testes-e-diagnostico.md)
+- [Recipes](https://github.com/st-all-one/html-auy/blob/main/docs/usage/14-receitas.md)
+- [Architecture](https://github.com/st-all-one/html-auy/blob/main/docs/usage/15-arquitetura.md)
+- [Quick reference](https://github.com/st-all-one/html-auy/blob/main/docs/usage/99-referencia-rapida.md)
+
+Design docs:
+
+- [Principles](https://github.com/st-all-one/html-auy/blob/main/docs/00-principios.md)
+- [Architecture](https://github.com/st-all-one/html-auy/blob/main/docs/01-arquitetura.md)
+- [Types and escaping](https://github.com/st-all-one/html-auy/blob/main/docs/02-tipos-e-contextos.md)
+- [Element vocabulary](https://github.com/st-all-one/html-auy/blob/main/docs/03-vocabulario-de-elementos.md)
+- [Validation](https://github.com/st-all-one/html-auy/blob/main/docs/04-validacao.md)
+- [Accessibility](https://github.com/st-all-one/html-auy/blob/main/docs/05-acessibilidade.md)
+- [Shell and theme](https://github.com/st-all-one/html-auy/blob/main/docs/06-shell-e-tema.md)
+- [JS and assets](https://github.com/st-all-one/html-auy/blob/main/docs/07-js-e-assets.md)
+- [Security](https://github.com/st-all-one/html-auy/blob/main/docs/08-seguranca.md)
+- [Performance and cache](https://github.com/st-all-one/html-auy/blob/main/docs/09-desempenho-e-cache.md)
+- [Ergonomics](https://github.com/st-all-one/html-auy/blob/main/docs/10-ergonomia.md)
+- [Stability](https://github.com/st-all-one/html-auy/blob/main/docs/11-estabilidade.md)
+- [Testing](https://github.com/st-all-one/html-auy/blob/main/docs/12-testes.md)
+- [Decisions](https://github.com/st-all-one/html-auy/blob/main/docs/13-decisoes.md)
+- [Alternatives](https://github.com/st-all-one/html-auy/blob/main/docs/14-alternativas.md)
+- [Blade migration](https://github.com/st-all-one/html-auy/blob/main/docs/15-migracao-blade.md)
+- [Roadmap](https://github.com/st-all-one/html-auy/blob/main/docs/16-roadmap.md)
+- [FAQ](https://github.com/st-all-one/html-auy/blob/main/docs/17-faq.md)
+- [Implementation map](https://github.com/st-all-one/html-auy/blob/main/docs/21-implementacao.md)
+- [Rigor and CI](https://github.com/st-all-one/html-auy/blob/main/docs/22-rigor.md)
+- [Accessibility and CSS boundary](https://github.com/st-all-one/html-auy/blob/main/docs/23-acessibilidade-e-css.md)
+- [Export notes](https://github.com/st-all-one/html-auy/blob/main/docs/24-exportacao.md)
+- [End-to-end example](https://github.com/st-all-one/html-auy/blob/main/docs/25-exemplo-de-uso.md)
+- [Consumer-owned theme](https://github.com/st-all-one/html-auy/blob/main/docs/26-d29-consumidor.md)
+
+Historical/analysis documents may describe earlier internal names (`html`, `html-core`, `html-spec`, `html-macro`) or earlier counts. Treat `README.md`, `docs/04`, `docs/21`, `docs/23`, `spec/elements.toml`, and `docs/usage/` as current.
+
+## 17. Hard rules for code generation or review
+
+When generating code or reviewing a change, follow these rules:
+
+1. Use only the public API described here; do not invent constructors or modules.
+2. Do not emit raw HTML strings, `Markup::from(String)`, `Raw`, `PreEscaped`, or `|safe`.
+3. Do not put document elements or `<form>` inside `html!`; use `Page`/`Form::open`.
+4. Do not put literal text in `html!`; use `Msg`, `Text`, or `(markup)`.
+5. Do not add `on*`, inline `<script>`, `<style>`, `srcdoc`, or arbitrary attributes.
+6. Prefer typed values (`Href`, `LUrl`, `Src`, `Alt`, `Text`, `AttrVal`, `Label`, `Class`) over strings.
+7. Keep output canonical; do not depend on HashMap order, locale, or source whitespace.
+8. Treat `Render`/`AttrValue` implementations as trust boundaries.
+9. Put document-wide checks in `audit`, not in `html!`.
+10. Browser-observable properties (contrast, target size, focus, occlusion) are consumer gates, not crate guarantees.
+11. For media alternatives, use `Track::descriptions` for audio description and `Transcript` for textual alternatives; do not claim one replaces the other.
+12. `accesskey` is forbidden; do not implement `Alt+1` as a crate feature.
+13. `aria-current` is unique per nearest `<nav>`; explicit `false` is not a current item.
+14. `style=` is an audited escape hatch, not a styling strategy.
+15. If a rule is unclear, inspect `spec/elements.toml` and the corresponding invariant table in `docs/04`.

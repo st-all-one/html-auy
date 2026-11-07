@@ -1,0 +1,211 @@
+# html-auy
+
+> `html-auy` is a typed HTML vocabulary for Rust: compile-time attribute validation, context-aware escaping, deterministic bytes, and accessibility by construction. HTML is the artifact, not a projection of a reactive tree.
+
+Version `0.1.0`. Rust 1.92+ (edition 2024). `#![no_std]` + `alloc`. No framework, HTTP, router, runtime, or embedded JavaScript. The public crate is `html-auy`; the `html!` macro is implemented by `html-auy-macros` and `html-auy-macros-core`.
+
+## Canonical facts
+
+- Public crate: `html-auy`; Rust crate name: `html_auy`.
+- Repository: <https://github.com/st-all-one/html-auy>
+- License: MIT.
+- Default build: no external parser/runtime dependency; `audit` is the only optional feature.
+- `audit` adds `html5ever` + `markup5ever_rcdom` and `html_auy::audit::check`.
+- Spec: 111 elements and 71 invariants: 59 `block`, 4 `type`, 8 `output`.
+- Audit: 13 final-document rules (`audit::check`).
+- The macro validates a fragment; `audit` validates the assembled document; browser gates (`axe`, `sniffCSS`, keyboard/e2e) handle computed style and interaction.
+- `Markup` has no public constructor from `String`; there is no public `Raw`/`PreEscaped`/`|safe` escape hatch.
+- `Page` is the only type that emits `<!DOCTYPE html>`, `<html>`, `<head>`, `<body>`, and `<main>`.
+- `Form::open` is the only way to emit `<form>`; CSRF lives in `Method::Post/…`.
+- HTML output is canonical: attribute order, class order, `srcset` order, and asset order are deterministic.
+- Accessibility is an API property where possible: missing `alt`, missing control name, invalid nesting, and missing CSRF do not compile; document-wide issues are `audit` tests.
+
+## Quick start
+
+```toml
+[dependencies]
+html-auy = "0.1"
+```
+
+```rust
+use html_auy::{html, Lang, Page, ShellData, Text, View};
+
+fn page() -> Page {
+    let lang = Lang::parse("en").expect("constant language");
+    let data = ShellData::new(Text::new("Home"), Text::new("Home"), lang);
+    let view = View::new(html! {
+        p { Text::new("Hello, world.") }
+    });
+    Page::new(&data, view)
+}
+```
+
+```rust
+use html_auy::{html, Href, LUrl, Text};
+
+let link = html! {
+    a href=(Href::internal(LUrl::new("/news").expect("constant route"))) {
+        (Text::new("News"))
+    }
+};
+assert_eq!(link.as_str(), r#"<a href="/news">News</a>"#);
+```
+
+## Mental model
+
+```text
+typed data -> html! / primitives -> Markup -> View -> Page -> bytes
+```
+
+- `html!` parses and validates the fragment at compile time, then emits `Markup`.
+- `Markup` is already-rendered HTML; composition is explicit.
+- `View` is the `<main>` content plus modals and required assets.
+- `ShellData` carries document-level data.
+- `Page` combines `ShellData` and `View` into the complete document.
+- The consumer owns HTTP, headers, status, sessions, routing, i18n, CSS, and browser gates.
+
+## Public surface
+
+- `html!` macro; `Markup`; `Render`.
+- `Page`, `ShellData`, `View`, `Regions`, `Alternate`, `OpenGraph`, `Hint`, `Preload`, `Asset`, `Assets`, `RootAttributes`.
+- Values: `Text`, `AttrVal`, `Href`, `LUrl`, `ExternalUrl`, `Fragment`, `MailAddr`, `PhoneNumber`, `Src`, `SrcSet`, `Sizes`, `Alt`, `WidthPx`, `HeightPx`, `Timestamp`, `Offset`, `Lang`, `Dir`, `Label`, `Id`, `FieldName`, `Class`, `ClassList`, `Tone`, `Media`, `Integrity`, `Autocomplete`, `JsonLd`.
+- Forms: `Form`, `Action`, `CsrfToken`, `Method`, `Field`, `FieldState`, `InputType`, `SelectOption`, `ChoiceOption`.
+- Media: `Img`, `Picture`, `Source`, `Video`, `Audio`, `Track`, `TrackKind`, `Transcript`, `Loading`, `MediaPreload`.
+- Optional: `audit::check`, `audit::Finding`.
+
+## `html!` essentials
+
+- Syntax: `tag attr=value { children }`; void elements end with `;`.
+- Literal text is forbidden: use `Msg` for static translated text, `Text::new` for dynamic text, `(markup)` for prebuilt markup.
+- Attribute names use Rust `_`; HTML output uses `-` (`aria_label` -> `aria-label`).
+- Typed attributes use `attr=(value)`; optional attributes use `attr?=(Option<T>)`.
+- Boolean attributes use presence: `disabled=(true)` emits `disabled`; `false` omits it.
+- `class`/`Class`/`ClassList` are canonicalized: sorted and deduplicated.
+- `target="_blank"` gains `rel="noopener noreferrer"` automatically.
+- Control flow: `@if`, `@else if`, `@else`, `for`.
+- No `@match`, `@let`, runtime templates, `on*`, `<style>`, `Raw`, or arbitrary HTML strings.
+- Document elements (`html`, `head`, `body`, `main`, `title`, `meta`, `link`, `script`, `noscript`) do not compile inside `html!`; use `Page`.
+- `<form>` does not compile inside `html!`; use `Form::open`.
+- `h1` is allowed for custom shells, but `Page` normally emits it; `audit` enforces exactly one `h1`.
+
+## Validation model
+
+- N1: type-level absence (`Alt`, `Src`, `CsrfToken`, `Page` title/heading).
+- N2: procedural-macro errors for the local block: unknown elements/attributes, required attributes, invalid nesting, `label for` resolution, `aria-*` rules, forbidden attributes.
+- N3: removed by design; no advisory lints.
+- N4: `audit::check` over the final HTML, behind `feature = "audit"`.
+- N5: consumer browser gates (`axe`, `sniffCSS`, keyboard/e2e) for computed style, contrast, target size, focus order, and interaction.
+- Invariant scopes: `block` (59), `type` (4), `output` (8).
+- The macro never sees another fragment; document-wide invariants belong to `audit`.
+
+## Accessibility
+
+- WCAG 2.2 AA target, with eMAG/Portuguese-context notes in the docs.
+- Images require `Alt`; decorative images require `Alt::decorative()`.
+- `Video::new` requires a `Track::captions`.
+- `Track::descriptions` provides audio description; `Video::transcript` and `Audio::transcript` provide textual alternatives in a `<figure>` with a `<figcaption>` link.
+- `ShellData::skip` emits the first-focusable skip link to `#main`.
+- `ShellData::help(Markup)` fixes a consistent help slot after the header and before `<main>`.
+- `Field` derives `label`, `id`, `aria-describedby`, `aria-invalid`, and `required`.
+- `Autocomplete` accepts `username webauthn` and `webauthn` for passkey flows.
+- `accesskey` is forbidden; there is no built-in `Alt+1`. The crate provides the skip link; the consumer owns optional keyboard shortcuts.
+- `audit` checks: `main_unique`, `single_h1`, `heading_levels_no_skips`, `ids_unique`, `landmark_names_distinct`, `landmark_names_required`, `aria_current_unique_per_nav`, `aria_refs_resolve`, `popover_target_resolves`, `no_content_derived_identifiers`, `no_inline_script`, `no_style_attribute`, `no_event_handler`.
+- `aria_current_unique_per_nav` counts only current values; `aria-current="false"` is ignored.
+- The crate does not measure contrast, target size, focus visibility, occlusion, or computed layout.
+
+## Security
+
+- Context-specific escaping: `Text`, `AttrVal`, `JsonLd`, `LUrl`, `Src`, `Href`.
+- `ExternalUrl` accepts only `http`/`https`; `LUrl` rejects `//`, `..`, `%2e%2e`, control characters, and unsafe path forms.
+- Requested attributes are omitted when invalid; forbidden attributes do not compile.
+- Forbidden everywhere: `on*`, `srcdoc`, `@*`, `hx-on*`, `hx-*`, `formaction`, `ping`, `slot`/`part`/`is`, `xlink:href`, `accesskey`, `draggable`.
+- `style=` is the only inline-style escape hatch: it is escaped as an attribute but not CSS-sanitized; `audit` reports it; CSP needs `style-src-attr`.
+- `JsonLd` escapes `<`, `>`, `&`, `'` and line separators so `</script>` cannot close the block.
+- `Render`/`AttrValue` implementations write trusted bytes; use `Text`/`escape::text` for foreign data.
+- No `<style>`, no inline scripts, no `IntoResponse`, no I/O.
+
+## Shell and document order
+
+`Page::new(&data, view)` emits:
+
+```text
+<!DOCTYPE html>
+<html lang="..." [dir] [class] [data-*]>
+  <head>
+    charset -> viewport -> title -> description -> og:* -> canonical -> manifest
+    -> alternates -> hints -> htmx-config -> assets -> JSON-LD
+  </head>
+  <body [class] [data-*]>
+    skip link -> role=status -> noscript -> header -> help -> before_main
+    -> main#main[h1 + view] -> after_main -> footer -> modals
+  </body>
+</html>
+```
+
+- `Page` always emits one `<main id="main" tabindex="-1">` and one persistent `role="status" aria-atomic="true"`.
+- `ShellData::help` is emitted after the header and before `before_main`.
+- Empty regions emit nothing.
+- `Assets` preserve declaration order; duplicates do not move position.
+- The crate does not emit CSS, theme tokens, cookies, headers, or ETags.
+
+## Forms and media
+
+- `Form::open(action, method, children)`; `Post` requires `CsrfToken`; `Put`/`Patch`/`Delete` emit `_method`.
+- `Field::text/input/textarea/select/file/checkbox/checkbox_group/radio_group`.
+- `input` supports the 14 native types; `Field::file` never emits `value`.
+- `Field::select` returns `None` when no option is selectable.
+- `Img` requires `Src`, `Alt`, `WidthPx`, and `HeightPx`; responsive images require `SrcSet` + `Sizes`.
+- `Picture` orders `source` before the fallback `img`.
+- `Video` requires captions; `Track::descriptions` is typed audio description.
+- `Transcript` is a link + label; `Audio::transcript` / `Video::transcript` wrap the player in `<figure>`.
+
+## Repository map
+
+- `crates/html-auy/` — public library: values, `Markup`, shell, components, optional `audit`.
+- `crates/html-auy-macros/` — `html!` proc-macro.
+- `crates/html-auy-macros-core/` — parser, validator, code generator.
+- `spec/elements.toml` — normative element/attribute/invariant table.
+- `spec/data.toml` — consumer `data-*` table.
+- `tools/gen_spec.py`, `tools/validate_spec.py`, `tools/check_links.py`.
+- `demo/` — comparison examples, not published.
+- `fuzz/` — parser fuzz target, separate workspace.
+- `docs/` — design, decisions, accessibility, security, testing, migration, and usage wiki.
+
+## Commands
+
+```bash
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace
+cargo test -p html-auy --features audit
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+python3 tools/gen_spec.py --check
+python3 tools/validate_spec.py
+python3 tools/check_links.py
+```
+
+## Docs
+
+- [Usage wiki](https://github.com/st-all-one/html-auy/blob/main/docs/usage/README.md): install, first page, macro, values, forms, media, shell, security, accessibility, HTTP, recipes, quick reference.
+- [Architecture](https://github.com/st-all-one/html-auy/blob/main/docs/01-arquitetura.md)
+- [Types and escaping](https://github.com/st-all-one/html-auy/blob/main/docs/02-tipos-e-contextos.md)
+- [Element vocabulary](https://github.com/st-all-one/html-auy/blob/main/docs/03-vocabulario-de-elementos.md)
+- [Validation](https://github.com/st-all-one/html-auy/blob/main/docs/04-validacao.md)
+- [Accessibility](https://github.com/st-all-one/html-auy/blob/main/docs/05-acessibilidade.md)
+- [Shell and theme](https://github.com/st-all-one/html-auy/blob/main/docs/06-shell-e-tema.md)
+- [Security](https://github.com/st-all-one/html-auy/blob/main/docs/08-seguranca.md)
+- [Testing](https://github.com/st-all-one/html-auy/blob/main/docs/12-testes.md)
+- [Decisions](https://github.com/st-all-one/html-auy/blob/main/docs/13-decisoes.md)
+- [Implementation map](https://github.com/st-all-one/html-auy/blob/main/docs/21-implementacao.md)
+- [Accessibility and CSS boundary](https://github.com/st-all-one/html-auy/blob/main/docs/23-acessibilidade-e-css.md)
+- [Full LLM context](https://github.com/st-all-one/html-auy/blob/main/llms-full.txt)
+
+## LLM rules
+
+- Prefer the APIs listed here; do not invent `Markup::from(String)`, raw HTML sinks, `Href::new`, `Raw`, or `PreEscaped`.
+- Do not put document elements or `<form>` in `html!`; use `Page` and `Form::open`.
+- Do not put literal text in `html!`; use `Msg`, `Text`, or `(markup)`.
+- Do not emit `on*`, `<style>`, `srcdoc`, or arbitrary attribute names.
+- Use `Page` for full documents, `View` for `<main>` content, and `ShellData` for document metadata.
+- Use `audit::check` only with `feature = "audit"`, and treat it as a test over final HTML, not as a runtime sanitizer.
+- When behavior is unclear, consult `spec/elements.toml`, `docs/04-validacao.md`, and the matching `docs/usage/` page.
