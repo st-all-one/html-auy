@@ -141,20 +141,29 @@ let markup = video.render();
 ## Áudio
 
 ```rust
-use html_auy::{Audio, MediaPreload, Src, Text, Track};
+use html_auy::{html, Audio, Href, LUrl, MediaPreload, Src, Text};
 
 let audio = Audio::new(Src::parse("/media/podcast.mp3").expect("áudio"))
     .preload(MediaPreload::Metadata)
-    .track(Track::captions(
-        Src::parse("/media/podcast.vtt").expect("transcrição"),
-        Text::new("Transcrição"),
-    ))
     .fallback(Text::new("Seu navegador não suporta áudio."));
 
-let markup = audio.render();
+let bloco = html! {
+    figure {
+        (audio.render())
+        figcaption {
+            a href=(Href::internal(
+                LUrl::new("/media/podcast-transcricao").expect("rota"),
+            )) {
+                Text::new("Transcrição do episódio")
+            }
+        }
+    }
+};
 ```
 
-Áudio aceita faixas, mas não as exige; legendas continuam recomendadas para conteúdo falado.
+Áudio aceita faixas (`Track`), mas não as exige. **`Track::captions` não substitui a
+transcrição exigida por 1.2.1**: áudio não tem área visual para legenda. Por isso o exemplo usa um
+link para a transcrição ao lado do player; o `Audio` em si só emite o `<audio>`.
 
 ## `preload` de mídia
 

@@ -187,6 +187,12 @@ Vale para `app.css` e para `/theme.css` — os dois únicos arquivos de estilo d
    **`display: grid`/`flex` em `<table>`** e **`list-style: none` em `ul`/`ol`** — os dois destroem a
    semântica nativa (tabela deixa de ser tabela, lista deixa de ser lista) e não há `role` no
    vocabulário para repor o que se perdeu (D4).
+8. **O contrato da camada `a11y` inclui as preferências do SO, não só `prefers-color-scheme`:** `:focus-visible`;
+   `@media (prefers-contrast: more)`; `@media (forced-colors: active)` com `Canvas`/`CanvasText`/
+   `ButtonText`/`LinkText`/`Highlight`; `@media (prefers-reduced-motion: reduce)`; `@media
+   (prefers-reduced-transparency: reduce)` e `(prefers-reduced-data: reduce)`; `color-scheme` no
+   `:root`; e regras de espaçamento de texto (1.4.12). Essa camada é a última de tela; o token do
+   tenant não a sobrescreve.
 
 ## 5. Cor de elemento individual: identidade, não CSS
 

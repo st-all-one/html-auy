@@ -44,6 +44,7 @@ Um aviso que dispara 20 vezes por página é desligado na segunda semana. Por is
 | 3.1.1 | idioma da página | **tipo**: `html lang` obrigatório e BCP-47 válido |
 | 3.1.2 | idioma de partes | **tipo**: `lang=(Lang)` em qualquer elemento (atributo global BCP-47) |
 | 3.2.1/3.2.2 | sem mudança por foco/entrada | **estrutural**: não existe `on*`; mudança só por submit |
+| 3.2.6 | ajuda consistente (2.2, **A**) | **consumidor**: se houver ajuda, ela ocupa o mesmo slot/posição em todas as páginas; o shell fixa a ordem das regiões, não o conteúdo |
 | 3.3.1 | identificação de erro | **tipo**: `Field` exige `erro: Option<Text>` e emite `aria-invalid` |
 | 3.3.2 | rótulos ou instruções | **tipo**: `Field` exige `label`; `ajuda: Option<Text>` vira `aria-describedby` |
 | 3.3.3 | sugestão de correção | **tipo**: `Field` recebe o texto de sugestão em `erro: Option<Text>` |

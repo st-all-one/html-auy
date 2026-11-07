@@ -48,6 +48,61 @@ let data = ShellData::new(title, heading, lang)
 - A ordem do DOM é a ordem visual; o crate não oferece `order`/`flex-direction: reverse` no CSS.
 - `header`/`footer`/`aside`/`nav` são regiões; um slot vazio não é emitido.
 
+### Skip link: um `<a>`, não um `<nav>` invisível
+
+O “link para pular blocos” não é um elemento `nav` escondido. É um link comum, colocado antes de
+qualquer conteúdo repetido:
+
+```html
+<a class="skip-link" href="#main">Pular para o conteúdo</a>
+```
+
+O `Page` o emite **quando** `ShellData::skip(Text)` recebe um texto. O destino é fixo:
+`<main id="main" tabindex="-1">`; o `tabindex="-1"` é o que permite ao navegador mover o foco para
+o `main` ao ativar o link. O link vem antes do header, da região de status e do `noscript`, portanto
+é o primeiro focável da página.
+
+O crate **não** decide tudo:
+
+| Parte | Quem assume |
+|---|---|
+| markup, classe, `href="#main"`, ordem e alvo focável | `html-auy` (`ShellData::skip` + `Page`) |
+| texto traduzido | consumidor (`Text::msg`) |
+| esconder até o foco e mostrar no `:focus` | CSS do consumidor |
+| existir ou não na página | consumidor: `.skip` é opt-in; o crate não tem locale para inventar o texto |
+| `Alt+1` | ninguém no crate; `accesskey` é proibido (conflita com navegador/leitor de tela) |
+
+Um CSS mínimo, no `@layer a11y` do consumidor:
+
+```css
+.skip-link {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 100;
+  padding: 0.75rem 1rem;
+  background: Canvas;
+  color: CanvasText;
+  transform: translateY(-150%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+```
+
+`Canvas`/`CanvasText` são cores de sistema e sobrevivem ao `forced-colors`. Não use
+`display: none`, `visibility: hidden` ou `aria-hidden`: isso remove o link do teclado e do leitor de
+tela. Se houver barra fixa, acrescente `scroll-margin-top` ao `#main`.
+
+**Sobre `Alt+1`:** não é um atalho HTML padrão. O único atributo nativo é `accesskey="1"`, cuja
+ativação varia por navegador/SO (`Alt+1`, `Alt+Shift+1`, `Ctrl+Option+1`) e conflita com atalhos do
+leitor de tela; por isso o vocabulário o recusa. `aria-keyshortcuts` apenas **anuncia** um atalho
+existente, não o implementa, e também não entra no vocabulário. O caminho suportado é `Tab` +
+`Enter` no skip link; leitores de tela também pulam por landmarks. Se o produto exigir `Alt+1`, isso
+é um listener no JS do consumidor, com o custo de conflito e de manutenção — não uma garantia do
+crate.
+
 ## Formulários
 
 ```rust
@@ -131,6 +186,10 @@ fn paginas_passam_no_audit() {
 | idioma de partes | `lang` correto no dado |
 | contraste de estados (hover/focus/disabled) | CSS + medição |
 | `prefers-reduced-motion` | CSS |
+| `forced-colors`, `prefers-contrast`, `prefers-reduced-transparency` | CSS do consumidor; o tema não emite essas camadas |
+| espaçamento de texto (WCAG 1.4.12) | CSS: `rem`, `line-height`, sem altura fixa em texto |
+| ajuda consistente entre páginas (WCAG 3.2.6) | layout do consumidor: mesmo slot/posição |
+| entrada redundante e autenticação (WCAG 3.3.7/3.3.8) | fluxo do consumidor; `Field` não bloqueia colar/gerenciador de senha |
 
 ## Erros comuns
 
