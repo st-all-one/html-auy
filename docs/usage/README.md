@@ -1,8 +1,9 @@
 # Uso do `html-auy`
 
 **Wiki operacional da série `0.1.x`.** Ela responde “como eu faço isto?” com código que segue a API
-atual. O *porquê* das decisões fica em [`docs/00`](../00-principios.md) a [`docs/27`](../27-licoes-do-eta.md);
-aqui o foco é a interface que o consumidor vê.
+atual. A filosofia operacional está em [00 — Filosofia](00-filosofia.md); o *porquê* histórico das
+decisões fica em [`docs/00`](../00-principios.md) a [`docs/27`](../27-licoes-do-eta.md). Aqui o foco
+é a interface que o consumidor vê.
 
 ## O modelo em uma frase
 
@@ -63,6 +64,7 @@ a saída exata e a fronteira HTTP, está em [Primeira página](02-primeira-pagin
 
 | Página | Pergunta que responde |
 |---|---|
+| [00 — Filosofia](00-filosofia.md) | Por que a API é assim e quais custos ela aceita? |
 | [01 — Instalação](01-instalacao.md) | Como adicionar, qual feature ligar, qual MSRV, o que é `no_std`? |
 | [02 — Primeira página](02-primeira-pagina.md) | Como sair de zero a um `Page` completo? |
 | [03 — O macro `html!`](03-macro-html.md) | Qual é a gramática, o que compila e o que o compilador recusa? |
@@ -97,7 +99,7 @@ a saída exata e a fronteira HTTP, está em [Primeira página](02-primeira-pagin
 
 ## Trilhas de leitura
 
-- **Primeiro contato:** 01 → 02 → 03 → 04.
+- **Primeiro contato:** 00 → 01 → 02 → 03 → 04.
 - **Formulário:** 02 → 06 → 10 → 12.
 - **Migração de Blade/template:** 03 → 04 → 06 → 09 → 14.
 - **Revisão de segurança:** 04 → 08 → 10 → 11.
@@ -123,4 +125,4 @@ contraste. A fronteira está detalhada em [Segurança](10-seguranca.md) e
 
 ---
 
-**Comece por:** [01 — Instalação](01-instalacao.md).
+**Comece por:** [00 — Filosofia](00-filosofia.md) e depois [01 — Instalação](01-instalacao.md).

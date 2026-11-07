@@ -135,7 +135,7 @@ binary artifacts.
 
 | Document | Subject |
 |---|---|
-| [`docs/usage/`](docs/usage/README.md) | **usage wiki:** install, pages, macro, values, forms, media, shell, security, accessibility, HTTP, recipes |
+| [`docs/usage/`](docs/usage/README.md) | **usage wiki:** philosophy, install, pages, macro, values, forms, media, shell, security, accessibility, HTTP, recipes |
 | [`docs/00-principios.md`](docs/00-principios.md) | problem, principles, non-goals, glossary |
 | [`docs/01-arquitetura.md`](docs/01-arquitetura.md) | the three crates, boundaries, request flow |
 | [`docs/02-tipos-e-contextos.md`](docs/02-tipos-e-contextos.md) | `Markup`, typed values, escaping |

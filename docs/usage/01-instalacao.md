@@ -1,4 +1,4 @@
-[← Índice](README.md) · [Índice](README.md) · [Próximo →](02-primeira-pagina.md)
+[← Filosofia](00-filosofia.md) · [Índice](README.md) · [Próximo →](02-primeira-pagina.md)
 
 # 01 — Instalação e configuração
 
@@ -115,4 +115,4 @@ Se você habilitou `audit`, rode também os testes que chamam `audit::check` sob
 
 ---
 
-[← Índice](README.md) · [Índice](README.md) · [Próximo →](02-primeira-pagina.md)
+[← Filosofia](00-filosofia.md) · [Índice](README.md) · [Próximo →](02-primeira-pagina.md)
