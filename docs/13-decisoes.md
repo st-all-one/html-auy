@@ -266,8 +266,8 @@ dependência de framework, e o shell fica testável sem servidor.
 **Contexto.** No corpus de origem são **142 `@csrf` + 57 `@method`** espalhados por views: o token é um
 campo oculto que cada formulário lembra de escrever. Esquecer não quebra layout — quebra segurança.
 **Decisão.** `[element.form]` recebe `only = "component"`: `html!` recusa `<form>`. O único construtor é
-`html-core::form::Form::open(action, method, &CsrfToken)`, que emite `_token` e, para `PUT`/`PATCH`/`DELETE`,
-o `_method` oculto. O crate **não gera** token (sessão é do consumidor); exige um. Invariante
+`html-core::form::Form::open(action, method, children)`, com o token dentro do método
+(`Method::Post(token)`), que emite `_token` e, para `Put`/`Patch`/`Delete`, o `_method` oculto. O crate **não gera** token (sessão é do consumidor); exige um. Invariante
 `form_requires_csrf`, escopo `type` ([`04`](04-validacao.md) §4.1).
 **Consequência.** Formulário sem CSRF deixa de ser possível — não por disciplina, por assinatura.
 
@@ -342,7 +342,8 @@ fazer ([`13`](13-decisoes.md) D11/D12 e [`20`](20-fronteira-de-aplicacao.md)).
 **Decisão.** O crate expõe `Page`, `ShellData`, `View`, `Form`, `Field`, `Class`; cores, CSS servido,
 `ETag` e cache pertencem ao consumidor.
 **Consequência.** Crate puro e vendorizável; o tema continua sendo **dado do consumidor**, não código
-de biblioteca.
+de biblioteca. A implementação de referência no consumidor e o desenho hipotético dentro do crate
+estão em [`26`](26-d29-consumidor.md).
 
 ## D30 — `N4` é módulo atrás de feature, não crate nem binário
 
@@ -392,3 +393,23 @@ Decisões anteriores que **mudam de leitura** por causa de D27–D32 (o texto or
 | **D15** — congelamento por minor | a atualização deixa de citar `cq fix`: é `cargo check` + revisão de snapshot (**D28**) |
 | **D25** — `Field` deriva todo `aria-*` | `FieldState` carrega `Text` **resolvido** (`erro`/`ajuda`), não `Msg`: com D31, `Msg` é trait e o enum é do consumidor (**D31**) |
 | **D16** — esquema 2 da spec | a barreira é `tools/validate_spec.py` até F3; não existe `cq spec` (**D27/D28**) |
+
+## D33 — Flexibilidade de HTML válido não é escape hatch
+
+**Contexto.** A primeira porta do `EXAMPLE.html` para `html!` custou 20 erros de compilação e
+8,6 KB de HTML cru em quatro `impl Render`: `<div>` dentro de `<a>` (válido, mas `a.children =
+["phrasing"]`), `title` em `button` (atributo global, mas ausente de `[globals]`), `h1` no hero
+(o shell sempre emitia o seu) e `href="#"` (não havia tipo para fragmento). O `eta` mostrou o
+contrário: superfície pequena, defaults explícitos e dados + loop no template.
+
+**Decisão.** (a) `a` declara `transparent = true`: herda o content model do ancestral não
+transparente e proíbe interativo em qualquer profundidade. (b) `title` entra em `[globals]` como
+`Text`. (c) `Href::Fragment` valida `#`, `#id`. (d) `h1` deixa de ser `only = "shell"`; `Page`
+continua emitindo por padrão, mas a view pode declarar o heading. (e) `single_h1` passa de `type`
+para `output`; `shell_owns_h1` é removida. (f) O demo troca os quatro `Render` por `SERVICES`/
+`CONTROLS` + `for` dentro de `html!`.
+
+**Consequência.** Menos falso-positivo, menos string crua e uma única forma de escrever cada
+destino. O preço é explícito: o `h1` único deixa de ser garantia de tipo e vira auditoria de
+documento (`audit`); um consumidor que usa `Page` mantém a garantia, um shell próprio assume a
+contagem. A versão do vocabulário sobe para `2.1.0`; o crate entra em `0.1.0`.

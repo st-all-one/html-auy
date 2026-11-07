@@ -3,7 +3,8 @@
 ## 1. Regra única
 
 **JavaScript nunca mora no markup.** Vive em arquivo estático, compilado com hash de conteúdo, e é
-**declarado por tipo** pelo Rust. O vocabulário do `html-auy` só sabe emitir `<script src=… defer>` e
+**declarado por tipo** pelo Rust. O vocabulário do `html-auy` só sabe emitir
+`<script type="module" defer src=…>` e
 `<link rel=stylesheet href=…>`; `<script>` inline, `on*` e `style=` **não existem**.
 
 Consequência: CSP `script-src 'self'` sem `unsafe-inline` e sem `unsafe-eval`, página cacheável e
@@ -12,28 +13,33 @@ Consequência: CSP `script-src 'self'` sem `unsafe-inline` e sem `unsafe-eval`, 
 ## 2. Tipos
 
 ```rust
-pub enum Asset {
-    Shared,        // enhancement comum (portal + CMS)
-    Cms,           // shell do CMS
-    Editor,        // editor de texto rico (TipTap)
-    GalleryBatch,  // upload em lote da galeria
-    HomeEditor,    // composição da home
-    Analytics,     // opt-in (só quando há ID configurado)
-    // …
+// html::shell — asset é (tipo, caminho interno validado); hash e CDN são do consumidor
+pub struct Asset { /* privado */ }
+impl Asset {
+    pub fn style(href: &'static str) -> Option<Asset>;   // `/assets/app.css`
+    pub fn style_media(href: &'static str, media: Media<'static>) -> Option<Asset>; // `media="print"`
+    pub fn script(href: &'static str) -> Option<Asset>;  // `/assets/app.js`
 }
+pub type Assets = BTreeSet<Asset>;
 
-impl Ctx {
-    pub fn require(&mut self, a: Asset);      // dedup + ordem determinística (BTreeSet)
+// consumidor: a antiga enumeração vira função que devolve os assets que a view pede
+fn base() -> Assets {
+    [Asset::style("/assets/app.css"), Asset::script("/assets/app.js")]
+        .into_iter()
+        .flatten()
+        .collect()
 }
 ```
 
 O shell emite, ao final, apenas os assets exigidos durante a montagem — e o faz em ordem canônica.
+Mídia de conteúdo (`<img>`, `<picture>`, `<video>`, `<audio>`) **não** é `Asset`: ela carrega dados do
+documento e usa `Src`/`SrcSet`/`Alt` em [`media`](../crates/html/src/media.rs), sem hash de build.
 
 ```rust
-let mut ctx = ShellCtx::new(&req);
-let main   = home_editor(&data, &mut ctx);   // a página pede o que precisa…
-ctx.require(Asset::HomeEditor);              // …e o ctx deduplica
-return Ok(Page::new(ctx, main, StatusCode::OK));
+let view = home_editor(&data)                // a view declara o que exige…
+    .asset(Asset::script("/assets/home.js").expect("asset")); // …e o `View` deduplica
+let shell = ShellData::new(title, heading, lang).assets(base()); // base do documento
+Page::new(&shell, view)                      // `BTreeSet` ordena; bytes determinísticos
 ```
 
 ## 3. Onde o JS passa a ler o estado
@@ -91,14 +97,14 @@ não há inline — e uma página cacheável não pode carregar nonce.
 
 ```rust
 let g: Graph = seo_graph(&meta);
-html! { head { JsonLd::graph(&g) } }
-// emite: <script type="application/ld+json">{"@context":…,"name":"A\u003cB"}</script>
+ShellData::new(title, heading, lang).schemas(vec![JsonLd::graph(&g)]);
+// o `Page` emite, no fim do `<head>`: <script type="application/ld+json">{"@context":…,"name":"A\u003cB"}</script>
 ```
 
 - `JsonLd` escapa `<` `>` `&` `'` para `\u003c` `\u003e` `\u0026` `\u0027` **sempre**.
 - `<script type="application/ld+json">` não é executável: fora do escopo de `script-src`, mas
   **dentro** do escopo do escape (um `</script>` em um título quebraria a página).
-- O lint de saída faz parse do JSON e falha se for inválido.
+- Validar o JSON-LD (parse no `audit`) é pós-MVP: hoje o gate cobre o escape, e o consumidor valida o grafo.
 
 ## 7. Fragmento e swap (o que vale com ou sem htmx)
 
@@ -108,7 +114,7 @@ completo ou fragmento, nunca JSON para o cliente renderizar. As regras abaixo va
 mecanismo de troca parcial que o consumidor declare como asset:
 
 1. **Duas formas, uma rota.** Toda rota com resposta parcial responde ao pedido normal (shell +
-   fragmento) e ao pedido de fragmento; o consumidor modela com `Render::{Full, Partial}`. A mesma
+   fragmento) e ao pedido de fragmento; o consumidor modela com `Page` ou `Partial`. A mesma
    rota, sem URL paralela, para que a navegação sem JS funcione.
 2. **`Vary` casa com o que o handler lê.** Resposta que difere entre fragmento e completa:
    `Vary: HX-Request`. Se o handler **roteia por alvo** (lê `HX-Target`), é
@@ -136,6 +142,52 @@ mecanismo de troca parcial que o consumidor declare como asset:
    script inline é proibido.
 10. **`axe` depois do swap** é obrigatório no e2e — senão o gate fica verde com foco perdido.
 
+### 7.1 Contrato de resposta parcial
+
+O crate não emite `hx-*`, mas o consumidor precisa de um modelo de resposta que não seja string
+livre. `html::Partial` é esse modelo; ele **não** renderiza nem escolhe transporte — o adaptador do
+consumidor serializa para OOB, `<hx-partial>` ou outro mecanismo.
+
+- `Partial::new(Markup)` substitui o alvo principal; `Partial::keep_main()` preserva o alvo e só
+  aplica atualizações. `MainSwap` é explícito, sem `swapEmpty`.
+- `Partial::update(Id, Swap, Markup)` acrescenta uma região; a ordem de `updates()` é a ordem de
+  aplicação. `Swap` cobre `Inner`, `Outer`, `BeforeBegin`, `AfterBegin`, `BeforeEnd`, `AfterEnd`,
+  `Delete` e `None`; não existe string de swap.
+- `select`, `reselect` e `select_oob` são `Id` tipados; permitem o caminho “corpo único para
+  navegador e fragmento” sem `Vary` (`hx-select`/`HX-Reselect`/`hx-select-oob`).
+- `focus` aponta para o título/controle que recebe foco depois do swap; nunca para o gatilho.
+- `RequestClass::vary` fixa a matriz: `Full` sem `Vary`; `Partial` `HX-Request`; `Targeted`
+  `HX-Request, HX-Target`; `HistoryRestore` inclui `HX-History-Restore-Request`; `Boosted` inclui
+  `HX-Boosted`.
+- `Sync` existe como enum fechado `Drop`, `Replace`, `Abort`. `Queue` não entra: fila pode aplicar
+  resposta antiga depois da nova.
+
+#### 422 é re-render do formulário
+
+`4xx` não deve apagar o que o usuário digitou. O contrato do consumidor é:
+
+- `422`: renderizar o **mesmo** `<form>`, com `FieldState` preenchido com o valor submetido,
+  `erro` por campo, `aria-invalid`/`aria-describedby` e um resumo `role="alert"` com links para os
+  `id`s `f-…`. O status continua `422`; o corpo é o formulário, não uma página de erro genérica.
+- `400`: requisição malformada; `409`: conflito de estado/replay divergente; `303`: sucesso.
+- `SubmitKey`/`Form::open_with_submit` emite `_submit` nos métodos não-GET. O servidor trata a chave
+  como uso único: replay com o mesmo corpo devolve o resultado original (`303`); corpo diferente
+  devolve `409`.
+
+#### Fronteira do swap
+
+O gatilho deve ficar **fora** da região que ele substitui; formulário não deve ficar dentro de região
+substituída. `aria-busy="true"` fica na região durante a requisição e é removido pelo swap. Não usar
+`hx-preserve`/morph para “resolver” foco/caret: o próprio htmx documenta que `input` perde foco e
+caret (`hx-preserve.md`), e o DOM deve continuar projeção do último render.
+
+#### Configuração segura do htmx
+
+Se o consumidor vendorizar htmx, `ShellData::htmx_config(HtmxConfig::safe())` emite
+`<meta name="htmx-config">` **antes** dos assets, com `allowEval:false`, `allowScriptTags:false`,
+`includeIndicatorStyles:false`, `selfRequestsOnly:true`, `withCredentials:false`,
+`historyCacheSize:0` e `timeout:10000`. Sem essa chamada, nenhum byte de htmx é emitido.
+
 ## 8. Pipeline de asset
 
 ```
@@ -158,10 +210,11 @@ icons (svg inline)        ─┘
 
 ### 8.1 PWA — a fronteira
 
-Entra na crate: os itens de `<head>` (`link rel="manifest"`, `meta name="theme-color"`,
-`meta name="apple-mobile-web-app-capable"`), os ícones (192 e 512, mais `maskable`), e a referência ao
-`/sw.js`, todos **tipados** e alimentados pelo tema (D12) — `theme_color`/`background_color` são o
-terceiro e o quarto consumidores do token, nunca configuração paralela.
+Entra na crate: `link rel="manifest"` via `ShellData::manifest(LUrl)` (já emitido, com URL fixa e
+`ETag` no consumidor). `meta name="theme-color"`, `meta name="apple-mobile-web-app-capable`, os ícones
+(192/512/maskable) e a referência ao `/sw.js` continuam no roadmap tipado, alimentados pelo tema (D12) —
+`theme_color`/`background_color` são o terceiro e o quarto consumidores do token, nunca configuração
+paralela.
 
 Não entra: o service worker em si (estratégia de cache, `skipWaiting`, precache). Ele é arquivo do
 consumidor, servido na URL fixa, e a crate só garante que ele **não** é hasheado e **não** é precacheado
@@ -174,8 +227,8 @@ até a última aba sair.
 - `Asset::ExternalOnDemand(Origem::Vlibras)` — carregado por `Shared` **após ação explícita** do
   usuário (nunca no load).
 - Analytics: só quando um ID está configurado; emissor próprio, same-origin, sem inline.
-- Qualquer outra origem externa exige decisão registrada e allowlist. O lint de saída reprova
-  `src`/`href` externo fora da allowlist.
+- Qualquer outra origem externa exige decisão registrada e allowlist (do consumidor). Reprovar
+  `src`/`href` externo no `audit` é pós-MVP.
 
 ## 10. Resumo do contrato
 

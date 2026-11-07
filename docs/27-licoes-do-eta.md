@@ -1,0 +1,97 @@
+# 27 — Lições do `eta` para o 0.1.0
+
+Este documento registra a leitura do `eta/` (templating engine em TypeScript, v4) e o que foi
+absorvido — e recusado — no `html-auy` 0.1.0. O objetivo não é copiar a arquitetura de templates em
+runtime, e sim roubar o que ela faz bem: **superfície pequena, defaults explícitos e erro com
+contexto**.
+
+## 1. O que o `eta` faz
+
+| Peça | O que faz | Lição |
+|---|---|---|
+| `src/config.ts` | um `EtaConfig` com **todos** os defaults num único objeto | o consumidor configura uma vez; não existe “modo invisível” espalhado |
+| `src/core.ts` | `class Eta extends EtaCore {}` — a fachada pública é quase vazia | API pública pequena; implementação fica em `internal.ts` |
+| `src/parse.ts` → `compile.ts` → `render.ts` | parse gera AST, compile gera função, render executa | passes separados, cada um testável isoladamente |
+| `src/err.ts` | `EtaParseError`/`EtaRuntimeError` com linha, coluna e trecho do template | erro aponta o lugar e o contexto, não só “falhou” |
+| `src/storage.ts` | armazenamento de templates é substituível | I/O fica fora do núcleo |
+| `test/*.spec.ts` | um arquivo de teste por módulo | a suíte cresce junto com a superfície |
+
+Números do próprio projeto: ~3,5 KB minzipped, zero dependências, um único ponto de entrada.
+
+## 2. O que foi aplicado no `html-auy`
+
+### 2.1 Uma forma canônica para cada destino
+
+`Href` ganhou `Fragment` e `Href::fragment`. Antes o demo inventava `Href::internal(LUrl("/#"))`
+para escrever `/#`; agora `href="#"` e `href="#conteudo"` são tipos validados (`#` + alfabeto de
+`Id`). O link de skip, o índice e o cartão de serviço usam a mesma regra.
+
+### 2.2 Conteúdo transparente em vez de exceção
+
+`<a>` passou a declarar `transparent = true`. O validador herda o content model do ancestral não
+transparente mais próximo:
+
+- um `<a>` dentro de `<div>` pode conter `<div>` (o cartão de serviço);
+- um `<a>` dentro de `<p>` não pode (herda `phrasing`);
+- `<a>` continua proibindo **qualquer** interativo descendente (`button`, `input`, outro `a`, …),
+  mesmo através de `<div>`.
+
+O `spec` agora descreve o HTML real; o demo não precisa de string crua para o grid.
+
+### 2.3 `title` é global; `h1` é markup comum
+
+- `title` entrou em `[globals]` como `Text`. Ele escapa como qualquer atributo e **não** conta como
+  nome acessível (`control_has_accessible_name` continua exigindo texto/`aria-labelledby`).
+- `h1` saiu de `only = "shell"`. O `Page` continua emitindo o heading por padrão, mas um shell
+  próprio pode declarar o seu; `single_h1` passou para `output` e o `audit` cobra exatamente um.
+  A promessa “é tipo, não teste” foi trocada por “o documento montado é testado” — o preço da
+  flexibilidade, explicitado em `docs/04` §4.0.
+
+### 2.4 Dados + loop no demo, não quatro `Render`
+
+O demo tinha quatro implementações de `Render` (`HeroTitle`, `ServiceGrid`, `HeaderControls`,
+`Marker`) e 8,6 KB de HTML cru. Agora:
+
+- `SERVICES: &[Service]` e `CONTROLS: &[Control]` são dados;
+- `service_grid()` e `header_controls()` são `html!` com `for`;
+- `Marker` virou `div title="…"`;
+- `HeroTitle` virou `h1`.
+
+Resultado no corpo: nenhum `Render` de consumidor, nenhum `<a href="#">` sem passar pelo tipo e
+nenhum `/#` na saída. O `<head>` continua sendo o `head.html` do exemplo (Tailwind CDN + config
+inline), uma concessão **do demo**, não do crate; ele é o único trecho fora da validação.
+
+### 2.5 Nomes que dizem o que fazem
+
+`rules::children` virou `rules::descendants`: a função sempre percorreu netos, e o nome antigo
+sugeria filho direto. `validate::check_children` continua sendo o passe de filhos diretos. A
+distinção agora está no nome, não no comentário.
+
+## 3. O que foi recusado
+
+| Ideia do `eta` | Por que não |
+|---|---|
+| template em runtime + `Storage` | o `html-auy` existe para o HTML ser o artefato e o erro ser de compilação; template em runtime devolve o erro para a request |
+| `useWith` / execução de JS no template | o crate proíbe `script` executável, `style=` e `on*`; executar código no template é o modelo de ameaça que ele evita |
+| plugins que reescrevem a AST | a AST é fechada e validada contra `spec/elements.toml`; plugin é uma segunda linguagem para manter |
+| `autoEscape` configurável | escape é contexto, não opção global: `Href`, `Src`, `Text`, `JsonLd` já são o “config” |
+| cache de templates | o `Markup` já é o resultado pré-compilado; cache é do consumidor |
+
+## 4. Números do 0.1.0
+
+| Métrica | Antes | Depois |
+|---|---:|---:|
+| `demo/html-auy/src/page.rs` | 101,2 KB | 95,5 KB (com 3 testes novos) |
+| HTML cru no corpo | 8,6 KB | 0 |
+| `impl Render` no demo | 4 | 0 |
+| `href="/#…"` na saída | 52 | 0 |
+| `<div>` dentro de `<a>` no demo | string crua | validado pelo macro |
+| erros iniciais ao portar o exemplo | 20 | 0 |
+
+## 5. O que ainda não está pronto (e é decisão, não esquecimento)
+
+O `head.html` do demo usa Tailwind CDN e um `<script>` inline. Isso é o que o `EXAMPLE.html`
+original faz e é **incompatível** com `no_inline_script`/CSP do crate. O `audit` do `html` não é
+aplicado a esse documento de demonstração; um consumidor de produção usa `Asset::style`/`Asset::script`
+e um CSS compilado. A biblioteca em si continua auditável: os testes de `Page` e de `audit` não
+dependem do demo.

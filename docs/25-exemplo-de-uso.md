@@ -1,9 +1,9 @@
 # 25 — Como é usar o crate (demonstração teórica)
 
-> **Nada disto existe ainda.** Este documento é o **critério de aceite de leitura** de F0–F6: se o uso
-> abaixo não compilar, não gerar os bytes mostrados e não falhar onde está dito, a fase correspondente
-> não está pronta. Ele também é o "cheat sheet de 12 linhas" prometido em
-> [`10`](10-ergonomia.md) §1, na versão longa.
+> **Critério de aceite de leitura de F0–F6.** Se o uso abaixo não compilar, não gerar os bytes
+> mostrados e não falhar onde está dito, a fase correspondente não está pronta. O núcleo já está
+> implementado; as extensões de formulário e mídia desta rodada aparecem em §5 e §5.1. Ele também é o
+> "cheat sheet de 12 linhas" prometido em [`10`](10-ergonomia.md) §1, na versão longa.
 
 ## 1. A cena
 
@@ -51,6 +51,14 @@ impl axum::response::IntoResponse for Responder {
 use html::{html, Markup, Href, LUrl, Src, SrcSet, Sizes, Alt, WidthPx, HeightPx, Class, Text, Timestamp};
 use crate::token::Token;   // enum do consumidor, gerado de `tokens.css` (ClassToken)
 
+// helpers do consumidor (C2): o crate recebe `LUrl`; a tabela de rotas é do app
+fn noticia(slug: &str) -> LUrl<'static> {
+    LUrl::with_segments("/noticias", &[slug]).expect("slug do banco")
+}
+fn noticias() -> LUrl<'static> {
+    LUrl::new("/noticias").expect("rota fixa")
+}
+
 pub fn news_list(data: &NewsList) -> Markup {
     html! {
         section class=(Class::of(&[Token::NewsList])) {
@@ -62,7 +70,7 @@ pub fn news_list(data: &NewsList) -> Markup {
                 ul class=(Class::of(&[Token::Cards])) {
                     for item in &data.items {
                         li {
-                            a href=(Href::internal(LUrl::noticia(&item.slug))) {
+                            a href=(Href::internal(noticia(&item.slug))) {
                                 img src=(Src::media(&item.cover))
                                     srcset=(SrcSet::from_variants(&item.variants))
                                     sizes=(Sizes::new("(min-width: 48em) 33vw, 100vw"))
@@ -88,8 +96,9 @@ O que já está decidido **pela forma** desta função:
   HTML, e ele escapa. Não existe `Markup::from(String)`.
 - `alt` não tem default: `Alt::new` ou `Alt::decorative()`, escolhido pelo autor.
 - `width`/`height` são `u32 > 0` — `CLS 0` deixa de ser recomendação.
+- `item.cover` implementa `MediaPath`, cujo `path()` devolve `&LUrl`: `Src` não aceita `&str`.
 - `SrcSet` ordena por largura e deduplica (bytes determinísticos — [`13`](13-decisoes.md) D14).
-- `h2` da seção; o `h1` **não** aparece aqui — é do `Page` (`single_h1` é tipo).
+- `h2` da seção; neste exemplo o `h1` é do `Page`. O macro também aceita `h1` para shells próprios; o `audit` cobra `single_h1` na saída.
 
 ## 4. A view de detalhe — o shell
 
@@ -101,7 +110,7 @@ pub fn news_detail(ctx: &Ctx, n: &News) -> Page {
                 h2 { Text::new(&n.title) }
                 p { time datetime=(Timestamp::new(n.published_at, n.tz)) { Text::new(&n.date_label) } }
                 div class=(Class::of(&[Token::Body])) { n.body.render() }   // `Markup` do RichText (ADR-028 do consumidor)
-                a href=(Href::internal(LUrl::noticias())) { Msg::BackToTop }
+                a href=(Href::internal(noticias())) { Msg::BackToTop }
             }
         },
     );
@@ -111,12 +120,14 @@ pub fn news_detail(ctx: &Ctx, n: &News) -> Page {
 
 // helper do consumidor — o crate recebe DADOS, não conhece locale, tema nem request
 fn shell(ctx: &Ctx, title: impl html::Msg, heading: impl html::Msg, schemas: Vec<JsonLd>) -> ShellData<'static> {
-    ShellData::new()
-        .title(title)            // NÃO opcional
-        .heading(heading)        // NÃO opcional → `<h1>` único por construção
-        .lang(ctx.locale)        // tipo `Lang`, não string
-        .schemas(schemas)        // JSON-LD entra no `<head>` na posição fixa (docs/06 §1)
-        .assets(ctx.assets())
+    ShellData::new(
+        Text::msg(title),      // NÃO opcional
+        Text::msg(heading),    // NÃO opcional → `<h1>` único por construção
+        ctx.locale,            // tipo `Lang`, não string
+    )
+    .schemas(schemas)          // JSON-LD entra no `<head>` na posição fixa (docs/06 §1)
+    .assets(ctx.assets())
+    .skip(Text::msg(Msg::SkipToContent))   // skip link do shell (SC 2.4.1); sem texto, não emite
 }
 ```
 
@@ -130,10 +141,17 @@ pub fn solicitacao_form(ctx: &Ctx, f: &FormState) -> Page {
     let view = View::new(
         html! {
             h2 { Msg::Title }
-            Form::open(&Action::new(LUrl::solicitacoes_nova()), Method::Post, ctx.csrf()) {
+            Form::open(&Action::new(solicitacoes_nova()), Method::Post(ctx.csrf())) {
                 Field::text(FieldName::new("nome"), Msg::Title, f.field("nome"))
-                Field::text(FieldName::new("email"), Msg::InvalidEmail, f.field("email"))
-                Field::textarea(FieldName::new("descricao"), Msg::Required, f.field("descricao"))  // um construtor por tipo de campo (F5)
+                Field::input(FieldName::new("email"), Msg::InvalidEmail, InputType::Email,
+                             &f.field("email").clone().autocomplete(Autocomplete::parse("email").expect("token")))
+                Field::input(FieldName::new("nascimento"), Msg::Title, InputType::Date, f.field("nascimento"))
+                Field::textarea(FieldName::new("descricao"), Msg::Required, f.field("descricao"))
+                Field::select(FieldName::new("assunto"), Msg::Title, &assuntos(), f.field("assunto"))
+                    .expect("opções do catálogo")
+                Field::file(FieldName::new("anexo"), Msg::Title, Some(AttrVal::new("image/png, application/pdf")),
+                            true, f.field("anexo"))
+                Field::checkbox(FieldName::new("aceite"), Msg::Required, &f.field("aceite").clone().checked(true))
                 button type="submit" { Msg::Submit }
             }
         },
@@ -143,13 +161,45 @@ pub fn solicitacao_form(ctx: &Ctx, f: &FormState) -> Page {
 ```
 
 - `<form>` **não** está no vocabulário de `html!` (`only = "component"`): o único jeito de emitir um é
-  `Form::open`, que exige `&CsrfToken`. Esquecer o token não é omissão — é erro de compilação.
-- `Form::open` emite `<form>`, o `_token` e, para `PUT`/`PATCH`/`DELETE`, o `_method` oculto. Os filhos
+  `Form::open`. O token mora no **método** (`Method::Post(token)`): esquecer o CSRF não é omissão — é
+  erro de compilação, e `Method::Get` não pede token (busca não inventa CSRF).
+- `Form::open` emite `<form>`, o `_token` e, para `Put`/`Patch`/`Delete`, o `_method` oculto. Os filhos
   entre `{ … }` são passados como `Markup` (o mesmo vale para qualquer primitivo do consumidor).
-- `Field::text` deriva `id`, `for`, `aria-describedby`, `aria-invalid`, `required` e o `*` fora do
-  `<label>`. O autor não escreve `aria-*` de campo.
+- `Field::text`/`input`/`textarea`/`select`/`file` derivam `id`, `for`, `aria-describedby` (com os
+  `<span>` de ajuda/erro), `aria-invalid`, `required` e o `*` fora do `<label>`. O autor não escreve
+  `aria-*` de campo. `input` cobre os 14 tipos nativos; `file` não emite `value`; `select` devolve
+  `None` sem opção selecionável. `autocomplete` só é emitido a partir de um token validado.
+- `Field::checkbox_group`/`radio_group` emitem `<fieldset>`+`<legend>`, ids únicos por opção,
+  `name[]` só no checkbox e `aria-describedby`/`aria-invalid`/`aria-required` no grupo; `None` quando
+  todas as opções estão `disabled`.
+- Para mídia, os builders de `media` substituem a construção manual quando o dado é dinâmico:
 - `f.field("email")` devolve `&FieldState` vindo de `FormState::from_request` — `old()` e `$errors` do
   Blade deixam de ser 302 leituras espalhadas.
+
+### 5.1 Mídia como dado
+
+```rust
+let cover = Img::new(
+    Src::media(&item.cover),
+    Alt::new(&item.cover_alt),
+    WidthPx::new(720),
+    HeightPx::new(480),
+)
+.responsive(SrcSet::from_variants(&item.variants), Sizes::new("(min-width: 48em) 33vw, 100vw"))
+.lazy();
+
+let video = Video::new(
+    Src::parse("/media/aula.mp4").expect("asset"),
+    Track::captions(Src::parse("/media/aula.vtt").expect("legenda"), Text::new("Legendas")),
+)
+.poster(Src::parse("/media/aula.jpg").expect("poster"))
+.preload(MediaPreload::Metadata)
+.dimensions(WidthPx::new(1280), HeightPx::new(720));
+```
+
+`Img` exige `alt` e as duas dimensões; `srcset`/`sizes` só saem juntos. `Picture` preserva a ordem
+dos `Source` e exige o `Img` de fallback. `Video::new` exige a faixa de legendas; `Audio` e `Video`
+aceitam `Track` adicionais.
 
 ## 6. O que o compilador recusa
 
@@ -160,8 +210,8 @@ error: `img` exige `alt`
    = regra: WCAG 1.1.1 / spec:element.img
    = ajuda: `Alt::new("Descrição objetiva")` ou `Alt::decorative()`
 
-error: atributo desconhecido `hreff` em `a`
-   = ajuda: atributos válidos em `a`: href, hreflang, rel, target, download, referrerpolicy
+error: atributo desconhecido `hreff` em `p`
+   = ajuda: atributos válidos em `p`: class, id
 
 error: `<div>` não é permitido dentro de `<p>`
    = regra: conteúdo-modelo (spec:element.p)
@@ -169,19 +219,19 @@ error: `<div>` não é permitido dentro de `<p>`
 
 error: `label for="nome"` não tem `id="nome"` no mesmo bloco
    = regra: WCAG 1.3.1
-   = ajuda: use `Field::text(FieldName::new("nome"), Msg::Name, &state)` (gera label+id+aria)
+   = ajuda: use `Field::text(FieldName::new("nome"), Msg::Name, &state)` (gera label+id+aria) ou envolva o controle
 ```
 
 E as duas que a própria arquitetura exige (`shell_only_elements`, `form_requires_csrf`), no mesmo formato:
 
 ```
-error: `<h1>` só existe no `Page`
+error: `<main>` só existe no `Page`
    = regra: spec:shell_only_elements
-   = ajuda: use `ShellData::new().heading(Msg::…)` — o `<h1>`, `<title>`, `<html>` e `<head>` são do shell
+   = ajuda: use `ShellData::new(Text::msg(Msg::Title), heading, lang)` — o `<title>`, `<html>`, `<head>` e `<main>` são do shell
 
 error: `<form>` não é elemento de `html!`
    = regra: spec:form_requires_csrf
-   = ajuda: use `Form::open(&action, Method::Post, ctx.csrf()) { … }`
+   = ajuda: use `Form::open(&action, Method::Post(csrf), children)`
 ```
 
 ## 7. A saída

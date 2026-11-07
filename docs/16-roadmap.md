@@ -5,11 +5,11 @@
 | Peça | Conteúdo | LOC (anterior) | LOC (decidido, D27–D32) |
 |---|---|---|---|
 | `html-core` | `Markup`, escaper, `Render`, 15 valores tipados, `Class`/`Tone`, `Msg` (D31) | ~600 | ~600 |
-| `html-core::spec` | tabela dos 97 elementos em Rust, **gerada uma vez** de `spec/elements.toml` | — | ~400 + `tools/gen_spec.py` ~120 |
+| `html-core::spec` | tabela dos 111 elementos em Rust, **gerada uma vez** de `spec/elements.toml` | — | ~400 + `tools/gen_spec.py` ~120 |
 | `html-spec` (`build.rs`) | gerador em tempo de build + esquema | ~300 + gerado | — (D27) |
 | `html-core::shell` | `Page`, `ShellData`, `View` (D24), `Form` (D23), `Field` (D25); sem tema (D29) | ~430 | ~430 |
 | `html-macro` | parser, validação, codegen (sem `fmt`) | ~1.900 | ~1.650 |
-| `audit` (`N4`) | `html5ever` + as 5 regras `output`, atrás de `feature = "audit"` | ~400 (crate + binário) | ~250 |
+| `audit` (`N4`) | `html5ever` + as 6 invariantes `output`, atrás de `feature = "audit"` | ~400 (crate + binário) | ~250 |
 | `cq` (binário) | check/fmt/fix/audit/spec | ~700 | — (D28) |
 | testes | golden, property, `trybuild`, fuzz, paridade da spec, conformidade | ~450 | ~450 |
 | **total** | | **~4.780 LOC** | **~3.780 LOC** (+ ~120 Python) |
@@ -78,7 +78,7 @@ informativo de elementos crus.
 |---|---|---|---|
 | parser da macro quebra com mudança de `rustc` | média | alto | MSRV + CI stable/beta + fuzz + dependências mínimas |
 | mensagens de erro ruins afastam o time | média | alto | `trybuild` + revisão por não-autor (M2.2) |
-| `spec.toml` e tabela divergem | alta | baixo | teste de paridade em todo `cargo test` (D27) |
+| `spec/elements.toml` e tabela divergem | alta | baixo | teste de paridade em todo `cargo test` (D27) |
 | ergonomia pior que Blade → abandono | média | alto | M1 mede linhas; M2 mede tempo de correção |
 | escopo cresce para "framework" | alta | alto | D3/D4: atributo novo exige decisão registrada |
 | formatter vira produto | média | alto | `fmt` só reemite do AST; sem gramática própria (D6) |

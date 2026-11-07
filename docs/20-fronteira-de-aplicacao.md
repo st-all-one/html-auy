@@ -23,7 +23,7 @@ Corpus real: **225 `.blade.php`** (23,6k LOC, 2.084 usos de componente, 6.765 ta
 
 | # | Caso | Absorve? | Mecanismo | Escopo | Por quê |
 |---|---|---|---|---|---|
-| **c** | `@csrf`/`@method` | **sim** | `Form::open(action, method, &CsrfToken)`; `form` com `only = "component"` | `type` | CSRF faltando é **falha de segurança**, não de layout. `html!` não emite `<form>`: o token passa a ser o argumento que não se esquece |
+| **c** | `@csrf`/`@method` | **sim** | `Form::open(action, method, children)` com `Method::Post(token)`; `form` com `only = "component"` | `type` | CSRF faltando é **falha de segurança**, não de layout. `html!` não emite `<form>`: o token passa a ser o argumento que não se esquece |
 | **b** | `@stack`/`@push` | **sim** | `View` = mônade de contribuições (`main`, `modals`, `assets`) devolvida para cima | `type` | pilha ambiente é ordem implícita de flush; valor devolvido é testável e não tem estado global |
 | **d** | `old()`/`$errors` | **sim (a forma, não a fonte)** | `FieldState { valor, erro, ajuda }` + `Field::text(name, label, &state)` | `type` | é exatamente onde mora o defeito de a11y (`aria-invalid`/`aria-describedby` divergentes); hoje são 2 componentes duplicando a lógica |
 | **a** | `$attributes` | **parcial** | `Class` combinável (`Class::of(&[…]).extend(…)`); `data-*` fechado por **gate**; **sem** bag | `block` + gate | 478 usos existem porque o componente não conhece o chamador. Em Rust o componente devolve `Markup` com as classes dele; o que sobra é classe do chamador e `data-*`, e só isso deve ser componível |
@@ -37,12 +37,16 @@ Corpus real: **225 `.blade.php`** (23,6k LOC, 2.084 usos de componente, 6.765 ta
 ```rust
 // html-core::form — o crate não emite token; exige um.
 pub struct CsrfToken<'a>(&'a str);
-pub enum Method { Get, Post, Put, Patch, Delete }
+pub enum Method<'a> {
+    Get,
+    Post(CsrfToken<'a>), Put(CsrfToken<'a>), Patch(CsrfToken<'a>), Delete(CsrfToken<'a>),
+}
 
 impl Form {
     /// Emite `<form>`, o `_token` e — para PUT/PATCH/DELETE — o `_method` oculto.
-    /// Sem `CsrfToken` não há `Form`: `form` tem `only = "component"`, então `html!` recusa `<form>`.
-    pub fn open(action: &Action, method: Method, csrf: &CsrfToken) -> FormBody;
+    /// Sem `CsrfToken` não há `Post`/`Put`/`Patch`/`Delete`: `form` tem `only = "component"`,
+    /// então `html!` recusa `<form>`.
+    pub fn open(action: &Action<'_>, method: Method<'_>, children: Markup) -> Markup;
 }
 ```
 
@@ -63,7 +67,7 @@ impl View {
 }
 
 // no formulário, 4 níveis abaixo:
-View::new(html! { Form::open(&action, Method::Post, csrf) { … } }).modal(html! { dialog { … } })
+View::new(html! { Form::open(&action, Method::Post(csrf)) { … } }).modal(html! { dialog { … } })
 // no topo:
 Page::new(&data, view)     // o shell consome `main`, `modals` e `assets` — uma vez, na ordem dele
 ```
@@ -75,14 +79,34 @@ Por que não uma pilha ambiente: (1) a ordem de flush deixa de ser implícita; (
 
 ```rust
 pub struct FieldState<'a> {
-    pub valor: AttrVal<'a>,
-    pub erro: Option<Text<'a>>,     // já resolvido: `Text::msg(Erro::Obrigatorio)` (D31)
-    pub ajuda: Option<Text<'a>>,
+    value: AttrVal<'a>,
+    required: bool,
+    checked: bool,
+    error: Option<Text<'a>>,   // já resolvido: `Text::msg(Erro::Obrigatorio)` (D31)
+    help: Option<Text<'a>>,
+    autocomplete: Option<Autocomplete<'a>>,
+}
+
+impl<'a> FieldState<'a> {
+    pub const fn new(value: AttrVal<'a>) -> Self;
+    pub const fn required(self, yes: bool) -> Self;
+    pub const fn checked(self, yes: bool) -> Self;
+    pub const fn error(self, text: Text<'a>) -> Self;
+    pub const fn help(self, text: Text<'a>) -> Self;
+    pub const fn autocomplete(self, token: Autocomplete<'a>) -> Self;
 }
 
 impl Field {
-    /// Deriva `id`, `for`, `aria-describedby`, `aria-invalid`, `required` e o `*` **fora** do `<label>`.
-    pub fn text<M: Msg>(name: FieldName, label: M, state: &FieldState<'_>) -> Markup;
+    /// Deriva `id`, `for`, `aria-describedby` (com os `<span>` de ajuda/erro), `aria-invalid`,
+    /// `required` e o `*` **fora** do `<label>`.
+    pub fn text<M: Msg>(name: FieldName<'_>, label: M, state: &FieldState<'_>) -> Markup;
+    pub fn input<M: Msg>(name: FieldName<'_>, label: M, kind: InputType, state: &FieldState<'_>) -> Markup;
+    pub fn textarea<M: Msg>(name: FieldName<'_>, label: M, state: &FieldState<'_>) -> Markup;
+    pub fn file<M: Msg>(name: FieldName<'_>, label: M, accept: Option<AttrVal<'_>>, multiple: bool, state: &FieldState<'_>) -> Markup;
+    pub fn checkbox<M: Msg>(name: FieldName<'_>, label: M, state: &FieldState<'_>) -> Markup;
+    pub fn checkbox_group<M: Msg>(name: FieldName<'_>, legend: M, options: &[ChoiceOption<'_>], state: &FieldState<'_>) -> Option<Markup>;
+    pub fn radio_group<M: Msg>(name: FieldName<'_>, legend: M, options: &[ChoiceOption<'_>], state: &FieldState<'_>) -> Option<Markup>;
+    pub fn select<M: Msg>(name: FieldName<'_>, label: M, options: &[SelectOption<'_>], state: &FieldState<'_>) -> Option<Markup>; // None: nenhuma opção selecionável
 }
 ```
 
@@ -139,7 +163,7 @@ Se algum passar de 1,3×, **o DSL tem buraco de ergonomia** — conserte o burac
 
 | ID | Decisão | Status | Custo |
 |---|---|---|---|
-| **D23** | `<form>` só via `Form::open` com `CsrfToken`; `form` com `only = "component"` | **aceita**; spec aplicado, código pendente | ~50 LOC + 4 `trybuild` |
+| **D23** | `<form>` só via `Form::open`, com o `CsrfToken` dentro do `Method`; `form` com `only = "component"` | **aceita**; spec e código prontos | `trybuild` de `Form::open` no macro e de `Method::Post` sem token |
 | **D24** | `View` (mônade de contribuições) substitui `@stack`/`@push` | **aceita** | ~40 LOC |
 | **D25** | `FieldState` + `Field` derivam `aria-*`; `FieldName` valida nome indexado | **aceita** | ~90 LOC |
 | **D26** | `Class` combinável; `data-*` fechado por **gate** (não pelo macro); **sem** attribute bag | **aceita** | ~60 LOC |

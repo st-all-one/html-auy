@@ -1,7 +1,7 @@
 # 21 — Plano de implementação
 
 > **O que é:** a ordem executável para escrever o crate, já com as decisões fechadas
-> (**D21–D26**) e as pendentes isoladas (**D27–D30**). Cada fase é um verde de `cargo test`.
+> (**D21–D26**) e as decisões fechadas (**D27–D32**). Cada fase é um verde de `cargo test`.
 > **O que não é:** cronograma. Os números são de código, não de calendário.
 
 ## 0. Para começar
@@ -19,20 +19,20 @@
 
 | Pré-requisito | Como se verifica | Estado |
 |---|---|---|
-| `spec/elements.toml` (97 elementos, 73 invariantes) | `python3 tools/validate_spec.py` → `0 erro(s)` | ✅ pronto |
-| `docs/00`–`24` + `tools/` (validador de spec, checador de links) | `python3 tools/check_links.py` → `0 quebrado(s)` | ✅ pronto |
+| `spec/elements.toml` (111 elementos, 71 invariantes) | `python3 tools/validate_spec.py` → `0 erro(s)` | ✅ pronto |
+| `docs/00`–`25` + `tools/` (validador de spec, checador de links) | `python3 tools/check_links.py` → `0 quebrado(s)` | ✅ pronto |
 | `sniff-css/` **fora** do workspace (workspace próprio, `resolver` próprio) | `ls sniff-css/Cargo.toml` | ✅ isolado |
-| `.gitignore` cobrindo `target/`, `*.snap.new`, `fuzz/` | `cat .gitignore` | ✅ pronto |
-| **repositório git** | `git rev-parse` | ❌ **não inicializado** |
+| `.gitignore` cobrindo `target/`, `*.snap.new`, `fuzz/artifacts/` | `cat .gitignore` | ✅ pronto (corpus do fuzz é versionado) |
+| **repositório git** | `git rev-parse` | ✅ inicializado |
 | toolchain **1.99.0** (o pin que [`22`](22-rigor.md) §2 fixa) | `rustc -V` → `1.99.0` | ✅ instalado e igual ao pin |
 | `clippy` + `rustfmt` no 1.99 | `rustup component list --installed` | ✅ instalados |
-| **MSRV 1.92** (job de CI da matriz) | `rustup toolchain list` → não aparece | ❌ `rustup toolchain install 1.92 --profile minimal --component clippy` |
+| **MSRV 1.92** (job de CI da matriz) | `rustup toolchain list` | ✅ instalado (`cargo +1.92 test`) |
 | `miri` no nightly (job `miri`) | `rustup component list --installed --toolchain nightly` | ✅ instalado |
-| `cargo-deny` 0.20.2 · `cargo-audit` 0.22.2 · `cargo-machete` 0.9.2 · `typos` 1.51.1 · `cargo-fuzz` 0.13.2 | `--version` | ✅ os cinco presentes |
+| `cargo-deny` · `cargo-audit` · `cargo-machete` · `cargo-fuzz` (nightly) | `--version` | ✅ no CI; `typos` saiu (dicionário inglês × corpus pt-BR) |
 | decisões **D27–D32** | [`13`](13-decisoes.md) | ✅ decididas em 2026-11-06 (§0.4) |
 
-**O que falta é pouco e é objetivo:** `git init` e o toolchain 1.92. O resto do ambiente já atende ao
-[`22`](22-rigor.md) sem instalar nada.
+**Estado:** o ambiente atende ao [`22`](22-rigor.md); o workspace tem `html`, `html-macros` e
+`html-macros-core`, e o `fuzz/` compila com `cargo +nightly build --manifest-path fuzz/Cargo.toml`.
 
 ### 0.2 Primeiro commit (árvore exata)
 
@@ -80,7 +80,7 @@ Todas as pendências foram decididas e estão registradas em [`13`](13-decisoes.
 |---|---|---|
 | **D27** | TOML normativo + `tools/gen_spec.py` + teste de paridade | sem `build.rs`; `spec/table.rs` versionado |
 | **D28** | sem binário `cq` | gate = `cargo fmt/clippy/test` |
-| **D29** | tema/shell de consumidor fora do crate | F5 expõe `Page`+`ShellData`, nada de CSS/`ETag` |
+| **D29** | tema/shell de consumidor fora do crate ([`26`](26-d29-consumidor.md)) | F5 expõe `Page`+`ShellData`, nada de CSS/`ETag` |
 | **D30** | `N4` como módulo atrás de `feature = "audit"` | html5ever opcional; consumidor roda no CI dele |
 | **D31** | `Msg` é trait do consumidor; `Text::msg(m)` | F0 não conhece locale |
 | **D32** | pin `1.99`; MSRV `1.92` em três lugares | F-1 fixa os dois números |
@@ -101,7 +101,7 @@ teste de que o desenho menor paga — se o `M3` não achar ≥ 3 defeitos reais,
 
 | Regra | Consequência prática |
 |---|---|
-| workspace com **2 crates** (`html`, `html-macros`) | `html` só depende de `core`/`alloc`; `html-macros` só de `proc-macro2`+`quote` (nunca `syn`) |
+| workspace com **3 crates** (`html`, `html-macros`, `html-macros-core`) | `html` só depende de `core`/`alloc`; o núcleo do macro depende de `proc-macro2`+`quote` (nunca `syn`) |
 | gate único: `cargo fmt --check` + `cargo clippy --all-targets -- -D warnings` + `cargo test` | não há binário de tarefas: o `cq` não existe (D28 pendente; até lá, nada depende dele) |
 | **1 mensagem de erro = 1 caso `trybuild`** | `crates/html-macros/tests/ui/*.rs` + `.stderr`; o texto de [`10`](10-ergonomia.md) §2 é contrato |
 | **1 saída canônica = 1 snapshot `insta`** | `crates/html/tests/snapshots/`; bytes determinísticos são testados, não prometidos |
@@ -114,7 +114,7 @@ teste de que o desenho menor paga — se o `M3` não achar ≥ 3 defeitos reais,
 ```toml
 # Cargo.toml (workspace)
 [workspace]
-members = ["crates/html", "crates/html-macros"]
+members = ["crates/html", "crates/html-macros", "crates/html-macros-core"]
 resolver = "3"
 # `exclude` explícito: `sniff-css/` e `spec/` não são membros
 
@@ -173,8 +173,8 @@ trybuild = "1"
 
 ## 2. Estado de partida
 
-- `spec/elements.toml`: **97 elementos**, **73 invariantes** (62 `block` / 6 `type` / 5 `output`),
-  `only`: 9 `shell` (`html head body title meta link script noscript h1`) + 1 `component` (`form`).
+- `spec/elements.toml`: **111 elementos**, **71 invariantes** (59 `block` / 6 `type` / 6 `output`),
+  `only`: 9 `shell` (`html head body title meta link script noscript main`) + 1 `component` (`form`).
 - `docs/00`–`24`: contrato completo (o que é garantia, o que é gate, e por quê).
 - `tools/validate_spec.py`: **a especificação executável do validador** — categorias, conteúdo-modelo,
   globais, escopos, `only`, rastreabilidade com `docs/04`, contagem nos docs. É a referência a portar;
@@ -246,11 +246,11 @@ deixa o CI vermelho, nunca o produto errado.
 pub struct Element { pub name: &'static str, pub categories: &'static [Cat], pub required: &'static [&'static str],
                      pub allowed: &'static [&'static str], pub children: &'static [Cat], pub only: Option<Only>,
                      pub invariants: &'static [&'static str], pub void: bool }
-pub static ELEMENTS: &[Element] = &[ /* 97 */ ];
+pub static ELEMENTS: &[Element] = &[ /* 111 */ ];
 pub enum Only { Shell, Component }
 ```
 
-**Testes.** Os mesmos do `validate_spec.py`: 97 elementos; cada invariante usada tem escopo; `only`
+**Testes.** Os mesmos do `validate_spec.py`: 111 elementos; cada invariante usada tem escopo; `only`
 exige a invariante correspondente (`shell_only_elements` / `form_requires_csrf`); `children` alcançável
 a partir de `body`; `docs/04` cobre 100% das invariantes; contagem declarada em `docs/03`/`docs/04` bate.
 **DoD.** `cargo test spec` cobre cada regra do script Python; o script passa a ser redundante (só é
@@ -282,7 +282,7 @@ Porte 1:1 das regras de `validate_spec.py`, agora com span no token:
 | aninhamento ilegal | `error: \`<div>\` não é permitido dentro de \`<p>\`` + alternativa |
 | valor fora do enum | `error: \`type="texto"\` não é válido em \`input\`` + valores aceitos |
 | elemento de documento | `error: \`<html>\` só existe no shell: use \`Page::new(…)\`` |
-| `<form>` à mão | `error: \`<form>\` só existe via \`Form::open(action, method, &CsrfToken)\`` |
+| `<form>` à mão | `error: \`<form>\` não é elemento de \`html!\`` |
 
 **Testes.** `trybuild`: **um caso por mensagem** (as 7 acima + os enums/aria + `label`/`id` + `srcset` +
 `role`), `insta` para os `.stderr` (a mensagem é artefato versionado).
@@ -299,41 +299,181 @@ Ordem de atributos = ordem da spec; boolean atributo (`checked`) por presença; 
 
 ```rust
 // html/src/shell.rs  — `ShellData` é DADO; tema/CSS/ETag ficam no consumidor (D29)
-pub struct ShellData<'a> { pub title: &'a str, pub heading: &'a str, pub lang: Lang, pub assets: &'a BTreeSet<Asset>,
-                           pub regions: Regions, /* … */ }              // title/heading NÃO opcionais
-pub struct View { pub main: Markup, pub modals: Vec<Markup>, pub assets: BTreeSet<Asset> }
+pub struct Regions { pub header: Option<Markup>, pub before_main: Option<Markup>,
+                     pub after_main: Option<Markup>, pub footer: Option<Markup> }
+pub struct ShellData<'a> { /* campos privados */ }
+impl<'a> ShellData<'a> {
+    pub fn new(title: Text<'a>, heading: Text<'a>, lang: Lang) -> Self;   // title/heading NÃO opcionais
+    pub fn description(self, Text<'a>) -> Self;
+    pub fn canonical(self, ExternalUrl<'a>) -> Self;                   // absoluto (SEO)
+    pub fn manifest(self, LUrl<'a>) -> Self;                           // link rel="manifest"
+    pub fn alternates(self, Vec<Alternate<'a>>) -> Self;                // hreflang absoluto
+    pub fn open_graph(self, OpenGraph<'a>) -> Self;                     // og:* derivado do documento
+    pub fn dir(self, Dir) -> Self;
+    pub fn schemas(self, Vec<JsonLd>) -> Self;
+    pub fn assets(self, Assets) -> Self;
+    pub fn hints(self, Vec<Hint<'a>>) -> Self;                          // resource hints (dedup)
+    pub fn hint(self, Hint<'a>) -> Self;                                  // um hint isolado
+    pub fn regions(self, Regions) -> Self;
+    pub fn skip(self, Text<'a>) -> Self;                                  // skip link (SC 2.4.1)
+    pub fn noscript(self, Markup) -> Self;                                // fallback sem JS
+    pub fn htmx_config(self, HtmxConfig) -> Self;                         // meta seguro, se houver htmx
+}
+pub struct View { /* campos privados */ }
 impl View { pub fn new(m: impl Into<Markup>) -> Self; pub fn modal(self, m: impl Into<Markup>) -> Self;
-            pub fn merge(self, o: View) -> Self; }
+            pub fn asset(self, a: Asset) -> Self; pub fn merge(self, o: View) -> Self; }
 impl Page { pub fn new(data: &ShellData<'_>, view: View) -> Self; }
 
-// html/src/form.rs
+// html/src/hint.rs — `link` é shell-only; este é o único caminho para hints
+pub enum Hint<'a> { Preconnect(ExternalUrl<'a>), DnsPrefetch(ExternalUrl<'a>),
+                    Preload(Preload<'a>), ImagePreload(ImagePreload<'a>),
+                    ModulePreload(Src<'a>), Prefetch(Src<'a>) }
+pub struct Preload<'a> { /* href, as, type, crossorigin, integrity, referrerpolicy, media,
+                            fetchpriority */ }
+impl<'a> Preload<'a> {
+    pub fn new(Src<'a>, PreloadAs) -> Self;
+    pub fn font(Src<'a>) -> Self;      // type="font/woff2" + crossorigin="anonymous"
+    pub fn image(Src<'a>) -> ImagePreload<'a>; // única porta para imagesrcset/imagesizes
+    pub fn style(Src<'a>) -> Self;
+    pub fn script(Src<'a>) -> Self;
+    pub fn with_type(self, &'static str) -> Self;
+    pub fn crossorigin(self, CrossOrigin) -> Self;
+    pub fn integrity(self, Integrity<'a>) -> Self;
+    pub fn referrerpolicy(self, ReferrerPolicy) -> Self;
+    pub fn media(self, Media<'a>) -> Self;
+    pub fn fetchpriority(self, FetchPriority) -> Self;
+}
+pub struct ImagePreload<'a> { /* Preload + imagesrcset/imagesizes */ }
+impl<'a> ImagePreload<'a> {
+    pub fn responsive(self, SrcSet<'a>, Sizes<'a>) -> Self;
+    pub fn with_type(self, &'static str) -> Self;
+    pub fn crossorigin(self, CrossOrigin) -> Self;
+    pub fn integrity(self, Integrity<'a>) -> Self;
+    pub fn referrerpolicy(self, ReferrerPolicy) -> Self;
+    pub fn media(self, Media<'a>) -> Self;
+    pub fn fetchpriority(self, FetchPriority) -> Self;
+}
+
+// html/src/shell.rs
+impl Asset { pub fn style_media(href: &'static str, Media<'static>) -> Option<Asset>; }
+
+// html/src/form.rs — o token mora no MÉTODO: `Post`/`Put`/`Patch`/`Delete` não existem sem ele
 pub struct CsrfToken<'a>(&'a str);
-pub enum Method { Get, Post, Put, Patch, Delete }
-impl Form { pub fn open(action: &Action, method: Method, csrf: &CsrfToken) -> FormBody; }
+pub enum Method<'a> {
+    Get,
+    Post(CsrfToken<'a>), Put(CsrfToken<'a>), Patch(CsrfToken<'a>), Delete(CsrfToken<'a>),
+}
+pub struct SubmitKey<'a>(&'a str);
+impl Form {
+    pub fn open(action: &Action<'_>, method: Method<'_>, children: Markup) -> Markup;
+    pub fn open_with_submit(action: &Action<'_>, method: Method<'_>, submit: &SubmitKey<'_>, children: Markup) -> Markup;
+}
 
 // html/src/field.rs
-pub struct FieldState<'a> { pub valor: AttrVal<'a>, pub erro: Option<Text<'a>>, pub ajuda: Option<Text<'a>> }
-impl Field { pub fn text<M: Msg>(n: FieldName, label: M, s: &FieldState<'_>) -> Markup; }
+pub struct FieldState<'a> { /* value, required, checked, error, help, autocomplete */ }
+impl<'a> FieldState<'a> {
+    pub const fn new(value: AttrVal<'a>) -> Self;
+    pub const fn required(self, yes: bool) -> Self;
+    pub const fn checked(self, yes: bool) -> Self;
+    pub const fn error(self, text: Text<'a>) -> Self;
+    pub const fn help(self, text: Text<'a>) -> Self;
+    pub const fn autocomplete(self, token: Autocomplete<'a>) -> Self;
+}
+pub enum InputType { Text, Email, Tel, Url, Search, Password, Number, Date, Time,
+                     DateTimeLocal, Month, Week, Color, Range }
+pub struct SelectOption<'a> { /* valor, rótulo, selected, disabled */ }
+pub struct ChoiceOption<'a> { /* valor, rótulo, checked, disabled */ }
+impl Field { pub fn text<M: Msg>(n: FieldName<'_>, label: M, s: &FieldState<'_>) -> Markup;
+             pub fn input<M: Msg>(n: FieldName<'_>, label: M, kind: InputType, s: &FieldState<'_>) -> Markup;
+             pub fn textarea<M: Msg>(n: FieldName<'_>, label: M, s: &FieldState<'_>) -> Markup;
+             pub fn file<M: Msg>(n: FieldName<'_>, label: M, accept: Option<AttrVal<'_>>, multiple: bool, s: &FieldState<'_>) -> Markup;
+             pub fn checkbox<M: Msg>(n: FieldName<'_>, label: M, s: &FieldState<'_>) -> Markup;
+             pub fn checkbox_group<M: Msg>(n: FieldName<'_>, legend: M, options: &[ChoiceOption<'_>], s: &FieldState<'_>) -> Option<Markup>;
+             pub fn radio_group<M: Msg>(n: FieldName<'_>, legend: M, options: &[ChoiceOption<'_>], s: &FieldState<'_>) -> Option<Markup>;
+             pub fn select<M: Msg>(n: FieldName<'_>, label: M, options: &[SelectOption<'_>], s: &FieldState<'_>) -> Option<Markup>; // None: sem opção selecionável }
+
+// html/src/response.rs — o contrato de resposta parcial é dado, não `hx-*`
+pub enum Swap { Inner, Outer, BeforeBegin, AfterBegin, BeforeEnd, AfterEnd, Delete, None }
+pub enum MainSwap { Replace(Markup), Keep }
+pub struct RegionUpdate<'a> { /* Id, Swap, Markup */ }
+pub struct Partial<'a> { /* main, updates, focus, select, reselect, select_oob */ }
+pub enum Sync { Drop, Replace, Abort }
+pub enum RequestClass { Full, Partial, Targeted, HistoryRestore, Boosted }
+
+// html/src/media.rs — builders de mídia; `srcset`+`sizes` andam juntos
+pub struct Img<'a> { /* src, alt, width, height, srcset, sizes, loading, fetchpriority */ }
+impl<'a> Img<'a> {
+    pub const fn new(Src<'a>, Alt<'a>, WidthPx, HeightPx) -> Self;
+    pub fn responsive(self, SrcSet<'a>, Sizes<'a>) -> Self;
+    pub const fn loading(self, Loading) -> Self;
+    pub const fn lazy(self) -> Self;
+    pub const fn fetchpriority(self, FetchPriority) -> Self;
+    pub fn render(&self) -> Markup;
+}
+pub struct Picture<'a> { /* sources, fallback */ }
+impl<'a> Picture<'a> { pub fn new(Img<'a>) -> Self; pub fn source(self, Source<'a>) -> Self; pub fn render(&self) -> Markup; }
+pub struct Source<'a> { /* srcset, sizes, media, mime */ }
+impl<'a> Source<'a> { pub fn new(SrcSet<'a>, Sizes<'a>) -> Option<Self>; pub const fn media(self, Media<'a>) -> Self;
+                       pub const fn mime(self, AttrVal<'a>) -> Self; pub fn render(&self) -> Markup; }
+pub struct Video<'a> { /* src, tracks, controls, preload, poster, muted, looping, playsinline, dims, fallback */ }
+impl<'a> Video<'a> {
+    pub fn new(Src<'a>, Track<'a>) -> Self;                 // captions obrigatórias
+    pub fn track(self, Track<'a>) -> Self;
+    pub const fn controls(self, bool) -> Self;
+    pub const fn preload(self, MediaPreload) -> Self;
+    pub const fn poster(self, Src<'a>) -> Self;
+    pub const fn muted(self, bool) -> Self;
+    pub const fn looping(self, bool) -> Self;
+    pub const fn playsinline(self, bool) -> Self;
+    pub const fn dimensions(self, WidthPx, HeightPx) -> Self;
+    pub const fn fallback(self, Text<'a>) -> Self;
+    pub fn render(&self) -> Markup;
+}
+pub struct Audio<'a> { /* src, tracks, controls, preload, looping, fallback */ }
+impl<'a> Audio<'a> { pub fn new(Src<'a>) -> Self; pub fn track(self, Track<'a>) -> Self;
+                     pub const fn controls(self, bool) -> Self; pub const fn preload(self, MediaPreload) -> Self;
+                     pub const fn looping(self, bool) -> Self; pub const fn fallback(self, Text<'a>) -> Self;
+                     pub fn render(&self) -> Markup; }
+pub struct Track<'a> { /* src, kind, label, srclang, default */ }
+impl<'a> Track<'a> {
+    pub const fn new(Src<'a>, TrackKind, Text<'a>) -> Self;
+    pub const fn captions(Src<'a>, Text<'a>) -> Self;
+    pub const fn subtitles(Src<'a>, Text<'a>, Lang) -> Self;
+    pub const fn srclang(self, Lang) -> Self;
+    pub const fn is_default(self, bool) -> Self;
+    pub fn render(&self) -> Markup;
+}
 ```
+
+**Desvios do plano aceitos na implementação:** o `CsrfToken` mora no `Method` (fecha o `GET` sem token
+inventado e torna “sem token” um erro de tipo, não de aridade); `FieldState` tem campos privados com
+builders; parser/validação/codegen vivem em `html-macros-core` (testáveis e fuzzáveis sem proc-macro);
+o parser tem teto de **64 níveis** de aninhamento (fonte patológico vira erro, não estouro de pilha).
 
 **Testes (aqui mora o valor das D23–D25):**
 
 | Caso | Prova |
 |---|---|
-| `Form::open` sem token | `trybuild` → não compila |
+| `Form::open` com `Method::Post` sem `CsrfToken` | `trybuild` → não compila |
 | `PUT`/`PATCH`/`DELETE` | `insta` → `_method` presente; `GET`/`POST` → ausente |
 | `Page::new` sem `title`/`heading` | `trybuild` → não compila |
-| dois `main` / `h1` no fragmento | `trybuild` → `html!` recusa (F3) |
+| `main` no fragmento | `trybuild` → `html!` recusa (F3) |
 | `View` com 2 modais | `insta` → ambos na região, ordem estável; `merge` dedupe de `assets` |
 | `Field` com erro | `insta` → `aria-invalid="true"` + `aria-describedby` com os dois ids |
 | `Field` sem erro | `insta` → **sem** `aria-invalid` e **sem** o id de erro |
 
 ### F6 — `output` (`N4`) atrás de feature (≈250 LOC; D30)
 
-Parse com `html5ever` (dependência **opcional**, `features = ["audit"]`) + as **5** invariantes de
-`output`: `landmark_names_distinct`,
-`no_content_derived_identifiers`, `ids_unique`, `heading_levels_no_skips`, `popover_target_resolves`
-([`23`](23-acessibilidade-e-css.md) §2.1).
+Parse com `html5ever` (dependência **opcional**, `features = ["audit"]`) + as invariantes de `output`:
+`main_unique`, `single_h1`, `heading_levels_no_skips`, `ids_unique`, `landmark_names_distinct`,
+`landmark_names_required`, `aria_refs_resolve`, `popover_target_resolves` e
+`no_content_derived_identifiers`
+([`23`](23-acessibilidade-e-css.md) §2.1), mais as três de conformidade (`no_inline_script`,
+`no_style_attribute`, `no_event_handler`).
+
+`RcDom` não guarda offset de origem: a ordem da saída é a **pré-ordem** do documento, com a ordem
+fixa das regras desempatando dois findings no mesmo nó. `.parent`/`.children` do DOM já são a ordem
+de documento, então o resultado é determinístico e não depende de mapa de posições.
 **DoD.** `html::audit::check(&page.markup())` roda no CI **do consumidor** em três linhas
 (`html = { path = …, features = ["audit"] }`); sem binário e sem crate novo. Sem a feature, o crate tem
 zero dependências — provado por `cargo tree -e normal` no job `check`.
@@ -403,8 +543,10 @@ seguro".
 
 1. `cargo test` verde **2× seguidas** (sem flaky).
 2. `clippy -D warnings` limpo; zero `allow` (só `#[expect(…, reason)]` pontual — [`22`](22-rigor.md) §10).
-3. `cargo deny check` + `cargo audit` + `cargo machete` + `typos` verdes; `cargo fuzz run parser` sem
-   pânico em 30 s.
+3. `cargo deny check` + `cargo audit` + `cargo machete` verdes; `cargo +nightly fuzz run parser` sem
+   pânico em 30 s. `typos` **não** roda: o dicionário é inglês e o corpus (docs, comentários,
+   identificadores) é pt-BR — todo "erro" seria falso positivo (`erro`→`error`, `ser`→`set`). A
+   checagem ortográfica equivalente é revisão humana, registrada aqui em vez de fingida no CI.
 4. Toda mensagem de erro de [`10`](10-ergonomia.md) §2 tem `trybuild`.
 5. `html` sem nenhuma dependência de runtime além de `core`/`alloc`.
 6. `Page`, `Form`, `Field`, `View` com os testes de F5 na tabela.

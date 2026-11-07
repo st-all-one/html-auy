@@ -150,9 +150,11 @@ que falha.** Depois desta revisão, nenhuma promessa fica em cima de "o desenvol
    responde). `validate_spec.py` falha se uma invariante usada não declarar escopo. Documentado em
    [`04-validacao.md`](04-validacao.md) §4.0.
 2. **Elementos de documento não compilam em `html!`**: `html`, `head`, `body`, `title`, `meta`, `link`,
-   `script`, `noscript` **e `h1`** marcam `only = "shell"` e carregam `shell_only_elements` (escopo
+   `script` e `noscript` marcavam `only = "shell"` e carregavam `shell_only_elements` (escopo
    `block`). A "base estrutural impossível de contornar" deixou de ser convenção: virou erro de
    compilação — e o mesmo movimento converteu 5 regras de página em regras de tipo (§4.0 do docs/04).
+   **Emenda 0.1.0:** `h1` saiu de `only = "shell"`; a view pode declarar o heading e `single_h1` passou
+   a `output` (ver docs/04 §4.0).
 3. **Fronteira de framework resolvida**: `Page`/`ShellData` no core (sem `http`), `impl
    IntoResponse` do consumidor em 6 linhas ([`06`](06-shell-e-tema.md) §1, [`01`](01-arquitetura.md) §3).
 

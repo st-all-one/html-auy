@@ -2,7 +2,8 @@
 
 > **Status: pós-MVP.** Nada aqui bloqueia o crate ([`21`](21-implementacao.md) §0). Está escrito agora
 > porque a decisão de **como** exportar muda o que se guarda hoje (o corpus, a spec como dado) — e essa
-> parte é de graça enquanto não há código. A execução (F7 + `html-vocab`) só entra depois de F6.
+> parte já está paga: `spec/elements.toml`, as invariantes e o corpus de conformidade existem. A
+> execução (F7 + `html-vocab`) só entra depois de F6.
 
 > **Pergunta:** isto pode virar PHP, Node, Java? **Resposta curta:** o *crate* não; o **contrato** sim.
 > O que viaja é a spec + o modelo de valores + o corpus de conformidade. O mecanismo (macro, plugin,
@@ -12,7 +13,7 @@
 
 | Camada | Conteúdo | Portabilidade | Observação |
 |---|---|---|---|
-| **L0 — Spec** | `elements.toml`: 97 elementos, categorias, `children`, `required`/`allowed`, globais, enums de `aria`, `role`, invariantes + escopo, `only` | **100%** | é dado neutro; vira JSON Schema sem perda |
+| **L0 — Spec** | `elements.toml`: 111 elementos, categorias, `children`, `required`/`allowed`, globais, enums de `aria`, `role`, invariantes + escopo, `only` | **100%** | é dado neutro; vira JSON Schema sem perda |
 | **L1 — Corpus de conformidade** | casos `aceita` / `recusa(invariante)` | **100%** | é o que impede 5 implementações virarem 5 dialetos (§3) |
 | **L2 — Modelo de valores** | *o escape é escolhido na construção, não na inserção* (`Text`, `AttrVal`, `Href`, `SrcSet`, `Alt`, `WidthPx`, `Class`, `FieldName`) | **~90%** | o princípio é neutro; a força depende da linguagem (tipo × verificação em tempo de build × gate) |
 | **L3 — Sintaxe/DSL** | `html!` | **~30%** | precisa de hospedeiro: macro (Rust/Swift), JSX + plugin (Node), checker (Java/C#), linter (PHP/Go/Python) |

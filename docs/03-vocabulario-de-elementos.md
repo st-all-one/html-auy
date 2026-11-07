@@ -19,7 +19,7 @@ schema = 2
 
 [meta]
 # versão da spec; congelada por minor do projeto, ver 11-estabilidade.md
-spec_version = "2.0.0"
+spec_version = "2.1.0"
 
 [element.div]
 category = "flow"                     # string ou array
@@ -31,17 +31,18 @@ forbidden_children = ["none"]         # (vazio; existe só para exceções)
 [element.img]
 category = ["phrasing", "media"]      # multi-categoria: dentro de <p> E dentro de <figure>
 void = true                           # não tem `children`
-required = ["src", "alt"]             # implicitamente permitidos
-allowed = ["width", "height", "loading", "decoding", "fetchpriority", "sizes", "srcset", "class", "data-*"]
+required = ["src", "alt", "width", "height"]   # dimensão intrínseca é obrigatória (CLS 0)
+allowed = ["referrerpolicy", "loading", "decoding", "fetchpriority", "sizes", "srcset", "class", "data-*"]
 accessible_name = "alt"               # nome acessível vem do alt
-invariants = ["alt_empty_means_decorative", "srcset_requires_sizes_and_dims"]
+invariants = ["alt_empty_means_decorative", "intrinsic_dimensions_required", "srcset_requires_sizes_and_dims"]
 
 [element.a]
 category = ["phrasing", "interactive"]
+transparent = true                    # herda o content model do pai; `children` só vale na raiz
 required = ["href"]                   # validado por `Href`, não por regex
 allowed = ["hreflang", "rel", "target", "download", "referrerpolicy", "class", "aria-*", "data-*"]
-children = ["phrasing"]
-forbidden_children = ["a", "button", "input", "select", "textarea", "details", "summary", "dialog"]
+children = ["flow"]
+forbidden_children = ["interactive"]  # nenhum interativo descendente, em qualquer profundidade
 ```
 
 Campos (esquema 2):
@@ -54,9 +55,10 @@ Campos (esquema 2):
 | `allowed` | allowlist adicional; qualquer outro nome é erro (com a lista de válidos na mensagem) |
 | `accessible_name` | `required`/`optional`/`none` (ou o atributo que a fornece: `alt`, `title`, `label`, `legend`, `caption`, `summary`) — substitui o pseudo-atributo `label` |
 | `children` | categorias **e/ou nomes de elemento**; nome tem precedência. `text` = só texto; `none` = apenas em `void` |
-| `required_children` | filho(s) obrigatório(s), verificado no bloco (`table`→`caption`, `video`→`track`, `fieldset`→`legend`) |
+| `required_children` | filho(s) ou categoria obrigatória, verificada no bloco (`table`→`caption`, `fieldset`→`legend`, `hgroup`→`heading`, `datalist`→`option`) |
 | `first_child` | filho que precisa vir primeiro |
-| `forbidden_children` | exceções sobre `children` |
+| `forbidden_children` | exceções sobre `children`; nome de elemento vale no filho direto, categoria vale em qualquer profundidade |
+| `transparent` | herda o content model do ancestral não transparente mais próximo (`<a>`); `children` é só o fallback na raiz |
 | `invariants` | nomes das regras que o validador implementa (registro em [`04-validacao.md`](04-validacao.md) §4) |
 | `deprecated` | quando presente, emite advisory e mantém compilação por uma minor |
 
@@ -68,8 +70,10 @@ Campos (esquema 2):
 ## 3. Invariantes implementados hoje (subconjunto normativo)
 
 > **Vocabulário dimensionado:** a medição no projeto de origem encontrou **63 elementos** realmente
-> usados; o `spec/elements.toml` 2.0.0 declara **97** (os 63 medidos + `h4`–`h6`, `special` de texto,
-> `tfoot`/`colgroup`/`col`, `optgroup`, `output`, `meter`, `progress`, `desc`, `svg_title`, `br`, `em`).
+> usados; o `spec/elements.toml` 2.1.0 declara **111** (os 63 medidos + `h4`–`h6`, `special` de texto,
+> `tfoot`/`colgroup`/`col`, `optgroup`, `output`, `meter`, `progress`, `desc`, `svg_title`, `br`, `em`,
+> além de `sub`, `sup`, `dfn`, `samp`, `var`, `bdi`, `bdo`, `data`, `wbr`, `ruby`/`rt`/`rp`, `hgroup` e
+> `datalist`).
 > Cada adição nova entra com justificativa no PR — o vocabulário cresce por necessidade, não por completude.
 
 | Elemento | Invariante |
@@ -79,18 +83,21 @@ Campos (esquema 2):
 | `html` | `lang` obrigatório e válido em BCP-47 |
 | `time` | `datetime` obrigatório quando há conteúdo textual não numérico |
 | `th` | `scope` obrigatório (`row`/`col`/`rowgroup`/`colgroup`) |
-| `input` | `id` obrigatório **e** vinculado a um `label`/`aria-labelledby` no mesmo bloco |
+| `input` | `type` e `name` obrigatórios; nome acessível exigido (`label` envolvendo, `for`, `aria-label` ou `aria-labelledby`), exceto `type` isento |
 | `label` | `for` obrigatório quando não envolve o controle |
 | `button` | `type` obrigatório (`button`/`submit`/`reset`) |
-| `select`, `textarea` | `id` vinculado a label, como `input` |
-| `dialog` | nome acessível obrigatório (`aria-labelledby` gerado pelo primitivo) |
-| `nav`, `aside` | nome acessível obrigatório (`Label`) |
-| `figure` | `figcaption` obrigatório quando há conteúdo visual sem texto adjacente |
-| `video`, `audio` | `track` de legendas obrigatório (WCAG 1.2.2); `src` **ou** `media_source`, nunca os dois |
-| `picture` | `source` antes de `img`, `img` obrigatório como último filho |
+| `select`, `textarea` | `name` obrigatório e nome acessível exigido, como `input` |
+| `dialog` | nome acessível obrigatório (`aria-label`/`aria-labelledby`); `aria-modal` é derivado — declará-lo é erro |
+| `nav`, `aside` | com dois ou mais do mesmo tipo, nome acessível obrigatório (`aria_label`; N4 `landmark_names_required`) |
+| `figure` | aceita `figcaption` (não obrigatório e ordem não cobrada pelo macro) |
+| `video`, `audio` | `video` exige `track kind="captions"` (WCAG 1.2.2); `audio` aceita faixas sem exigi-las (A12); `src` **ou** `media_source`, nunca os dois |
+| `picture` | `source` (com `srcset`+`sizes`) antes de `img`, `img` obrigatório como último filho |
 | `option` | `value` obrigatório; `selected` só dentro de `select` sem `multiple` |
 | `script` | forma exclusiva: `src` externo · JSON-LD · `importmap`; nenhum executável inline |
 | `abbr` | `title` obrigatório (expansão) |
+| `data` | `value` obrigatório (valor legível por máquina) |
+| `hgroup` | `heading` (`h2`–`h6`) obrigatório; `p` é subtítulo opcional |
+| `datalist` | `option` obrigatório; `input list` literal precisa apontar para um `datalist` do bloco |
 | `figure` | `figcaption` como primeiro ou último filho |
 | `meta` | forma exclusiva: `charset` · `name`+`content` · `property`+`content`; `http-equiv` proibido |
 
@@ -116,6 +123,7 @@ Categorias de conteúdo usadas:
 `flow` · `phrasing` · `sectioning` (`section`, `article`, `aside`, `nav`) · `heading` (`h1..h6`) ·
 `form` · `table` · `media` · `metadata` · `interactive` (`a`, `button`, `input`, `select`, `textarea`, `details`, `summary`, `dialog`) ·
 `text` (elementos que só aceitam texto: `title`, `option`, `textarea`, `desc`, `svg_title`, `iframe`) ·
+`ruby_text` (só dentro de `ruby`: `rt`, `rp`) ·
 `svg_shape` (formas SVG: `path`, `circle`, `rect`, `line`, `polyline`, `polygon`, `g`, `use`) · `json` (só o `script` JSON-LD) · `none` (só em `void`)
 
 O conteúdo textual é o **default** de qualquer `children`: um elemento sem `children` declarado aceita
@@ -130,7 +138,7 @@ Regras verificadas no macro (dentro de um bloco):
 - `<a>` não aninha `interactive`;
 - `<button>` não aninha `interactive`;
 - `<label>` não aninha outro `label`;
-- `<picture>` exige `source*` seguido de `img`.
+- `<picture>` exige `source*` (cada um com `srcset`+`sizes`) seguido de `img`.
 
 ## 5. Atributos nunca permitidos (em nenhum elemento)
 

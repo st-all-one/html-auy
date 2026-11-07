@@ -68,26 +68,27 @@ Toda invariante declara dono em `spec/elements.toml` → `[invariants]`. O escop
 
 | Escopo | Quem cobra | Promessa | Quantas |
 |---|---|---|---|
-| `block` | a macro, no `html!` | **erro de compilação**, com span no token | **62** |
-| `type` | o construtor do crate (`Page`, `Form`) | **não compila** sem o dado: um `main`, um `h1`, um `title`, um banner no root, um CSRF | **6** |
-| `output` | `N4` sobre o HTML final | falha o **teste**; nenhum dos dois vê | **5** |
+| `block` | a macro, no `html!` | **erro de compilação**, com span no token | **59** |
+| `type` | o construtor do crate (`Page`, `Form`) | **não compila** sem o dado: um `main`, um `title`, um banner no root, um CSRF | **4** |
+| `output` | `N4` sobre o HTML final | falha o **teste**; nenhum dos dois vê | **7** |
 
-As **5 de saída** — as únicas que ficam em cima de teste:
+As **7 de saída** — as únicas que ficam em cima de teste:
 
 | Invariante | Por que nenhum tipo responde |
 |---|---|
 | `landmark_names_distinct` | depende de nomes de landmarks espalhados por fragmentos que nunca se veem |
+| `landmark_names_required` | só a contagem no documento decide se um `nav`/`aside` sem nome é ambíguo |
 | `no_content_derived_identifiers` | é uma propriedade do **conjunto** dos ids da página, não de um bloco |
 | `ids_unique` | dois componentes independentes podem escolher o mesmo `id` (DOM clobbering, `label` quebrado) |
 | `heading_levels_no_skips` | a sequência `h2 → h4` só existe na página montada (WCAG 1.3.1) |
 | `popover_target_resolves` | o alvo do `popovertarget` pode viver em outro componente dinâmico |
+| `single_h1` | o `<h1>` pode vir do shell (`Page`) ou da view; só o documento montado sabe se há exatamente um |
 
-As **6 de tipo**: cinco subiram de "teste" para "tipo" quando o shell virou `Page` — `main_unique`,
-`single_h1`, `shell_owns_h1`, `document_title_required` e `banner_unique_at_root` não são mais regras a
-lembrar. `Page::new(&ShellData { title, heading, … }, main)` recebe **exatamente um** miolo, o `<h1>` e o
-`<title>` vêm de campos **não opcionais**, e o `<h1>` não compila em `html!` (`only = "shell"`). Um
-fragmento não pode violar o que não consegue expressar. A sexta é `form_requires_csrf`: `Form::open`
-exige o token, então o `<form>` sem `_token` não compila — o mesmo movimento, aplicado ao formulário.
+As **4 de tipo** são o que o construtor ainda garante: `Page` recebe **exatamente uma** `View`, o
+`<title>` vem de campo não opcional, `main_unique` é estrutural e `banner_unique_at_root` é decidido
+pelo shell. `h1` **não** é mais `only = "shell"`: a view pode declarar o heading da página (o caso do
+hero), e o `audit` cobra `single_h1` na saída. `form_requires_csrf` continua tipo: `Form::open` exige o
+token no método (`Method::Post(token)`), então `<form>` sem `_token` não compila.
 
 O que resta em `output` é o que **nenhuma** ferramenta de compilação pode decidir sem possuir a página
 inteira — e possuir a página inteira é exatamente o que mataria a composição (cada view teria que
@@ -101,33 +102,32 @@ documentada (ou o contrário). O nome é a chave da mensagem de erro e do teste.
 
 | Invariante | Elementos | Regra |
 |---|---|---|
-| `href_is_typed` | `a` | `href` só existe via `Href` (https/relativo/mailto/tel); `javascript:`/`data:` não constroem |
+| `href_is_typed` | `a` | `href` só existe via `Href` (https/relativo/fragmento/mailto/tel); `javascript:`/`data:` não constroem |
 | `blank_target_implies_noopener` | `a` | `target="_blank"` acrescenta `rel="noopener noreferrer"` automaticamente |
 | `no_aria_label_over_visible_text` | `a`, `button` | com texto visível, nome acessível é o texto; `aria-label` divergente é erro |
 | `a_rel_enum` | `a` | `rel` é enum fechado (`noopener`, `noreferrer`, `external`, `nofollow`, `license`, …); `opener` é proibido |
 | `referrer_policy_enum` | `a`, `link`, `img` | `referrerpolicy` só nos valores padronizados; `unsafe-url` proibido |
-| `no_content_derived_identifiers` | `a` e todo `id`/`name` | `id`/`name` nunca derivam do dado do usuário: são gerados por primitivo. Um `id` vindo de slug de conteúdo abre DOM clobbering (`window.x`) e colisão entre páginas |
+| `no_content_derived_identifiers` | `a` e todo `id`/`name` | `id`/`name` nunca derivam do dado do usuário: são gerados por primitivo. Um `id` vindo de slug de conteúdo abre DOM clobbering (`window.x`) e colisão entre páginas; `name` aceita a gramática de `FieldName` (`sections[0][campo]`) |
 | `banner_unique_at_root` | `header` | no máximo um `header` **filho direto do `body`** (banner); dentro de `article`/`section`/`nav`/`main`/`aside` não é banner e pode repetir |
 | `legend_not_empty` | `fieldset` | `legend` com nome acessível não vazio (é o rótulo do grupo) |
 | `select_has_selectable_option` | `select` | ao menos uma `option` selecionável; placeholder é `value=""` + `disabled`, nunca `selected` |
 | `svg_informative_has_name` | `svg` | ícone decorativo é `aria-hidden`; SVG que carrega informação tem `svg_title`/`aria-labelledby` |
-| `shell_only_elements` | `html`, `head`, `body`, `title`, `meta`, `link`, `script`, `noscript`, `h1` | elementos de documento **não compilam** em `html!`: só o `Document` do shell os emite. É a garantia estrutural que hoje existia apenas como convenção |
-| `form_requires_csrf` | `form` | o `<form>` só existe via `Form::open(action, method, &CsrfToken)`: sem token não compila, e `PUT`/`PATCH`/`DELETE` derivam o `_method` oculto — esquecer CSRF deixa de ser possível |
+| `shell_only_elements` | `html`, `head`, `body`, `title`, `meta`, `link`, `script`, `noscript`, `main` | elementos de documento **não compilam** em `html!`: só o `Document` do shell os emite. É a garantia estrutural que hoje existia apenas como convenção |
+| `form_requires_csrf` | `form` | o `<form>` só existe via `Form::open(action, method, children)`, e o token mora no método (`Method::Post(token)`): sem token não compila, e `Put`/`Patch`/`Delete` derivam o `_method` oculto — esquecer CSRF deixa de ser possível |
 | `control_has_accessible_name` | `a`, `button`, `input` | controle sem nome acessível (só ícone, só placeholder) não compila — WCAG 1.1.1/2.4.4/4.1.2 |
 | `no_aria_hidden_on_focusable` | `a`, `button`, `input` | `aria-hidden="true"` num elemento focável é contradição (o foco some da árvore de acessibilidade) |
 | `head_charset_first` | `head` | `meta charset` é o primeiro filho do `head` e cai nas primeiras 1024 posições do documento |
 | `captions_kind_required` | `video` | o `track` exigido é `kind="captions"` (não basta `subtitles`; WCAG 1.2.2) |
 | `named_is_landmark` | `form` | `form` só é landmark (`role="form"`) quando tem nome acessível; sem nome, não recebe papel |
-| `single_h1` | `h1` | exatamente um `h1` por documento (o shell o emite; o módulo não) |
-| `shell_owns_h1` | `h1` | `h1` só no shell/`Page`; view de módulo com `h1` próprio falha o lint |
+| `single_h1` | `h1` | exatamente um `h1` por documento; o `Page` o emite por padrão, a view pode declarar o seu e o `audit` cobra a contagem |
 | `main_unique`, `main_tabindex_minus_one` | `main` | um `main` por página; `tabindex="-1"` fixo para o skip link |
-| `landmark_names_distinct` | `nav` | landmarks do mesmo tipo precisam de nomes distintos |
+| `landmark_names_distinct` | `nav`, `aside`, `section` | landmarks do mesmo tipo precisam de nomes distintos |
+| `landmark_names_required` | `nav`, `aside` | com dois ou mais landmarks do mesmo tipo, cada um precisa de nome acessível (`aria-label`/`aria-labelledby`) |
 | `section_has_heading_or_name` | `section` | `section` sem heading e sem nome acessível não é seção — use `div` |
 | `alt_empty_means_decorative` | `img` | `alt` só é vazio via `Alt::decorative()` (imagem decorativa explícita) |
 | `intrinsic_dimensions_required` | `img` | `width` + `height` obrigatórios: sem dimensão intrínseca o espaço reservado é zero e o `CLS` estoura |
 | `script_src_requires_defer` | `script` | na forma `src` externo, `defer` é obrigatório e `async` é proibido (ordem determinística e sem bloqueio de render) |
 | `srcset_requires_sizes_and_dims` | `img` | `srcset` exige `sizes` + `width`/`height` (CLS 0) |
-| `fold_controls_loading` | `img` | `loading="lazy"`/`fetchpriority` são derivados da posição, não digitados |
 | `label_or_labelledby_in_block` | `input`, `select`, `textarea` | controle com `id` e `label for`/`aria-labelledby` resolvível no mesmo bloco |
 | `label_exempt_types` | `input` | `hidden`/`submit`/`reset`/`button`/`image` dispensam rótulo |
 | `attribute_by_input_type` | `input` | atributo só existe se o `type` o admite (`min`/`max`/`step` são de número/data) |
@@ -141,13 +141,11 @@ documentada (ou o contrário). O nome é a chave da mensagem de erro e do teste.
 | `no_text_children` | `table` | texto solto em `table` é erro (vai para `caption`/`th`/`td`) |
 | `tbody_explicit` | `table` | `tbody` sempre explícito (`thead`/`tfoot` quando houver) |
 | `li_only_in_list` | `li` | `li` só em `ul`/`ol` |
-| `details_name_accordion` | `details` | `name` só para acordeão exclusivo; sem `name` os `details` são independentes |
 | `closedby_enum`, `no_aria_modal` | `dialog` | `closedby` enumerado (`any`/`closerequest`/`none`); `aria-modal` é derivado de `showModal()`, nunca digitado |
 | `dialog_modal_semantics` | `dialog` | modal exige `aria-labelledby` apontando para o título do diálogo |
 | `popover_target_resolves` | `button` | `popovertarget` resolve para elemento existente com `popover` |
 | `media_requires_captions` | `video` | `track kind="captions"` presente (WCAG 1.2.2) |
 | `srclang_required_for_subtitles` | `track` | `srclang` obrigatório quando `kind` é `subtitles` |
-| `media_requires_transcript` | `audio` | áudio exige transcrição adjacente (o lint cobra o link, não o texto) |
 | `source_profile_picture_only` | `source` | dentro de `picture` o atributo é `srcset` (nunca `src`) |
 | `source_profile_media_only` | `media_source` | dentro de `video`/`audio` o atributo é `src` + `type` (nunca `srcset`) |
 | `media_source_xor_src` | `video`, `audio` | `src` no elemento **ou** filhos `media_source`, nunca os dois |

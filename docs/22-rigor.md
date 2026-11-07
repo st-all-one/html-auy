@@ -149,17 +149,18 @@ allow-registry = ["https://github.com/rust-lang/crates.io-index"]
 A allowlist é a **mesma** da constituição de origem (permissivas apenas; MPL só build-only): o `deny.toml`
 passa a ser a execução automática de uma regra que hoje é convenção em documento.
 
-## 8. CI: quatro jobs, cada um cobrindo o que o outro não vê
+## 8. CI: cinco jobs, cada um cobrindo o que o outro não vê
 
 | Job | Comando | O que ele pega que os outros não pegam |
 |---|---|---|
-| `check` | `cargo fmt --all -- --check` · `clippy --workspace --all-targets -- -D warnings` · `test --workspace` | estilo, lints, unidade+integração+**doc-tests** (doc-test roda em `cargo test`) |
-| `supply-chain` | `cargo deny check` · `cargo audit` · `cargo machete` · `typos` | licença proibida, advisory, dependência morta, typo em string/documentação |
-| `miri` | `cargo miri test -p html --test miri_smoke` | UB/leitura inválida no núcleo puro (barato com `forbid(unsafe_code)`) |
-| `fuzz` | `cargo fuzz run parser` (smoke 30 s) | **o parser entrando em pânico com input adverso** — a única falha que o macro não pode ter |
+| `check` | `cargo fmt --all -- --check` · `clippy --workspace --all-targets --all-features -- -D warnings` · `test --workspace` · `test -p html --features audit` | estilo, lints, unidade+integração+**doc-tests** (doc-test roda em `cargo test`) |
+| `supply-chain` | `cargo deny check` · `cargo audit` · `cargo machete` | licença proibida, advisory, dependência morta (`typos` saiu: dicionário inglês × corpus pt-BR) |
+| `miri` | `cargo miri test -p html --test miri_smoke` (nightly) | UB/leitura inválida no núcleo puro (barato com `forbid(unsafe_code)`) |
+| `fuzz` | `cargo +nightly fuzz run parser` (smoke 30 s) | **o parser entrando em pânico com input adverso** — a única falha que o macro não pode ter |
 
 O alvo de fuzz deste crate é o **parser do macro**, não rede: qualquer `TokenStream` malformado deve virar
-`compile_error!`, nunca pânico. É o mesmo motivo pelo qual o `sniff` extraiu `decode_incoming` como função
+`compile_error!`, nunca pânico. `msrv`/`miri`/`fuzz` fixam `RUSTUP_TOOLCHAIN` no job: sem isso o
+`rust-toolchain.toml` (1.99) venceria o toolchain instalado e o job testaria o compilador errado. É o mesmo motivo pelo qual o `sniff` extraiu `decode_incoming` como função
 pura e total.
 
 ## 9. Golden: byte-for-byte, regenerado por intenção

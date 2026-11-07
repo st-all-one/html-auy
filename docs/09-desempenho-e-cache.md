@@ -6,9 +6,9 @@
 - O escape é feito **durante** a escrita (`push_str`/`extend_from_slice`), sem buffer intermediário.
 - `Render::render_to(&mut String)` existe para reaproveitar buffer — usado pelo shell para montar a
   página inteira sem alocações por fragmento.
-- Cada `Render` expõe `const SIZE_HINT: usize` (estimativa do bloco, gerada pelo macro a partir da
-  contagem de nós estáticos + folga por interpolação): `Vec::with_capacity(bloco.size_hint())` deixa
-  de realocar e o custo por bloco vira uma alocação.
+- O macro estima o tamanho do bloco (`tags` + atributos + folga por interpolação) e o `Writer` já
+  nasce com `String::with_capacity(…)`: o custo por bloco vira **uma** alocação, e um atributo
+  literal reserva o pior caso do escape.
 - Nenhum valor tipado aloca ao ser construído além do necessário (`Text<'a>` empresta; `Alt<'a>`
   empresta; `SrcSet` é montado uma vez e reusado).
 
@@ -48,9 +48,15 @@ Metas declaradas (não dogmas):
 | HTML autenticado / formulário | `private, no-cache` + `ETag` | **`no-store` é proibido**: bloqueia `bfcache` e o "voltar" fica lento |
 | fragmento de swap | mesma política da página de origem | herda, não inventa |
 
-- Fontes: `woff2` com `font-display: swap` e `preload` **do único arquivo de texto**, com
-  `as="font" type="font/woff2" crossorigin` — sem `crossorigin` o preload faz só DNS lookup e baixa
-  duas vezes.
+- Fontes: `woff2` com `font-display: swap` e `preload` **do único arquivo de texto**. Use
+  `Hint::Preload(Preload::font(...))`: o construtor emite `as="font" type="font/woff2"
+  crossorigin="anonymous"` juntos — sem `crossorigin` o preload faz só DNS lookup e baixa duas
+  vezes.
+- Imagem LCP: `Img` exige `width`/`height` (CLS 0) e `srcset`+`sizes` saem juntos; o preload usa a
+  **mesma** `SrcSet`/`Sizes` (`ImagePreload::responsive`), senão o navegador baixa duas variantes.
+  Fora da dobra, `Img::lazy()`; para a LCP, `fetchpriority="high"` via `Img::fetchpriority`.
+- Vídeo/áudio: `preload="metadata"` para não baixar o corpo inteiro na primeira pintura; `poster`
+  ocupa o espaço antes do primeiro frame.
 - `.br` é servido com `Content-Encoding: br` e `Vary: Accept-Encoding`; `.gz` é fallback, nunca o
   padrão.
 
@@ -75,7 +81,9 @@ pintura vira regressão de layout.
 - Teste de orçamento sobre fixtures: HTML de página de lista não pode crescer além de N% entre
   versões (orçamento de bytes por página, como o do projeto consumidor).
 - CSS do `/theme.css` limitado por tamanho; número de regras por seção limitado pelo schema.
-- Nenhum atributo emitido com valor vazio (`class=""`, `sizes=""`): o tipo `Option` impede.
+- Atributo condicional vazio não é emitido: `Option` (ausente), `SrcSet`/`Sizes` vazios (sem variante
+  válida) e `Class::of(&[])` são omitidos pelo `Writer`. `AttrVal::new("")` computado é emitido — o
+  consumidor só constrói um quando o valor vazio é intencional.
 
 ## 5. Custo de compilação
 

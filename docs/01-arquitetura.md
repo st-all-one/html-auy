@@ -16,7 +16,12 @@ html-macro     html! : parser, validação, fmt, codegen                  (proc-
 html-lint      validação de página inteira sobre HTML renderizado       (ferramenta)
 ```
 
-Mais um binário de tarefas (`cq`), que é a interface de desenvolvimento:
+> **Estado (MVP).** O desenho acima é o alvo; a implementação de hoje tem `crates/html` (o antigo
+> `html-core`, com `spec/table.rs` gerado e o `audit` opcional no lugar de `html-lint`) e
+> `crates/html-macros` (o `html!`), cujo parser/validação/codegen vivem em `html-macros-core` para
+> serem fuzzáveis. `html-spec`/`cq` não existem: o gerador é `tools/gen_spec.py`.
+
+Mais um binário de tarefas (`cq`), que era a interface de desenvolvimento:
 
 ```
 cq check     # roda macro-validate + lint de fonte + lint de saída + testes de conformidade

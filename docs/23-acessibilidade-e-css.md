@@ -31,11 +31,12 @@ quem cobre quem. Nenhum tipo e nenhum parse estático responde isso.
 | `aria-hidden-focusable` | 4.1.2 | bloco (mesmo elemento) / saída (wrapper) | **novo**: `no_aria_hidden_on_focusable` (`a`, `button`, `input`) |
 | ordem de títulos (`h2 → h4`) | 1.3.1 | página | **novo**: `heading_levels_no_skips` (`output`) |
 | `id` duplicado entre fragmentos | 1.3.1 / 4.1.1 | página | **novo**: `ids_unique` (`output`) |
-| landmark/`main`/`h1` únicos | 1.3.1 / 2.4.1 | tipo + página | `main_unique`, `single_h1`, `shell_owns_h1`, `landmark_names_distinct` |
+| landmark/`main`/`h1` únicos | 1.3.1 / 2.4.1 | tipo + página | `main_unique`, `single_h1`, `landmark_names_distinct` |
+| landmark repetido sem nome | 1.3.1 | página | **novo**: `landmark_names_required` (`nav`/`aside` repetidos) |
 
-Os quatro **novos** entraram na spec nesta revisão (73 invariantes: 62 `block`, 6 `type`, 5 `output`). Os
-três primeiros são de bloco porque o macro vê o conteúdo do controle e os atributos dele; os dois últimos
-são de página porque dependem do conjunto que nenhum fragmento vê.
+Os quatro **novos** entraram na spec nesta revisão (70 invariantes: 59 `block`, 4 `type`, 7 `output`). Os
+dois primeiros são de bloco porque o macro vê o conteúdo do controle e os atributos dele; os dois
+últimos são de página porque dependem de um conjunto que nenhum fragmento vê.
 
 ### 2.2 Só com estilo computado (gate do consumidor, nunca do crate)
 

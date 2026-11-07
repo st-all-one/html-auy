@@ -34,16 +34,22 @@ tem **um** tipo, com **um** construtor seguro e nenhum construtor cru.
 
 | Tipo | Contexto | Construção | Regras |
 |---|---|---|---|
-| `Text<'a>` | texto de conteúdo | `Text::new(&str)` · `From<Msg>` | escapa `&` `<` `>` `"` `'`; **nunca** vira markup |
+| `Text<'a>` | texto de conteúdo | `Text::new(&str)` · `Text::msg(Msg)` | escapa `&` `<` `>` `"` `'` e NUL; **nunca** vira markup |
 | `AttrVal<'a>` | valor de atributo comum | `AttrVal::new` | escapa os 5 + `\r` `\n` `\t` como entidades numéricas |
-| `Href` | link | `Href::internal(LUrl)` · `Href::external(https)` · `Href::mailto` · `Href::tel` | **recusa** `javascript:`, `data:`, `vbscript:`; normaliza esquema em minúsculas |
-| `LUrl` | rota interna localizada | `LUrl::nome_da_rota(params)` (gerado do roteador) | o locale é injetado pelo roteador — não há `LUrl` sem locale |
-| `Src` | URL de recurso | `Src::media(ObjKey)` · `Src::asset(Asset)` | só de fontes conhecidas; nunca string livre |
-| `SrcSet` | conjunto responsivo | `SrcSet::from_variants(&[Variant])` | ordena por largura; agrupa por tipo MIME; **determinístico** |
-| `Sizes<'a>` | tamanho de exibição | `Sizes::new(&str)` validado | só aceita gramática `(condition) length` |
+| `Href` | link | `Href::internal(LUrl)` · `Href::fragment(Fragment)` · `Href::external(https)` · `Href::mailto` · `Href::tel` | **recusa** `javascript:`, `data:`, `vbscript:`; normaliza esquema em minúsculas |
+| `LUrl` | rota interna | `LUrl::new("/…")` · `LUrl::with_segments(base, &[seg])` | começa com `/`, sem `//`, sem `:`, sem `..` (nem `%2e%2e`); o locale/rota é helper do consumidor (C2) |
+| `Src` | URL de recurso | `Src::media(&impl MediaPath)` · `Src::asset(Asset)` · `Src::parse(&str)` | interno validado (`LUrl`) ou `http(s)` absoluto; `javascript:`/`data:` não constroem |
+| `SrcSet` | conjunto responsivo | `SrcSet::from_variants(&[Variant])` | `src` interno validado ou `http(s)` absoluto; ordena por largura, deduplica e emite `Nw`; **determinístico** |
+| `Sizes<'a>` | tamanho de exibição | `Sizes::new(&str)` validado | gramática `(condition) length`, com `length = <n><unidade> \| auto \| calc(…) \| min(…) \| max(…) \| clamp(a, b, c)` |
+| `Media<'a>` | `link media` / preload condicional | `Media::print()`, `Media::new(&str)` | vazia/inválida não emite o atributo |
+| `OpenGraphKind` | `og:type` | `OpenGraphKind::{Website, Article, Product}` | enum fechado; `Website` é o padrão |
+| `Loading` | `loading` de imagem | `Loading::{Eager, Lazy}` | presença explícita; `Img::lazy()` é o atalho |
+| `MediaPreload` | `preload` de vídeo/áudio | `MediaPreload::{None, Metadata, Auto}` | enum fechado |
+| `TrackKind` | `kind` de `<track>` | `TrackKind::{Subtitles, Captions, Descriptions, Chapters, Metadata}` | `subtitles` exige `srclang` (`Track::subtitles`) |
+| `Integrity<'a>` | SRI de preload/stylesheet | `Integrity::parse(&str)` | só `sha256/384/512` + base64; o resto não constrói |
 | `JsonLd` | dado em `<script type="application/ld+json">` | `JsonLd::graph(&Graph)` | escapa `<` `>` `&` `'` como `\u003c` `\u003e` `\u0026` `\u0027` |
-| `Alt<'a>` | texto alternativo | `Alt::new(&str)` · `Alt::decorative()` | `decorative()` é explícito; `new("")` é erro de compilação |
-| `Class<'a>` | classes CSS | `Class::of(&[Token])` | só tokens do vocabulário fechado; sem string livre |
+| `Alt<'a>` | texto alternativo | `Alt::new(&str)` · `Alt::decorative()` | `decorative()` é explícito; `new("")` equivale a `decorative()` |
+| `Class` | classes CSS | `Class::of(&[Token])` | só tokens do vocabulário fechado; sem string livre |
 | `Tone` | cor por identidade | `Tone::Primary` … (enum) | nunca hex; ver [`06-shell-e-tema.md`](06-shell-e-tema.md) |
 | `SectionId` | identidade de seção | enum por módulo | chave do mapa de tokens |
 | `WidthPx`/`HeightPx` | dimensão | `WidthPx::new(u32)` | > 0; emite `width`/`height` como número |
@@ -63,9 +69,10 @@ tem **um** tipo, com **um** construtor seguro e nenhum construtor cru.
 
 Nunca há escape duplo: `Text` já sai escapado; inserir `Text` dentro de `Text` é erro de tipo.
 
-Texto e atributo têm escapes **distintos**: `&<>` no texto, `&<>"` no valor de atributo, e o `JsonLd`
-escapa `<`/`>`/`&`/U+2028/U+2029 mas preserva aspas. Um escape único "para todos os contextos" é
-mais curto e erra o caso que importa (`"` fechando atributo).
+Texto e atributo têm escapes **distintos**: o texto escapa `&` `<` `>` `"` `'`; o valor de atributo
+escapa os mesmos cinco e converte `\r`/`\n`/`\t` em entidades numéricas; o `JsonLd` escapa `<` `>` `&`
+`'` e U+2028/U+2029 como `\uXXXX`. Um escape único "para todos os contextos" é mais curto e erra o
+caso que importa (`"` fechando atributo).
 
 `/` **não** é escapado, ao contrário do Jinja/Askama (`&#x2f;`): dentro de texto ou atributo a barra
 não fecha nada, e a única sequência perigosa — `</script>` dentro de JSON — é fechada pelo escape do
@@ -157,9 +164,6 @@ erro: `img` exige `alt`
   --> src/views/news.rs:12:9
    = ajuda: use `Alt::new("Descrição objetiva da imagem")`
             ou `Alt::decorative()` se a imagem é puramente decorativa
-
-erro: `Alt::new("")` não é um texto alternativo válido
-   = ajuda: para imagem decorativa, use `Alt::decorative()` (explícito)
 
 erro: valor de `href` não permitido: `javascript:`
    = ajuda: use `Href::internal(LUrl::…)` para rotas do site,

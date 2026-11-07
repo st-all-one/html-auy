@@ -9,7 +9,7 @@ e nenhuma depende de disciplina.
 |---|---|---|
 | **texto** | `<script>` em um título de notícia | `Text` escapa os 5 caracteres; `String` não vira `Markup` |
 | **valor de atributo** | `"` em `alt`/`title` | `AttrVal` escapa os 5 + `\r\n\t` |
-| **URL** | `javascript:alert(1)`, `data:text/html,…` | `Href` só constrói `https?`, `mailto`, `tel`, `LUrl`; esquema normalizado |
+| **URL** | `javascript:alert(1)`, `data:text/html,…` | `Href` só constrói `https?`, `mailto`, `tel`, `LUrl`, `Fragment`; esquema normalizado |
 | **script/data** | `</script>` dentro de JSON-LD | `JsonLd` escapa `<` `>` `&` `'` para `\uXXXX` |
 | **CSS** | cor/classe controlada pelo usuário | `Token`/`Tone`/`SectionId` são enums; `style=` não existe |
 
@@ -24,8 +24,9 @@ e nenhuma depende de disciplina.
 
 ```rust
 pub enum Href {
-    Internal(LUrl),              // rota do roteador, com locale
-    External(https::Url),        // exige esquema https (http só por decisão explícita)
+    Internal(LUrl),              // caminho interno validado (`/noticias/…`)
+    Fragment(Fragment),          // `#` ou `#id`; não sai da página
+    External(ExternalUrl),       // http/https; esquema hostil não constrói
     Mailto(MailAddr),            // valida formato
     Tel(PhoneNumber),            // valida E.164
 }
@@ -34,9 +35,13 @@ pub enum Href {
 - **Não existe** `Href::new(&str)`. Não há como construir um `href` arbitrário.
 - `javascript:`, `data:`, `vbscript:`, `file:` são recusados na construção — com erro de tipo, não de
   runtime.
-- `LUrl` só existe via tabela de rotas gerada; logo, link interno **sempre** carrega o locale ativo
-  (o que também fecha o defeito clássico de `href="/noticias"` em site multilíngue).
-- `Src` só aceita chave de mídia ou asset registrado; `srcset` só via `SrcSet::from_variants`.
+- `ExternalUrl` aceita `http`/`https` (e recusa o resto: `javascript:`, `data:`, `vbscript:`,
+  `file:`); a emissão normaliza o esquema para minúsculas.
+- `LUrl` é caminho interno validado (`new`/`with_segments`, com `..` e `%2e%2e` recusados). O locale
+  e a tabela de rotas são helpers do consumidor (C2): o `LUrl` é o tipo, não o roteador.
+- `Src` aceita caminho interno validado (`Src::media`, `Src::asset`) **ou** URL absoluta `http(s)`
+  (`Src::parse`); `javascript:`, `data:`, `vbscript:` e `//host` não constroem. `srcset` só via
+  `SrcSet::from_variants`, que reaplica a mesma gramática a cada variante.
 
 ## 4. CSS
 
@@ -100,6 +105,9 @@ frame-ancestors 'none';
 - Autenticação, CSRF, rate limit — do consumidor.
 - Criptografia de dado em repouso — do consumidor.
 - Conteúdo de texto (se um título é ofensivo) — do consumidor.
+- Privacidade (consentimento, cookies, analytics, retenção) — do consumidor. O crate não abre
+  slot para script de terceiro: o `<head>` é fechado e `Asset::script` só aceita caminho interno,
+  então rastreamento não entra no markup por acidente.
 
 O crate garante que **nada do que ele emite** vira injeção. O resto é fronteira do consumidor.
 

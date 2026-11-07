@@ -8,7 +8,7 @@ vendoriza. Estabilidade tem quatro contratos:
 | Contrato | Garantia |
 |---|---|
 | **sintaxe de `html!`** | congelada por minor; mudança só em major interno |
-| **spec de elementos** | `spec_version` própria (`2.0.0`), congelada por minor do projeto |
+| **spec de elementos** | `spec_version` própria (`2.1.0`), congelada por minor do projeto |
 | **MSRV** | declarada, verificada no CI; subir MSRV é major |
 | **semântica de escape** | nunca muda sem major; tem propriedade testada |
 
@@ -75,8 +75,9 @@ O passo 4 é o que torna atualização segura: qualquer diferença de bytes apar
 ## 7. Compatibilidade com o consumidor (o que o crate assume)
 
 - Rust ≥ 1.92, edição 2024.
-- Tipos do consumidor que o crate referencia por trait: `Msg` (texto), `Locale`, `Asset`, `LUrl`.
-  Todos por **trait**, nunca por tipo concreto — o crate não conhece o domínio.
+- Traits que o consumidor implementa: `Msg` (texto), `ClassToken` (classes), `Variant` (srcset),
+  `MediaPath` (mídia) e `JsonGraph` (JSON-LD). `Asset`, `LUrl`, `Lang` e `Text` são tipos concretos
+  do crate; o domínio entra pelos traits, nunca por tipo concreto do consumidor.
 - Nenhum acesso a I/O, tempo, aleatoriedade ou variável de ambiente.
 
 ### 7.1 Lints, publicação e lockfile

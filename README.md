@@ -2,9 +2,9 @@
 
 **Um vocabulário HTML tipado para Rust, orientado a prevenção de erros, acessibilidade e determinismo.**
 
-`html-auy` é um projeto **open source independente**, mantido como repositório próprio, cujo objetivo é
-especificar e (mais tarde) implementar uma camada de renderização de HTML que trate o **HTML final como
-artefato**, e não como projeção de uma árvore reativa.
+`html-auy` é um projeto **open source independente**, mantido como repositório próprio, que especifica e
+implementa uma camada de renderização de HTML que trate o **HTML final como artefato**, e não como
+projeção de uma árvore reativa.
 
 > **Este projeto NÃO será publicado como crate.**
 > Não há compromisso de semver público, nem obrigação de suportar consumidores externos.
@@ -32,7 +32,7 @@ O quadrante vazio que este projeto ocupa:
 
 > **props tipadas + `Markup` não reativo + atributo validado em compilação + acessibilidade por construção**
 
-O escopo real que motivou o desenho: um portal municipal com 222 views, 6.765 tags e 63 elementos realmente usados (o `spec/elements.toml` declara 97)
+O escopo real que motivou o desenho: um portal municipal com 222 views, 6.765 tags e 63 elementos realmente usados (o `spec/elements.toml` declara 111)
 distintos, exigência de **WCAG 2.2 AA**, **CSP sem inline**, **ETag/304**, **funcionamento sem JavaScript**
 e um conjunto de gates de acessibilidade em CI. Os números que sustentam cada decisão estão em
 [`docs/15-migracao-blade.md`](docs/15-migracao-blade.md).
@@ -41,13 +41,19 @@ e um conjunto de gates de acessibilidade em CI. Os números que sustentam cada d
 
 ## Estado do projeto
 
-**Fase de especificação.** Este repositório começa (e por enquanto contém) pela documentação: princípios,
-arquitetura, tipos, vocabulário de elementos, níveis de validação, acessibilidade, tema em runtime,
-segurança, desempenho, ergonomia, testes, governança e roadmap com critérios de go/no-go.
+**0.1.0 (MVP, F-1 → F6.1).** O workspace `crates/` já contém o produto descrito em
+[`docs/21-implementacao.md`](docs/21-implementacao.md): a biblioteca `html` (`no_std`, zero dependência
+normal) a proc-macro `html-macros` e seu núcleo `html-macros-core`; a tabela gerada de `spec/elements.toml`; o shell
+(`Page`/`View`/`Regions`), os componentes (`Form`/`Field`) e os builders de mídia (`Img`/`Picture`/`Video`/`Audio`/`Track`), além do `audit` opcional (`feature = "audit"`).
 
-Não há código de produção aqui ainda, e isso é deliberado: o valor deste projeto está nas decisões
-documentadas, e três marcos objetivos (`M1`, `M2`, `M3` em [`docs/16-roadmap.md`](docs/16-roadmap.md))
-podem matar o projeto antes que ele custe caro.
+O gate é o do consumidor: `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets
+--all-features -- -D warnings`, `cargo test --workspace` (duas vezes), `cargo test -p html --features
+audit`, `python3 tools/validate_spec.py`, `python3 tools/gen_spec.py --check` e
+`python3 -m unittest discover -s tools/tests`.
+
+Ficam para os marcos **medidos**: `M1`/`M2`/`M3` ([`docs/16-roadmap.md`](docs/16-roadmap.md)) comparam
+linhas e tempo de correção contra o Blade. Os testes de aceitação de leitura (`acceptance_m1`, `m2`,
+`port`) já provam a **igualdade byte a byte** entre a página sem macro e a com macro.
 
 ---
 
@@ -56,7 +62,8 @@ podem matar o projeto antes que ele custe caro.
 1. **O HTML é o artefato.** O que se escreve é o que sai, byte a byte, com escape automático e sem
    `Raw`/`PreEscaped` público.
 2. **Contexto de escape é o tipo, não a posição sintática.** `Href`, `Src`, `Text`, `JsonLd`, `SrcSet`.
-3. **Acessibilidade é ausência de API, não aviso.** `img` sem `Alt` não compila; `div` com `aria-label` é avisado.
+3. **Acessibilidade é ausência de API, não aviso.** `img` sem `Alt` não compila; nomear um `div` não
+   cria landmark — o nome acessível existe só onde o elemento o expõe (`nav`, `section`, `dialog`).
 4. **O componente carrega a acessibilidade.** O desenvolvedor escolhe o componente, não os atributos.
 5. **Zero `unsafe`. Zero runtime. Zero JavaScript embutido.**
 6. **Determinismo total**: ordem de atributos, de `srcset`, de tokens de tema e de assets é canônica.
@@ -81,7 +88,7 @@ Detalhes em [`docs/00-principios.md`](docs/00-principios.md) e [`docs/14-alterna
 | [`docs/00-principios.md`](docs/00-principios.md) | problema, princípios, não-objetivos, glossário |
 | [`docs/01-arquitetura.md`](docs/01-arquitetura.md) | os quatro crates internos, fronteiras, fluxo de request |
 | [`docs/02-tipos-e-contextos.md`](docs/02-tipos-e-contextos.md) | `Markup`, valores tipados, regras de escape |
-| [`docs/03-vocabulario-de-elementos.md`](docs/03-vocabulario-de-elementos.md) | `spec.toml`, invariantes por elemento, conteúdo-modelo |
+| [`docs/03-vocabulario-de-elementos.md`](docs/03-vocabulario-de-elementos.md) | `spec/elements.toml`, invariantes por elemento, conteúdo-modelo |
 | [`docs/04-validacao.md`](docs/04-validacao.md) | os cinco níveis de validação e seus limites |
 | [`docs/05-acessibilidade.md`](docs/05-acessibilidade.md) | WCAG 2.2 AA → mecanismo, regras advisory, ergonomia |
 | [`docs/06-shell-e-tema.md`](docs/06-shell-e-tema.md) | base obrigatória, tokens, `/theme.css`, preview |
@@ -104,7 +111,12 @@ Detalhes em [`docs/00-principios.md`](docs/00-principios.md) e [`docs/14-alterna
 | [`docs/23-acessibilidade-e-css.md`](docs/23-acessibilidade-e-css.md) | a fronteira do decidível: 25 regras medidas do `sniff` divididas em bloco / página / estilo computado |
 | [`docs/24-exportacao.md`](docs/24-exportacao.md) | **pós-MVP:** exportar para PHP/Node/Java — o que viaja (spec + corpus), o que não (o macro) |
 | [`docs/25-exemplo-de-uso.md`](docs/25-exemplo-de-uso.md) | **o uso final, por escrito:** as três telas do portal, o que o compilador recusa, os bytes que saem e o teste que roda no CI — critério de aceite de F0–F6 |
+| [`docs/26-d29-consumidor.md`](docs/26-d29-consumidor.md) | D29 na prática: tema/CSS/`ETag` no consumidor e o desenho hipotético (recusado) dentro do crate |
+| [`docs/27-licoes-do-eta.md`](docs/27-licoes-do-eta.md) | o que o `eta` faz bem, o que foi absorvido no 0.1.0 e o que foi recusado |
+| [`crates/`](crates) | implementação do MVP: `html` (biblioteca), `html-macros` (`html!`) e `html-macros-core` (parser/validação/codegen) |
 | [`spec/elements.toml`](spec/elements.toml) | tabela de elementos e invariantes (dado versionado) |
+| [`spec/data.toml`](spec/data.toml) | tabela de `data-*` do consumidor (gate `tools/data_check.py`) |
+| [`tools/`](tools) | gerador da tabela, validador da spec, gate `data-*` e seus testes |
 
 ---
 

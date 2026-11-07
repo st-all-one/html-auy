@@ -47,9 +47,8 @@ error: `label for="nome"` não tem `id="nome"` no mesmo bloco
    = regra: WCAG 1.3.1
    = ajuda: use `Field::text(FieldName::new("nome"), Msg::Name, &state)` (gera label+id+aria)
 
-error: link com texto ambíguo `Msg::ReadMore`
-   = regra: WCAG 2.4.4
-   = ajuda: use `Msg::ReadNewsTitle` ou adicione `Label::sr_only(Msg::…)`
+> Link com texto ambíguo (WCAG 2.4.4) é regra de **N4/pós-MVP**: o macro não compara variantes de
+> `Msg`, e o `audit` ainda não implementa a checagem.
 ```
 
 ## 3. Formatação
@@ -69,19 +68,22 @@ escrever, não um comando que o impõe.
 - **Nada depende do fonte**: não há teste de idempotência de formatação porque não há formatador — o
   teste que existe é o de **saída** (o mesmo corpo com 2, 4 ou 8 espaços gera bytes idênticos).
 
-## 4. Correções mecânicas (viraram default, não comando)
+## 4. O que o codegen sintetiza (e o que é erro)
 
-O `cq fix` foi cortado (D28/A3): se a correção é mecânica e inequívoca, **o codegen a aplica sozinho** —
-o autor não precisa saber que ela existe. A tabela abaixo é a lista do que o gerador emite:
+`cq fix` foi cortado (D28/A3): correção mecânica e inequívoca vira **default do codegen**; o que não é
+inequívoco vira erro de compilação, nunca sugestão silenciosa.
 
-| Correção | Segurança |
+| Comportamento | Como |
 |---|---|
-| `button` sem `type` → `type="button"` | inequívoca |
-| ícone decorativo → `aria-hidden="true" focusable="false"` | inequívoca quando o `svg` não tem `title` |
-| `<img>` com legenda solta → envolver em `<figure>`+`<figcaption>` | requer heurística; só com `--aggressive` |
-| `th` sem `scope` → `scope="col"` em `thead`, `scope="row"` em `tbody` | inequívoca por posição |
-| `role` redundante → remover | inequívoca |
-| `class` fora do vocabulário | **erro** (o token é enum), nunca sugestão |
+| `target="_blank"` sem `rel` → `rel="noopener noreferrer"` | sintetizado |
+| `target="_blank"` com `rel` literal sem `noopener` | **erro** (`blank_target_implies_noopener`); `rel` computado também |
+| `svg` sem nome acessível → `aria-hidden="true" focusable="false"` | sintetizado; atributo explícito vence |
+| ordem dos atributos = `required ++ allowed` da ordem declarada na spec | determinística |
+| `class` vazio, `srcset`/`sizes` sem valor válido | omitidos pelo `Writer` |
+| `button` sem `type` | **erro**: `type` é obrigatório (nunca o submit implícito) |
+| `th` sem `scope` | **erro**: `scope` é obrigatório |
+| `img` com legenda solta → `<figure>`+`<figcaption>` | **não** existe: o autor escreve `figure`/`figcaption` |
+| `role` redundante | **não** é removido pelo codegen: `role` é allowlist por elemento |
 
 ## 5. Anti-ruído (regra dura)
 

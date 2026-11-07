@@ -51,11 +51,12 @@ Uma fixture por mensagem normativa de [`10-ergonomia.md`](10-ergonomia.md) §2, 
 - `Markup` não construível de fora;
 - atributo desconhecido listando os válidos;
 - conteúdo-modelo violado (3 casos);
-- `Alt::new("")`;
-- `href` com `javascript:`;
 - elemento inexistente na spec;
 - `style`/`on*` (não existem: erro de atributo desconhecido com dica).
 
+- `Alt::new("")` e `javascript:` **não** são casos de `trybuild`: o primeiro equivale a
+  `Alt::decorative()` e o segundo não constrói (`ExternalUrl::parse` devolve `None`) — a prova é de
+  runtime, nos testes de valor.
 - Caso que prova a **ausência** de API de template por string: qualquer tentativa de compilar template
   a partir de `String`/`&str` de runtime falha por tipo (não existe função pública para isso), e a falha
   é fixada em `trybuild`.
@@ -112,10 +113,10 @@ Cada regra de página tem um par de fixtures: uma que passa, uma que falha com a
 ## 11. Como rodar (referência)
 
 ```
-cargo test                      # unidade + golden
-cargo test --features trybuild  # mensagens (compila fixtures)
-cargo fuzz run parser           # parser
-cargo test --features audit     # spec + validação + golden + trybuild + N4 (D30)
+cargo test                          # unidade + integração + golden + doc-tests
+cargo test -p html --test ui        # mensagens (trybuild)
+cargo test -p html --features audit # N4: invariantes de `output` (D30)
+cargo +nightly fuzz run parser      # parser (crate `fuzz/`, fora do workspace)
 ```
 
 ### 10.1 Gates de processo (herdados do `sniff-css`, ver [`22`](22-rigor.md))
@@ -123,10 +124,10 @@ cargo test --features audit     # spec + validação + golden + trybuild + N4 (D
 | Gate | Comando | Cobre |
 |---|---|---|
 | formato | `cargo fmt --all -- --check` | só opções estáveis no `rustfmt.toml` |
-| lints | `cargo clippy --workspace --all-targets -- -D warnings` | duas camadas: níveis no `Cargo.toml`, valores no `clippy.toml` |
-| supply chain | `cargo deny check` · `cargo audit` · `cargo machete` · `typos` | licença/advisory/dep morta/typo |
+| lints | `cargo clippy --workspace --all-targets --all-features -- -D warnings` | duas camadas: níveis no `Cargo.toml`, valores no `clippy.toml`; a feature `audit` também é lintada |
+| supply chain | `cargo deny check` · `cargo audit` · `cargo machete` | licença/advisory/dep morta (`typos` saiu: dicionário só em inglês, corpus pt-BR) |
 | UB | `cargo miri test -p html --test miri_smoke` | núcleo puro (`forbid(unsafe_code)`) |
-| pânico no parser | `cargo fuzz run parser` (smoke) | input adverso nunca vira pânico — sempre `compile_error!` |
+| pânico no parser | `cargo +nightly fuzz run parser` (smoke) | input adverso nunca vira pânico — sempre `compile_error!`; profundidade de aninhamento tem teto de 64 |
 | golden | `cargo test` + `UPDATE_GOLDEN=1` para regenerar | bytes determinísticos, comparação byte-for-byte |
 
 ### 11.0 Gates fora do crate
@@ -135,13 +136,15 @@ cargo test --features audit     # spec + validação + golden + trybuild + N4 (D
 |---|---|
 | `tools/validate_spec.py` | spec ↔ docs (escopos, contagens, rastreabilidade de invariante) |
 | `tools/data-check.py` (D26) | `data-*` declarado ↔ usado ↔ lido pelo JS |
-| `N4` (`dev-dependency`) | as 3 invariantes de `output` sobre o HTML final |
+| `N4` (`feature = "audit"`) | as 12 regras de `output` sobre o HTML final |
 
 ## 11.1 Inventário mínimo de `trybuild` (uma mensagem = um caso)
 
 `elemento desconhecido` · `atributo desconhecido` · `atributo obrigatório ausente` · `aninhamento
-ilegal` · `valor fora do enum` · `role` inválido · `aria-*` fora do enum · `aria-hidden` em focável ·
-`label` sem `id` pareado · `srcset` sem `sizes`/dims · `elemento de documento em html!` · `<form>` à mão ·
-`Form::open` sem `CsrfToken` · `Page::new` sem `title`/`heading` · `Field::text` sem `FieldState`.
+ilegal` · `valor fora do enum` · `role` inválido · `aria-*` fora do enum · `aria-*` fora da allowlist
+do elemento · `aria-hidden` em focável · `label` sem `id` pareado · `srcset` sem `sizes`/dims ·
+`elemento de documento em html!` · `<form>` à mão · `Form::open` com `Method::Post` sem `CsrfToken` ·
+filhos de primitivo validados · `target="_blank"` com `rel` computado · `pattern` com flags ·
+`source`/parte de tabela fora do pai · aninhamento acima de 64 níveis.
 
 Cada caso guarda o `.stderr` versionado: mudar a mensagem é mudar o contrato ([`10`](10-ergonomia.md) §2).
