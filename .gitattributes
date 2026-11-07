@@ -1,21 +1,48 @@
-# knudge:start
-# Notas canônicas: LF mantém `body_hash`/id estáveis (D06/D95).
-/.knudge/notas/** text eol=lf
+# html-auy — line endings and repository classification.
+#
+# The project requires LF everywhere: rustfmt uses Unix newlines, Python tools and
+# documentation are compared as bytes, and CRLF would create noisy diffs.
 
-# Configuração do projeto: texto normalizado.
-/.knudge/config.toml text eol=lf
-/.knudge/templates.toml text eol=lf
-/.knudge/validators.toml text eol=lf
+* text=auto eol=lf
 
-# Log de eventos: append-only; o `id` do conteúdo torna o union seguro (D26/D28/D31).
-/.knudge/eventos/events*.jsonl text eol=lf merge=union
+# Source, data, generated tables, and documentation.
+*.rs            text eol=lf
+*.md            text eol=lf
+*.toml          text eol=lf
+*.json          text eol=lf
+*.jsonl         text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+*.sh            text eol=lf
+*.py            text eol=lf
+*.txt           text eol=lf
+*.html          text eol=lf
+*.css           text eol=lf
+*.svg           text eol=lf
+*.stderr        text eol=lf
+*.snap          text eol=lf
+Cargo.lock      text eol=lf
 
-# Cache vetorial versionado: chave `(body_hash, model)`; union + dedup no loader (D148/D153).
-/.knudge/emb_cache.jsonl text eol=lf merge=union
+# Binary artifacts: never normalize.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary
+*.woff  binary
+*.woff2 binary
+*.gguf  binary
+*.bin   binary
 
-# Derivado e runtime (reconstruíveis, nunca versionados): sem diff/merge automático.
-/.knudge/.idx/** binary linguist-generated
-/.knudge/cache/** binary linguist-generated
-/.knudge/.locks/** binary linguist-generated
-/.knudge/**/*.tmp binary linguist-generated
-# knudge:end
+# GitHub Linguist: the product is Rust; docs, LLM context, and generated tables
+# should not distort the language breakdown.
+*.md                    linguist-documentation
+docs/**                 linguist-documentation
+llms.txt                linguist-documentation
+llms-full.txt           linguist-documentation
+SKILL.md                linguist-documentation
+AGENTS.md               linguist-documentation
+crates/html-auy/src/spec/table.rs              linguist-generated
+crates/html-auy-macros-core/src/table.rs       linguist-generated
+Cargo.lock              linguist-generated
