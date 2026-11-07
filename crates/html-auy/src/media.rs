@@ -6,7 +6,9 @@
 
 use crate::hint::FetchPriority;
 use crate::msg::Text;
-use crate::value::{Alt, AttrVal, AttrValue, HeightPx, Lang, Media, Sizes, Src, SrcSet, WidthPx};
+use crate::value::{
+    Alt, AttrVal, AttrValue, HeightPx, Href, Lang, Media, Sizes, Src, SrcSet, WidthPx,
+};
 use crate::{Markup, escape};
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -290,6 +292,36 @@ impl TrackKind {
     }
 }
 
+/// Link para a transcrição textual de uma mídia falada.
+///
+/// A transcrição não é um `<track>`: ela é conteúdo alternativo, normalmente uma página ou uma
+/// seção com `id`. O escape é o do link; a mídia continua sendo emitida no mesmo `figure`.
+#[derive(Debug, Clone)]
+pub struct Transcript<'a> {
+    href: Href<'a>,
+    label: Text<'a>,
+}
+
+impl<'a> Transcript<'a> {
+    /// Link de transcrição para `href`, com nome acessível em `label`.
+    #[must_use]
+    pub const fn new(href: Href<'a>, label: Text<'a>) -> Self {
+        Self { href, label }
+    }
+
+    /// O HTML do link.
+    #[must_use]
+    pub fn render(&self) -> Markup {
+        let mut out = String::with_capacity(self.label.as_str().len().saturating_add(32));
+        out.push_str("<a href=\"");
+        self.href.write_attr(&mut out);
+        out.push_str("\">");
+        escape::text(&mut out, self.label.as_str());
+        out.push_str("</a>");
+        Markup(out)
+    }
+}
+
 /// Faixa de texto (`<track>`), com `srclang` obrigatório em legendas.
 #[derive(Debug, Clone)]
 pub struct Track<'a> {
@@ -317,6 +349,15 @@ impl<'a> Track<'a> {
     #[must_use]
     pub const fn captions(src: Src<'a>, label: Text<'a>) -> Self {
         Self::new(src, TrackKind::Captions, label)
+    }
+
+    /// Audiodescrição (`kind="descriptions"`).
+    ///
+    /// É o caminho tipado para WCAG 1.2.3/1.2.5 em vídeo; uma transcrição completa
+    /// ([`Transcript`]) é a alternativa de 1.2.3 quando não há faixa descritiva.
+    #[must_use]
+    pub const fn descriptions(src: Src<'a>, label: Text<'a>) -> Self {
+        Self::new(src, TrackKind::Descriptions, label)
     }
 
     /// Tradução (`kind="subtitles"`), com o idioma de origem.
@@ -387,6 +428,7 @@ pub struct Video<'a> {
     playsinline: bool,
     width: Option<WidthPx>,
     height: Option<HeightPx>,
+    transcript: Option<Transcript<'a>>,
     fallback: Option<Text<'a>>,
 }
 
@@ -406,6 +448,7 @@ impl<'a> Video<'a> {
             playsinline: false,
             width: None,
             height: None,
+            transcript: None,
             fallback: None,
         }
     }
@@ -467,6 +510,16 @@ impl<'a> Video<'a> {
         self
     }
 
+    /// Transcrição completa; quando presente, o `<video>` é envolvido em `<figure>` com um link.
+    ///
+    /// Use como alternativa de 1.2.3 quando o vídeo não tem faixa `descriptions`; para 1.2.5,
+    /// prefira [`Track::descriptions`].
+    #[must_use]
+    pub fn transcript(mut self, transcript: Transcript<'a>) -> Self {
+        self.transcript = Some(transcript);
+        self
+    }
+
     /// Texto de fallback para navegador sem suporte.
     #[must_use]
     pub const fn fallback(mut self, text: Text<'a>) -> Self {
@@ -474,7 +527,7 @@ impl<'a> Video<'a> {
         self
     }
 
-    /// O HTML do `<video>`.
+    /// O HTML do `<video>` (ou do `<figure>` quando há transcrição).
     #[must_use]
     pub fn render(&self) -> Markup {
         let mut out = String::with_capacity(256);
@@ -518,7 +571,7 @@ impl<'a> Video<'a> {
             escape::text(&mut out, text.as_str());
         }
         out.push_str("</video>");
-        Markup(out)
+        with_transcript(Markup(out), self.transcript.as_ref())
     }
 }
 
@@ -530,6 +583,7 @@ pub struct Audio<'a> {
     controls: bool,
     preload: Option<MediaPreload>,
     looping: bool,
+    transcript: Option<Transcript<'a>>,
     fallback: Option<Text<'a>>,
 }
 
@@ -543,6 +597,7 @@ impl<'a> Audio<'a> {
             controls: true,
             preload: None,
             looping: false,
+            transcript: None,
             fallback: None,
         }
     }
@@ -575,6 +630,16 @@ impl<'a> Audio<'a> {
         self
     }
 
+    /// Transcrição completa; quando presente, o `<audio>` é envolvido em `<figure>` com um link.
+    ///
+    /// É o caminho tipado para 1.2.1 em áudio falado. `Track` não substitui transcrição: áudio não
+    /// tem área visual para legenda.
+    #[must_use]
+    pub fn transcript(mut self, transcript: Transcript<'a>) -> Self {
+        self.transcript = Some(transcript);
+        self
+    }
+
     /// Texto de fallback.
     #[must_use]
     pub const fn fallback(mut self, text: Text<'a>) -> Self {
@@ -582,7 +647,7 @@ impl<'a> Audio<'a> {
         self
     }
 
-    /// O HTML do `<audio>`.
+    /// O HTML do `<audio>` (ou do `<figure>` quando há transcrição).
     #[must_use]
     pub fn render(&self) -> Markup {
         let mut out = String::with_capacity(192);
@@ -608,6 +673,27 @@ impl<'a> Audio<'a> {
             escape::text(&mut out, text.as_str());
         }
         out.push_str("</audio>");
-        Markup(out)
+        with_transcript(Markup(out), self.transcript.as_ref())
     }
+}
+
+/// Envolve a mídia em `<figure>` apenas quando há transcrição declarada.
+fn with_transcript(media: Markup, transcript: Option<&Transcript<'_>>) -> Markup {
+    let Some(transcript) = transcript else {
+        return media;
+    };
+    let link = transcript.render();
+    let mut out = String::with_capacity(
+        media
+            .as_str()
+            .len()
+            .saturating_add(link.as_str().len())
+            .saturating_add(48),
+    );
+    out.push_str("<figure>");
+    out.push_str(media.as_str());
+    out.push_str("<figcaption>");
+    out.push_str(link.as_str());
+    out.push_str("</figcaption></figure>");
+    Markup(out)
 }

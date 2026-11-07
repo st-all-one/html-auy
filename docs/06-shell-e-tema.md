@@ -24,7 +24,7 @@ impl Page {
 
 // ShellData é builder de DADOS: `ShellData::new(title, heading, lang)`, depois
 // `.description(…)`, `.canonical(…)`, `.alternates(…)`, `.open_graph(…)`, `.hints(…)`, `.dir(…)`,
-// `.schemas(…)`, `.assets(…)`, `.regions(…)`, `.skip(Text)` e `.noscript(Markup)`.
+// `.schemas(…)`, `.assets(…)`, `.regions(…)`, `.skip(Text)`, `.help(Markup)` e `.noscript(Markup)`.
 
 // consumidor (6 linhas, o crate não participa):
 impl IntoResponse for Responder {          // Responder { status, page: Page }
@@ -237,6 +237,7 @@ mapa — não N folhas inline, não cache fragmentado por página.
    é o único gatilho de modo "no-quirks"; sem ele o box model e o `height: 100%` mudam.
 1. Nenhuma página existe sem base estrutural (tipo, não lint).
 2. Skip link (quando `ShellData::skip` recebe texto) e região viva `role="status"` persistente.
+   `ShellData::help(Markup)` fixa o bloco de ajuda depois do header e antes do `<main>` (3.2.6).
    `ShellData::noscript(Markup)` emite o fallback sem JS logo depois da região viva, antes do header,
    sem deslocar o skip link como primeiro focável. `ShellData::htmx_config(HtmxConfig::safe())`
    emite o `<meta name="htmx-config">` seguro antes de qualquer asset.

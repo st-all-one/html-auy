@@ -127,6 +127,22 @@ fn regions_and_modals_keep_order() {
 }
 
 #[test]
+fn help_slot_is_fixed_between_header_and_main() {
+    let mut regions = Regions::new();
+    regions.header = Some(html! { header { (Text::new("topo")) } });
+    let data = ShellData::new(Text::new("Ajuda"), Text::new("Ajuda"), lang())
+        .regions(regions)
+        .help(html! { p { (Text::new("ajuda consistente")) } });
+    let drawn = Page::new(&data, View::new(html! { p { (Text::new("corpo")) } }));
+    let s = drawn.markup().as_str();
+    let header = s.find("topo").expect("header");
+    let help = s.find("ajuda consistente").expect("help");
+    let main = s.find("<main").expect("main");
+    assert!(header < help && help < main, "header < help < main: {s}");
+    assert_eq!(s.matches("ajuda consistente").count(), 1);
+}
+
+#[test]
 fn region_slots_bracket_main() {
     let mut regions = Regions::new();
     regions.header = Some(html! { header { (Text::new("topo")) } });

@@ -162,6 +162,7 @@ assert!(findings.is_empty(), "{findings:#?}");
 | `ids_unique` | `id` repetido |
 | `landmark_names_distinct` | dois landmarks com o mesmo nome |
 | `landmark_names_required` | `nav`/`aside` repetidos sem nome |
+| `aria_current_unique_per_nav` | mais de um `aria-current` atual no mesmo `<nav>` (valor diferente de `false`) |
 | `aria_refs_resolve` | `aria-labelledby`/`describedby`/`controls` para id inexistente |
 | `popover_target_resolves` | `popovertarget` sem `popover` correspondente |
 | `no_content_derived_identifiers` | `id`/`name` fora do alfabeto estável |

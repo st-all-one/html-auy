@@ -1,4 +1,6 @@
 //! Token de `autocomplete` para campos de formulário.
+//!
+//! Além dos tokens simples, aceita o par `username webauthn` (passkey) e `webauthn`.
 
 /// Valor de `autocomplete` validado contra o vocabulário HTML.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -12,6 +14,8 @@ const VALUES: &[&str] = &[
     "additional-name",
     "family-name",
     "username",
+    "username webauthn",
+    "webauthn",
     "email",
     "current-password",
     "new-password",

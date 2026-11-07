@@ -47,7 +47,7 @@ GLOBAL_KINDS = {
 ARIA_KINDS = {"idref": "IdRef", "idref-list": "IdRefList", "text": "Text"}
 
 # Atributos cujo literal é lista de tokens (validados um a um, sem reordenar).
-TOKEN_ATTRS = {"rel", "sandbox"}
+TOKEN_ATTRS = {"autocomplete", "rel", "sandbox"}
 # Atributos cujo literal não é enum nem token, e sim uma gramática.
 GRAMMAR_ATTRS = {
     ("source", "type"): "Mime",

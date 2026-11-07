@@ -67,7 +67,9 @@ pub use hint::{
 };
 pub use html_auy_macros::html;
 pub use markup::{Markup, Render};
-pub use media::{Audio, Img, Loading, MediaPreload, Picture, Source, Track, TrackKind, Video};
+pub use media::{
+    Audio, Img, Loading, MediaPreload, Picture, Source, Track, TrackKind, Transcript, Video,
+};
 pub use msg::{Msg, Text};
 pub use response::{MainSwap, Partial, RegionUpdate, RequestClass, Swap, Sync};
 pub use shell::{

@@ -18,13 +18,14 @@ use html5ever::{ParseOpts, parse_document};
 use markup5ever_rcdom::{Handle, NodeData, RcDom};
 
 /// Ordem fixa das regras na saída (desempate quando duas caem no mesmo nó).
-const RULES: [&str; 12] = [
+const RULES: [&str; 13] = [
     "main_unique",
     "single_h1",
     "heading_levels_no_skips",
     "ids_unique",
     "landmark_names_distinct",
     "landmark_names_required",
+    "aria_current_unique_per_nav",
     "aria_refs_resolve",
     "popover_target_resolves",
     "no_content_derived_identifiers",
@@ -47,6 +48,8 @@ struct Snapshot {
     tag: String,
     attrs: Vec<(String, String)>,
     handle: Handle,
+    /// `<nav>` ancestral que contém o elemento, se houver.
+    nav: Option<usize>,
 }
 
 impl Snapshot {
@@ -82,6 +85,7 @@ pub fn check(html: &str) -> Vec<Finding> {
     check_headings(&elements, &mut emits);
     check_duplicate_ids(&elements, &mut emits);
     check_landmark_names(&landmark_names, &mut emits);
+    check_aria_current(&elements, &mut emits);
     check_aria_refs(&elements, &ids, &mut emits);
     check_popover(&elements, &ids, &mut emits);
     check_identifiers(&elements, &mut emits);
@@ -109,11 +113,17 @@ fn push(emits: &mut Vec<Emit>, at: usize, rule: &'static str, message: String) {
 /// Pré-ordem iterativa (pilha explícita: documento hostil não derruba a auditoria).
 fn collect(document: &Handle) -> Vec<Snapshot> {
     let mut elements = Vec::new();
-    let mut stack: Vec<Handle> = Vec::new();
-    push_children(document, &mut stack);
-    while let Some(handle) = stack.pop() {
+    let mut stack: Vec<(Handle, Option<usize>)> = Vec::new();
+    let mut next_nav = 0usize;
+    push_children_with_nav(document, &mut stack, None);
+    while let Some((handle, nav)) = stack.pop() {
+        let mut child_nav = nav;
         if let NodeData::Element { name, attrs, .. } = &handle.data {
             let tag = name.local.as_ref().to_string();
+            if tag == "nav" {
+                child_nav = Some(next_nav);
+                next_nav = next_nav.saturating_add(1);
+            }
             let attrs = attrs
                 .borrow()
                 .iter()
@@ -123,11 +133,23 @@ fn collect(document: &Handle) -> Vec<Snapshot> {
                 tag,
                 attrs,
                 handle: handle.clone(),
+                nav,
             });
         }
-        push_children(&handle, &mut stack);
+        push_children_with_nav(&handle, &mut stack, child_nav);
     }
     elements
+}
+
+fn push_children_with_nav(
+    handle: &Handle,
+    stack: &mut Vec<(Handle, Option<usize>)>,
+    nav: Option<usize>,
+) {
+    let children = handle.children.borrow();
+    for child in children.iter().rev() {
+        stack.push((child.clone(), nav));
+    }
 }
 
 /// Empilha os filhos em ordem inversa para que a pré-ordem saia da esquerda para a direita.
@@ -320,6 +342,29 @@ fn check_landmark_names(landmarks: &[Landmark], emits: &mut Vec<Emit>) {
                     format!("`{tag}` sem nome acessível: há {count} `{tag}` no documento"),
                 );
             }
+        }
+    }
+}
+
+fn check_aria_current(elements: &[Snapshot], emits: &mut Vec<Emit>) {
+    let mut seen: BTreeMap<usize, usize> = BTreeMap::new();
+    for (index, element) in elements.iter().enumerate() {
+        let Some(current) = element.attr("aria-current") else {
+            continue;
+        };
+        if current.eq_ignore_ascii_case("false") {
+            continue;
+        }
+        let Some(nav) = element.nav else {
+            continue;
+        };
+        if seen.insert(nav, index).is_some() {
+            push(
+                emits,
+                index,
+                "aria_current_unique_per_nav",
+                "mais de um `aria-current` no mesmo `<nav>`".to_string(),
+            );
         }
     }
 }

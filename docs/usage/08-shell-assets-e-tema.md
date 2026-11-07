@@ -23,6 +23,7 @@ let data = ShellData::new(
 |---|---|
 | `new(title, heading, lang)` | documento mínimo |
 | `.skip(Text)` | skip link para `#main`; primeiro focável |
+| `.help(Markup)` | bloco de ajuda fixo entre header e `<main>` (WCAG 3.2.6) |
 | `.description(Text)` | `<meta name="description">` |
 | `.canonical(ExternalUrl)` | `<link rel="canonical">` e `og:url` |
 | `.manifest(LUrl)` | `<link rel="manifest">` |
@@ -73,7 +74,7 @@ move posição.
     → hints → htmx-config → assets → JSON-LD
   </head>
   <body [class] [data-*]>
-    skip link → role=status → noscript → header → before_main
+    skip link → role=status → noscript → header → help → before_main
     → main#main[h1 + view] → after_main → footer → modals
   </body>
 </html>
@@ -85,6 +86,7 @@ Consequências:
 - `<main id="main" tabindex="-1">` é do shell; a view começa no seu conteúdo.
 - O `<div role="status" aria-atomic="true">` é sempre emitido, vazio; é a região viva persistente.
 - `noscript` fica depois do status e antes do header; o skip link continua sendo o primeiro focável.
+- `help` fica depois do header e antes do `before_main`; o consumidor decide o conteúdo.
 - Modais ficam no fim do `<body>`, fora do `<main>`.
 
 ## Assets

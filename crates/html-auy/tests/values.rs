@@ -1,9 +1,9 @@
 //! Matrizes de valores: cada tipo recusa o que não pode emitir e emite o que promete.
 
 use html_auy::{
-    Alt, AttrValue, Class, ClassToken, Dir, ExternalUrl, FieldName, Fragment, HeightPx, Href, Id,
-    Integrity, JsonGraph, JsonLd, LUrl, Label, Lang, MailAddr, Media, Offset, PhoneNumber, Render,
-    Sizes, Src, SrcSet, Timestamp, Tone, Variant, WidthPx,
+    Alt, AttrValue, Autocomplete, Class, ClassToken, Dir, ExternalUrl, FieldName, Fragment,
+    HeightPx, Href, Id, Integrity, JsonGraph, JsonLd, LUrl, Label, Lang, MailAddr, Media, Offset,
+    PhoneNumber, Render, Sizes, Src, SrcSet, Timestamp, Tone, Variant, WidthPx,
 };
 
 /// Escreve um valor de atributo como o crate faria.
@@ -571,4 +571,22 @@ fn integrity_validates_sri_metadata() {
             "{bad:?} deveria ser recusado"
         );
     }
+}
+
+#[test]
+fn autocomplete_accepts_passkey_tokens() {
+    assert_eq!(
+        Autocomplete::parse("username webauthn")
+            .expect("token de passkey")
+            .as_str(),
+        "username webauthn"
+    );
+    assert_eq!(
+        Autocomplete::parse("webauthn")
+            .expect("token webauthn")
+            .as_str(),
+        "webauthn"
+    );
+    assert!(Autocomplete::parse("username  webauthn").is_none());
+    assert!(Autocomplete::parse("passkey").is_none());
 }

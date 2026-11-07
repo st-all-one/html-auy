@@ -68,6 +68,14 @@ fn hgroup_requires_a_heading_and_accepts_a_subtitle() {
 }
 
 #[test]
+fn popover_hint_is_a_declared_value() {
+    let drawn = html! {
+        div id="tt" popover="hint" { (Text::new("dica")) }
+    };
+    assert!(drawn.as_str().contains("popover=\"hint\""));
+}
+
+#[test]
 fn datalist_options_and_input_list_resolve() {
     let drawn = html! {
         label for="cidade" { (Text::new("Cidade")) }

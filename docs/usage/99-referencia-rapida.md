@@ -8,12 +8,12 @@
 
 ```rust
 use html_auy::{
-    html, Action, Alt, Asset, Assets, AttrVal, Autocomplete, Class, ClassList, ClassToken,
+    html, Action, Alt, Asset, Assets, AttrVal, Audio, Autocomplete, Class, ClassList, ClassToken,
     CsrfToken, DataAttr, ExternalUrl, Field, FieldName, FieldState, Form, HeightPx, Href,
     Img, InputType, Integrity, JsonGraph, JsonLd, Label, Lang, LUrl, Markup, Media, Method,
     Msg, Offset, Page, Partial, Picture, Regions, Render, RootAttributes, SelectOption,
-    ShellData, Sizes, Src, SrcSet, Swap, Text, Timestamp, Tone, Track, Variant, View,
-    WidthPx, HtmxConfig, OpenGraph, OpenGraphKind, Hint, Preload,
+    ShellData, Sizes, Src, SrcSet, Swap, Text, Timestamp, Tone, Track, Transcript, Variant, View,
+    Video, WidthPx, HtmxConfig, OpenGraph, OpenGraphKind, Hint, Preload,
 };
 ```
 
@@ -117,12 +117,19 @@ let img = Img::new(src, Alt::new("…"), WidthPx::new(720), HeightPx::new(480))
     .lazy();
 
 let video = Video::new(src, Track::captions(vtt, Text::new("Legendas")))
+    .track(Track::descriptions(ad_vtt, Text::new("Audiodescrição")))
     .poster(poster)
     .dimensions(WidthPx::new(1280), HeightPx::new(720));
+
+let audio = Audio::new(src).transcript(Transcript::new(
+    Href::internal(LUrl::new("/transcricao").expect("rota")),
+    Text::new("Transcrição"),
+));
 ```
 
-`Picture::new(fallback).source(Source::new(srcset, sizes)?)`; `Audio::new(src)`;
-`Track::subtitles(vtt, Text, Lang)`.
+`Picture::new(fallback).source(Source::new(srcset, sizes)?)`;
+`Track::subtitles(vtt, Text, Lang)`; `Video::transcript(Transcript)` é a alternativa de 1.2.3
+quando não há `descriptions`.
 
 ## Shell e assets
 
@@ -184,7 +191,7 @@ assert!(findings.is_empty(), "{findings:#?}");
 ```
 
 Regras: `main_unique`, `single_h1`, `heading_levels_no_skips`, `ids_unique`,
-`landmark_names_distinct`, `landmark_names_required`, `aria_refs_resolve`,
+`landmark_names_distinct`, `landmark_names_required`, `aria_current_unique_per_nav`, `aria_refs_resolve`,
 `popover_target_resolves`, `no_content_derived_identifiers`, `no_inline_script`,
 `no_style_attribute`, `no_event_handler`.
 

@@ -70,9 +70,9 @@ Toda invariante declara dono em `spec/elements.toml` → `[invariants]`. O escop
 |---|---|---|---|
 | `block` | a macro, no `html!` | **erro de compilação**, com span no token | **59** |
 | `type` | o construtor do crate (`Page`, `Form`) | **não compila** sem o dado: um `main`, um `title`, um banner no root, um CSRF | **4** |
-| `output` | `N4` sobre o HTML final | falha o **teste**; nenhum dos dois vê | **7** |
+| `output` | `N4` sobre o HTML final | falha o **teste**; nenhum dos dois vê | **8** |
 
-As **7 de saída** — as únicas que ficam em cima de teste:
+As **8 de saída** — as únicas que ficam em cima de teste:
 
 | Invariante | Por que nenhum tipo responde |
 |---|---|
@@ -82,6 +82,7 @@ As **7 de saída** — as únicas que ficam em cima de teste:
 | `ids_unique` | dois componentes independentes podem escolher o mesmo `id` (DOM clobbering, `label` quebrado) |
 | `heading_levels_no_skips` | a sequência `h2 → h4` só existe na página montada (WCAG 1.3.1) |
 | `popover_target_resolves` | o alvo do `popovertarget` pode viver em outro componente dinâmico |
+| `aria_current_unique_per_nav` | `aria-current` só é único dentro do conjunto que o `<nav>` delimita; dois fragmentos independentes podem repetir o estado em navegações diferentes |
 | `single_h1` | o `<h1>` pode vir do shell (`Page`) ou da view; só o documento montado sabe se há exatamente um |
 
 As **4 de tipo** são o que o construtor ainda garante: `Page` recebe **exatamente uma** `View`, o
@@ -123,6 +124,7 @@ documentada (ou o contrário). O nome é a chave da mensagem de erro e do teste.
 | `main_unique`, `main_tabindex_minus_one` | `main` | um `main` por página; `tabindex="-1"` fixo para o skip link |
 | `landmark_names_distinct` | `nav`, `aside`, `section` | landmarks do mesmo tipo precisam de nomes distintos |
 | `landmark_names_required` | `nav`, `aside` | com dois ou mais landmarks do mesmo tipo, cada um precisa de nome acessível (`aria-label`/`aria-labelledby`) |
+| `aria_current_unique_per_nav` | `nav` (conteúdo) | no máximo um `aria-current` **atual** (valor diferente de `false`) por `<nav>`; navegações distintas podem ter o seu próprio item atual |
 | `section_has_heading_or_name` | `section` | `section` sem heading e sem nome acessível não é seção — use `div` |
 | `alt_empty_means_decorative` | `img` | `alt` só é vazio via `Alt::decorative()` (imagem decorativa explícita) |
 | `intrinsic_dimensions_required` | `img` | `width` + `height` obrigatórios: sem dimensão intrínseca o espaço reservado é zero e o `CLS` estoura |
@@ -131,7 +133,7 @@ documentada (ou o contrário). O nome é a chave da mensagem de erro e do teste.
 | `label_or_labelledby_in_block` | `input`, `select`, `textarea` | controle com `id` e `label for`/`aria-labelledby` resolvível no mesmo bloco |
 | `label_exempt_types` | `input` | `hidden`/`submit`/`reset`/`button`/`image` dispensam rótulo |
 | `attribute_by_input_type` | `input` | atributo só existe se o `type` o admite (`min`/`max`/`step` são de número/data) |
-| `autocomplete_enum` | `input` | `autocomplete` é enum com tokens de identidade (WCAG 3.3.7 — nível A) |
+| `autocomplete_enum` | `input` | `autocomplete` é lista de tokens de identidade (inclui `username webauthn`; WCAG 1.3.5/3.3.8) |
 | `pattern_flags_forbidden` | `input` | `pattern` é regex comum, sem flags inline; mensagem de erro é do `Field`, não do navegador |
 | `for_matches_id_in_block` | `label` | `for` aponta para controle existente no bloco; envolver o controle dispensa `for` |
 | `type_enum` | `button` | `type` é obrigatório e enumerado (nunca o `submit` implícito) |

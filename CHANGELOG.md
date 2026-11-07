@@ -4,6 +4,18 @@ All notable changes to `html-auy` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow the policy in
 [`docs/11-estabilidade.md`](docs/11-estabilidade.md).
 
+## [Unreleased]
+
+### Added
+
+- `Transcript`, `Audio::transcript`, and `Video::transcript` for WCAG 1.2.1/1.2.3 alternatives;
+  `Track::descriptions` for WCAG 1.2.3/1.2.5 audio description.
+- `ShellData::help` for a consistent help block (WCAG 3.2.6).
+- `Autocomplete` accepts `username webauthn` and `webauthn` (accessible authentication / passkeys).
+- `popover="hint"` in the global vocabulary.
+- `audit::check` rule `aria_current_unique_per_nav`.
+- Specific `accesskey` diagnostic pointing to the skip link instead of `Alt+1`.
+
 ## [0.1.0] - 2026-11-07
 
 First public release.

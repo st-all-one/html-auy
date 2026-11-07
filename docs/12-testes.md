@@ -136,7 +136,7 @@ cargo +nightly fuzz run parser      # parser (crate `fuzz/`, fora do workspace)
 |---|---|
 | `tools/validate_spec.py` | spec ↔ docs (escopos, contagens, rastreabilidade de invariante) |
 | `tools/data_check.py` (D26) | `data-*` declarado ↔ usado ↔ lido pelo JS |
-| `N4` (`feature = "audit"`) | as 12 regras de `output` sobre o HTML final |
+| `N4` (`feature = "audit"`) | as 13 regras de `output` sobre o HTML final |
 
 ## 11.1 Inventário mínimo de `trybuild` (uma mensagem = um caso)
 

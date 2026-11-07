@@ -110,7 +110,7 @@ O HTML de `Field::text("nome", "Nome", state)` é, em forma canônica:
 - `FieldName::new("nome")` normaliza o `name` e deriva `id="f-nome"`.
 - `name` é o nome de submissão; `id` é `f-` + nome normalizado.
 - `aria-describedby` liga ajuda e erro na ordem; não escreva esses ids à mão.
-- `autocomplete` só sai de `Autocomplete::parse`; não aceita string livre.
+- `autocomplete` só sai de `Autocomplete::parse`; não aceita string livre. Para passkey, `username webauthn` é um valor válido.
 
 ### `select`
 

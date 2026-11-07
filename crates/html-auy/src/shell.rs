@@ -473,6 +473,7 @@ pub struct ShellData<'a> {
     pub(crate) body_attributes: RootAttributes,
     pub(crate) regions: Regions,
     pub(crate) skip: Option<crate::msg::Text<'a>>,
+    pub(crate) help: Option<crate::Markup>,
     pub(crate) noscript: Option<crate::Markup>,
     pub(crate) alternates: Vec<Alternate<'a>>,
     pub(crate) open_graph: Option<OpenGraph<'a>>,
@@ -502,6 +503,7 @@ impl<'a> ShellData<'a> {
             body_attributes: RootAttributes::new(),
             regions: Regions::new(),
             skip: None,
+            help: None,
             noscript: None,
             alternates: Vec::new(),
             open_graph: None,
@@ -516,6 +518,16 @@ impl<'a> ShellData<'a> {
     #[must_use]
     pub const fn skip(mut self, text: crate::msg::Text<'a>) -> Self {
         self.skip = Some(text);
+        self
+    }
+
+    /// Bloco de ajuda do documento, emitido **depois do header e antes do `<main>`**.
+    ///
+    /// O slot fixo é o que torna a ajuda consistente entre páginas (SC 3.2.6): o consumidor decide
+    /// o conteúdo, o shell decide a posição. Sem chamada, nada é emitido.
+    #[must_use]
+    pub fn help(mut self, help: crate::Markup) -> Self {
+        self.help = Some(help);
         self
     }
 
@@ -748,6 +760,9 @@ impl Page {
         }
         if let Some(header) = &data.regions.header {
             out.push_str(header.as_str());
+        }
+        if let Some(help) = &data.help {
+            out.push_str(help.as_str());
         }
         if let Some(before_main) = &data.regions.before_main {
             out.push_str(before_main.as_str());

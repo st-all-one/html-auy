@@ -17,7 +17,10 @@ Um aviso que dispara 20 vezes por página é desligado na segunda semana. Por is
 | SC | Requisito | Mecanismo |
 |---|---|---|
 | 1.1.1 | conteúdo não textual tem alternativa | **tipo**: `img` exige `Alt`; decorativa = `Alt::decorative()` explícito; `svg` exige `title` ou `aria-hidden` |
+| 1.2.1 | alternativa para áudio pré-gravado | **tipo**: `Audio::transcript(Transcript)` envolve o player em `figure` com link para a transcrição; `Track` não substitui transcrição |
 | 1.2.2 | legendas em vídeo pré-gravado | **tipo**: `Video::new(src, Captions)` — sem `Caption`, não compila |
+| 1.2.3 | audiodescrição ou alternativa | **tipo**: `Video::track(Track::descriptions(…))` ou `Video::transcript(Transcript)` |
+| 1.2.5 | audiodescrição (AA) | **tipo**: `Track::descriptions`; `Transcript` cobre 1.2.3, não substitui a faixa descritiva de 1.2.5 |
 | 1.3.1 | informação e relações | **tipo** (semântica + `label`/`for` + `scope`) + **N4** (estrutura de página) |
 | 1.3.2 | sequência significativa | **estrutural**: a ordem de leitura é a ordem do DOM (não existe `style`, logo não existe `order` visual divergente) |
 | 1.3.4 | orientação | **CSS** (`@media (orientation)`) + gate de design |
@@ -44,12 +47,12 @@ Um aviso que dispara 20 vezes por página é desligado na segunda semana. Por is
 | 3.1.1 | idioma da página | **tipo**: `html lang` obrigatório e BCP-47 válido |
 | 3.1.2 | idioma de partes | **tipo**: `lang=(Lang)` em qualquer elemento (atributo global BCP-47) |
 | 3.2.1/3.2.2 | sem mudança por foco/entrada | **estrutural**: não existe `on*`; mudança só por submit |
-| 3.2.6 | ajuda consistente (2.2, **A**) | **consumidor**: se houver ajuda, ela ocupa o mesmo slot/posição em todas as páginas; o shell fixa a ordem das regiões, não o conteúdo |
+| 3.2.6 | ajuda consistente (2.2, **A**) | **shell**: `ShellData::help(Markup)` fixa o bloco entre header e `<main>`; o consumidor decide conteúdo e presença |
 | 3.3.1 | identificação de erro | **tipo**: `Field` exige `erro: Option<Text>` e emite `aria-invalid` |
 | 3.3.2 | rótulos ou instruções | **tipo**: `Field` exige `label`; `ajuda: Option<Text>` vira `aria-describedby` |
 | 3.3.3 | sugestão de correção | **tipo**: `Field` recebe o texto de sugestão em `erro: Option<Text>` |
-| 3.3.7 | entrada redundante (2.2, **nível A**) | **pós-MVP**: `Autocomplete` enum (tokens de identidade) e reuso de valor no mesmo fluxo |
-| 3.3.8 | autenticação acessível — mínimo (2.2, **AA**) | **pós-MVP**: campo de senha (`input type=password`) com `autocomplete="current-password"/"new-password"`, sem teste cognitivo e sem bloqueio de gerenciador de senha. 3.3.9 (AAA) fora da meta |
+| 3.3.7 | entrada redundante (2.2, **nível A**) | **tipo**: `Autocomplete` com tokens de identidade; o reuso de valor no mesmo fluxo é do consumidor |
+| 3.3.8 | autenticação acessível — mínimo (2.2, **AA**) | **tipo**: `input type=password` com `Autocomplete` (`current-password`/`new-password`/`username webauthn`), sem CAPTCHA e sem bloquear colar/gerenciador; o fluxo de passkey é do consumidor. 3.3.9 (AAA) fora da meta |
 | 4.1.2 | nome, papel, valor | **tipo**: `a`/`button` exigem nome acessível; `Dialog` gera `aria-labelledby` (pós-MVP); **N4**: com dois ou mais `nav`/`aside`, cada um exige nome (`landmark_names_required`) |
 | 4.1.3 | mensagens de status | **tipo + shell**: região viva (`role="status"` + `aria-atomic="true"`) **persistente no shell**, vazia no primeiro render e preenchida por swap/navegação. Sem `aria-atomic` só o trecho alterado é anunciado; `role="alert"` **nunca** pré-existente estático (não é anunciado) |
 
@@ -66,7 +69,7 @@ primitivos, garantidos pelo catálogo de `Msg`.
 
 **Estado:** entregues `Page`, `View`, `Form`, `Field::text`, `Field::input` (todos os 14 tipos nativos),
 `Field::textarea`, `Field::select`, `Field::file`, `Field::checkbox`, `Field::checkbox_group`,
-`Field::radio_group` e `autocomplete` validado; `Img`, `Picture`, `Video`, `Audio` e `Track` vivem em
+`Field::radio_group` e `autocomplete` validado; `Img`, `Picture`, `Video`, `Audio`, `Track` e `Transcript` vivem em
 `media`. As demais linhas desta tabela seguem o catálogo pós-MVP; a coluna “Emite” é o contrato delas.
 
 | Primitivo | Emite |
@@ -75,7 +78,7 @@ primitivos, garantidos pelo catálogo de `Msg`.
 | `Field::checkbox`/`checkbox_group`/`radio_group` | `<fieldset>`+`<legend>`, ids `f-<nome>-<índice>`, `name[]` só em checkbox, `aria-describedby`/`aria-invalid`/`aria-required` no grupo e `checked`/`disabled` por opção; `None` quando todas as opções estão `disabled` |
 | `Dialog` | `<dialog>`, `aria-labelledby` com id gerado, botão de fechar com nome, foco inicial |
 | `Table` | `<caption>`, `<th scope>`, agrupamento `thead/tbody` |
-| `Img`/`Picture`/`Video`/`Audio`/`Track` | `Img` com `src`/`alt`/`width`/`height` obrigatórios e `srcset`+`sizes` acoplados; `Picture` com `source` ordenado e `img` de fallback; `video` exige `track kind="captions"`; `audio` aceita faixas; `Track` com `srclang` em `subtitles` |
+| `Img`/`Picture`/`Video`/`Audio`/`Track`/`Transcript` | `Img` com `src`/`alt`/`width`/`height` obrigatórios e `srcset`+`sizes` acoplados; `Picture` com `source` ordenado e `img` de fallback; `video` exige `track kind="captions"`, `Track::descriptions` cobre 1.2.3/1.2.5; `Audio::transcript` cobre 1.2.1; `Track` com `srclang` em `subtitles` |
 | `Icon` | `<svg aria-hidden="true" focusable="false">` por padrão; nomeável só por `Icon::labelled` |
 | `Button`/`LinkButton` | `type`, alvo ≥ 2.75 rem, estado (`aria-pressed`/`aria-expanded`) quando aplicável |
 | `Alert`/`Toast` | `role="status"` **sem** `aria-live` adicional (o papel já implica `polite`); `role="alert"` só para erro que interrompe, e também sem `aria-live` (duplicar faz o VoiceOver iOS anunciar duas vezes) |
@@ -97,7 +100,7 @@ que agora é **teste que falha** no CI do consumidor, não aviso com ratchet:
 | `tabindex` positivo | 2.4.3 (ordem artificial) |
 | `title` como único nome acessível | 4.1.2 (não aparece em toque/teclado) |
 | estado só por cor | 1.4.1 |
-| `id` duplicado / `h1` duplicado / salto de nível | 1.3.1, 2.4.6 (as 7 invariantes de `output`) |
+| `id` duplicado / `h1` duplicado / salto de nível | 1.3.1, 2.4.6 (as 8 invariantes de `output`) |
 | nomes de landmark repetidos | 1.3.1 |
 
 As demais regras que eram advisory **não** viraram teste porque não precisavam de teste: viraram tipo,

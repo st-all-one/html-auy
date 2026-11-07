@@ -316,6 +316,7 @@ impl<'a> ShellData<'a> {
     pub fn hint(self, Hint<'a>) -> Self;                                  // um hint isolado
     pub fn regions(self, Regions) -> Self;
     pub fn skip(self, Text<'a>) -> Self;                                  // skip link (SC 2.4.1)
+    pub fn help(self, Markup) -> Self;                                    // ajuda fixa entre header e main (SC 3.2.6)
     pub fn noscript(self, Markup) -> Self;                                // fallback sem JS
     pub fn htmx_config(self, HtmxConfig) -> Self;                         // meta seguro, se houver htmx
 }
@@ -415,7 +416,7 @@ impl<'a> Picture<'a> { pub fn new(Img<'a>) -> Self; pub fn source(self, Source<'
 pub struct Source<'a> { /* srcset, sizes, media, mime */ }
 impl<'a> Source<'a> { pub fn new(SrcSet<'a>, Sizes<'a>) -> Option<Self>; pub const fn media(self, Media<'a>) -> Self;
                        pub const fn mime(self, AttrVal<'a>) -> Self; pub fn render(&self) -> Markup; }
-pub struct Video<'a> { /* src, tracks, controls, preload, poster, muted, looping, playsinline, dims, fallback */ }
+pub struct Video<'a> { /* src, tracks, controls, preload, poster, muted, looping, playsinline, dims, transcript, fallback */ }
 impl<'a> Video<'a> {
     pub fn new(Src<'a>, Track<'a>) -> Self;                 // captions obrigatórias
     pub fn track(self, Track<'a>) -> Self;
@@ -427,22 +428,27 @@ impl<'a> Video<'a> {
     pub const fn playsinline(self, bool) -> Self;
     pub const fn dimensions(self, WidthPx, HeightPx) -> Self;
     pub const fn fallback(self, Text<'a>) -> Self;
+    pub fn transcript(self, Transcript<'a>) -> Self;
     pub fn render(&self) -> Markup;
 }
-pub struct Audio<'a> { /* src, tracks, controls, preload, looping, fallback */ }
+pub struct Audio<'a> { /* src, tracks, controls, preload, looping, transcript, fallback */ }
 impl<'a> Audio<'a> { pub fn new(Src<'a>) -> Self; pub fn track(self, Track<'a>) -> Self;
                      pub const fn controls(self, bool) -> Self; pub const fn preload(self, MediaPreload) -> Self;
                      pub const fn looping(self, bool) -> Self; pub const fn fallback(self, Text<'a>) -> Self;
+                     pub fn transcript(self, Transcript<'a>) -> Self;
                      pub fn render(&self) -> Markup; }
 pub struct Track<'a> { /* src, kind, label, srclang, default */ }
 impl<'a> Track<'a> {
     pub const fn new(Src<'a>, TrackKind, Text<'a>) -> Self;
     pub const fn captions(Src<'a>, Text<'a>) -> Self;
+    pub const fn descriptions(Src<'a>, Text<'a>) -> Self;
     pub const fn subtitles(Src<'a>, Text<'a>, Lang) -> Self;
     pub const fn srclang(self, Lang) -> Self;
     pub const fn is_default(self, bool) -> Self;
     pub fn render(&self) -> Markup;
 }
+pub struct Transcript<'a> { /* href, label */ }
+impl<'a> Transcript<'a> { pub const fn new(Href<'a>, Text<'a>) -> Self; pub fn render(&self) -> Markup; }
 ```
 
 **Desvios do plano aceitos na implementação:** o `CsrfToken` mora no `Method` (fecha o `GET` sem token
@@ -466,7 +472,7 @@ o parser tem teto de **64 níveis** de aninhamento (fonte patológico vira erro,
 
 Parse com `html5ever` (dependência **opcional**, `features = ["audit"]`) + as invariantes de `output`:
 `main_unique`, `single_h1`, `heading_levels_no_skips`, `ids_unique`, `landmark_names_distinct`,
-`landmark_names_required`, `aria_refs_resolve`, `popover_target_resolves` e
+`landmark_names_required`, `aria_current_unique_per_nav`, `aria_refs_resolve`, `popover_target_resolves` e
 `no_content_derived_identifiers`
 ([`23`](23-acessibilidade-e-css.md) §2.1), mais as três de conformidade (`no_inline_script`,
 `no_style_attribute`, `no_event_handler`).

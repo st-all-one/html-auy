@@ -126,6 +126,10 @@ let video = Video::new(
     Text::new("English"),
     Lang::parse("en").expect("idioma"),
 ))
+.track(Track::descriptions(
+    Src::parse("/media/aula-ad.vtt").expect("audiodescrição"),
+    Text::new("Audiodescrição"),
+))
 .fallback(Text::new("Seu navegador não suporta vídeo."));
 
 let markup = video.render();
@@ -136,34 +140,30 @@ let markup = video.render();
 - `dimensions` exige as duas dimensões para evitar layout shift.
 - `preload`, `poster`, `muted`, `looping`, `playsinline` são builders explícitos.
 - `Track::subtitles` exige `Lang` (o `srclang`); `Track::captions` não.
-- Outras faixas (`descriptions`, `chapters`, `metadata`) entram por `Track::new` ou `.track`.
+- `Track::descriptions` é a audiodescrição (WCAG 1.2.3/1.2.5); `chapters`/`metadata` entram por `Track::new` ou `.track`.
+- Sem faixa `descriptions`, use `Video::transcript(Transcript::new(…))` como alternativa de 1.2.3.
 
 ## Áudio
 
 ```rust
-use html_auy::{html, Audio, Href, LUrl, MediaPreload, Src, Text};
+use html_auy::{Audio, Href, LUrl, MediaPreload, Src, Text, Transcript};
+
+let transcript = Transcript::new(
+    Href::internal(LUrl::new("/media/podcast-transcricao").expect("rota")),
+    Text::new("Transcrição do episódio"),
+);
 
 let audio = Audio::new(Src::parse("/media/podcast.mp3").expect("áudio"))
     .preload(MediaPreload::Metadata)
+    .transcript(transcript)
     .fallback(Text::new("Seu navegador não suporta áudio."));
 
-let bloco = html! {
-    figure {
-        (audio.render())
-        figcaption {
-            a href=(Href::internal(
-                LUrl::new("/media/podcast-transcricao").expect("rota"),
-            )) {
-                Text::new("Transcrição do episódio")
-            }
-        }
-    }
-};
+let markup = audio.render();
 ```
 
 Áudio aceita faixas (`Track`), mas não as exige. **`Track::captions` não substitui a
-transcrição exigida por 1.2.1**: áudio não tem área visual para legenda. Por isso o exemplo usa um
-link para a transcrição ao lado do player; o `Audio` em si só emite o `<audio>`.
+transcrição exigida por 1.2.1**: áudio não tem área visual para legenda. `Audio::transcript` envolve
+o player em `<figure><audio>…</audio><figcaption><a>…</a></figcaption></figure>`.
 
 ## `preload` de mídia
 

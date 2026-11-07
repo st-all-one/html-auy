@@ -1359,7 +1359,11 @@ pub static ELEMENTS: &[Element] = &[
         void: false,
         accessible_name: "required",
         roles: &[],
-        invariants: &["landmark_names_distinct", "landmark_names_required"],
+        invariants: &[
+            "aria_current_unique_per_nav",
+            "landmark_names_distinct",
+            "landmark_names_required",
+        ],
     },
     Element {
         name: "noscript",
@@ -2311,6 +2315,7 @@ pub static INVARIANT_SCOPES: &[(&str, Scope)] = &[
     ("a_rel_enum", Scope::Block),
     ("action_required_unless_dialog", Scope::Block),
     ("alt_empty_means_decorative", Scope::Block),
+    ("aria_current_unique_per_nav", Scope::Output),
     ("attribute_by_input_type", Scope::Block),
     ("autocomplete_enum", Scope::Block),
     ("banner_unique_at_root", Scope::Type),
@@ -2456,7 +2461,7 @@ pub static GLOBALS: &[GlobalValue] = &[
     GlobalValue {
         name: "popover",
         kind: ValueKind::Enum,
-        values: &["", "auto", "manual"],
+        values: &["", "auto", "manual", "hint"],
     },
     GlobalValue {
         name: "aria-atomic",
@@ -2813,7 +2818,7 @@ pub static ATTR_VALUES: &[AttrValues] = &[
     AttrValues {
         element: "input",
         attr: "autocomplete",
-        kind: ValueKind::Enum,
+        kind: ValueKind::Tokens,
         values: &[
             "off",
             "on",
@@ -2822,6 +2827,8 @@ pub static ATTR_VALUES: &[AttrValues] = &[
             "additional-name",
             "family-name",
             "username",
+            "username webauthn",
+            "webauthn",
             "email",
             "current-password",
             "new-password",

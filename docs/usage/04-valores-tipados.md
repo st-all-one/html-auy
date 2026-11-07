@@ -34,7 +34,7 @@ contexto tem um tipo com um construtor seguro e nenhum construtor cru.
 | cor/token | `Tone` | variantes | identidade semântica, não hex |
 | consulta de mídia | `Media<'a>` | `print` · `screen` · `new` · `try_new` | estrutura válida; vazia = omitido |
 | SRI | `Integrity<'a>` | `Integrity::parse` | `sha256/384/512` + base64 |
-| autocomplete | `Autocomplete<'a>` | `Autocomplete::parse` | vocabulário HTML fechado |
+| autocomplete | `Autocomplete<'a>` | `Autocomplete::parse` | vocabulário HTML fechado, incluindo `username webauthn` |
 | JSON-LD | `JsonLd` | `JsonLd::graph(&G)` | serializa e escapa `< > & '` |
 
 ## URLs: cada destino tem um tipo

@@ -90,6 +90,16 @@ fn autocomplete_is_emitted_only_when_valid_and_declared() {
 }
 
 #[test]
+fn password_can_declare_a_passkey_autocomplete() {
+    let state = FieldState::new(AttrVal::new(""))
+        .autocomplete(Autocomplete::parse("username webauthn").expect("token"));
+    let field = Field::input(FieldName::new("usuario"), M, InputType::Password, &state);
+    let s = field.as_str();
+    assert!(s.contains("type=\"password\""));
+    assert!(s.contains(" autocomplete=\"username webauthn\""));
+}
+
+#[test]
 fn file_has_no_value_and_emits_accept_multiple() {
     let state = FieldState::new(AttrVal::new("ignorado")).required(true);
     let drawn = Field::file(

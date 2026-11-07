@@ -18,6 +18,7 @@ do consumidor.
 | um `h1` | `Page` emite um; não escreva outro na view |
 | skip link | `ShellData::skip(Text)` |
 | status vivo | `Page` emite `role="status" aria-atomic="true"` persistente |
+| ajuda consistente | `ShellData::help(Markup)` fixa o slot entre header e `main` |
 | nome de campo | `Field` exige `label` e deriva `id`/`aria-*` |
 | erro de campo | `FieldState::error(Text)` liga `aria-invalid`/`aria-describedby` |
 | grupo de escolha | `checkbox_group`/`radio_group` emitem `fieldset`+`legend` |
@@ -164,6 +165,7 @@ fn paginas_passam_no_audit() {
 | `ids_unique` | `id` repetido |
 | `landmark_names_distinct` | dois landmarks com o mesmo nome |
 | `landmark_names_required` | `nav`/`aside` repetidos sem nome |
+| `aria_current_unique_per_nav` | mais de um `aria-current` atual no mesmo `<nav>` (valor diferente de `false`) |
 | `aria_refs_resolve` | `aria-labelledby`/`describedby`/`controls` órfãos |
 | `popover_target_resolves` | `popovertarget` sem `popover` |
 | `no_content_derived_identifiers` | `id`/`name` instáveis |
@@ -188,7 +190,7 @@ fn paginas_passam_no_audit() {
 | `prefers-reduced-motion` | CSS |
 | `forced-colors`, `prefers-contrast`, `prefers-reduced-transparency` | CSS do consumidor; o tema não emite essas camadas |
 | espaçamento de texto (WCAG 1.4.12) | CSS: `rem`, `line-height`, sem altura fixa em texto |
-| ajuda consistente entre páginas (WCAG 3.2.6) | layout do consumidor: mesmo slot/posição |
+| ajuda consistente entre páginas (WCAG 3.2.6) | `ShellData::help` fixa o slot; o consumidor decide o conteúdo |
 | entrada redundante e autenticação (WCAG 3.3.7/3.3.8) | fluxo do consumidor; `Field` não bloqueia colar/gerenciador de senha |
 
 ## Erros comuns

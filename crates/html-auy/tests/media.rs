@@ -7,8 +7,8 @@
 
 use html_auy::hint::FetchPriority;
 use html_auy::{
-    Alt, Audio, HeightPx, Img, Loading, MediaPreload, Picture, Sizes, Source, Src, SrcSet, Text,
-    Track, TrackKind, Variant, Video, WidthPx,
+    Alt, Audio, HeightPx, Href, Img, LUrl, Loading, MediaPreload, Picture, Sizes, Source, Src,
+    SrcSet, Text, Track, TrackKind, Transcript, Variant, Video, WidthPx,
 };
 
 struct V(&'static str, u32);
@@ -208,4 +208,44 @@ fn loading_and_preload_values_are_stable() {
     assert_eq!(MediaPreload::None.as_str(), "none");
     assert_eq!(MediaPreload::Metadata.as_str(), "metadata");
     assert_eq!(MediaPreload::Auto.as_str(), "auto");
+}
+
+#[test]
+fn audio_transcript_wraps_in_figure_and_escapes_label() {
+    let href = Href::internal(LUrl::new("/podcast/transcricao").expect("rota"));
+    let s = Audio::new(src("/podcast.mp3"))
+        .transcript(Transcript::new(href, Text::new("<Transcrição>")))
+        .render();
+    let text = s.as_str();
+    assert!(
+        text.starts_with("<figure><audio src=\"/podcast.mp3\" controls>"),
+        "{text}"
+    );
+    assert!(
+        text.contains(
+            "<figcaption><a href=\"/podcast/transcricao\">&lt;Transcrição&gt;</a></figcaption></figure>"
+        ),
+        "{text}"
+    );
+}
+
+#[test]
+fn video_transcript_wraps_in_figure_and_keeps_captions() {
+    let captions = Track::captions(src("/legendas.vtt"), Text::new("Português"));
+    let href = Href::internal(LUrl::new("/video/transcricao").expect("rota"));
+    let s = Video::new(src("/video.mp4"), captions)
+        .transcript(Transcript::new(href, Text::new("Transcrição")))
+        .render();
+    let text = s.as_str();
+    assert!(text.starts_with("<figure><video src=\"/video.mp4\" controls>"));
+    assert!(text.contains("kind=\"captions\""));
+    assert!(text.contains(
+        "<figcaption><a href=\"/video/transcricao\">Transcrição</a></figcaption></figure>"
+    ));
+}
+
+#[test]
+fn track_descriptions_is_a_typed_audio_description() {
+    let track = Track::descriptions(src("/descricao.vtt"), Text::new("Audiodescrição"));
+    assert!(track.render().as_str().contains("kind=\"descriptions\""));
 }

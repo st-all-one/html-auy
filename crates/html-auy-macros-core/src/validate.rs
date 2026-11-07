@@ -478,13 +478,18 @@ fn check_allowed(element: &Element, spec: &'static table::Element, ctx: &mut Ctx
         if key == "role" {
             check_role(spec, attr, ctx);
         } else if is_forbidden(&key) {
+            let hint = if key == "accesskey" {
+                "atalhos de teclado não são portáveis entre navegador/leitor de tela; use o skip link e `Tab`"
+            } else {
+                "estilo é token e comportamento é asset declarado"
+            };
             ctx.error(
                 Diag::new(
                     attr.span,
                     format!("atributo proibido `{key}` em `{}`", spec.name),
                 )
                 .rule(format!("spec:element.{}", spec.name))
-                .hint("estilo é token e comportamento é asset declarado"),
+                .hint(hint),
             );
         } else if key.starts_with("data-") {
             if !valid_data_name(&key) {

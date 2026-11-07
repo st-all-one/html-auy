@@ -114,6 +114,37 @@ fn landmark_names_required_when_repeated() {
 }
 
 #[test]
+fn aria_current_is_unique_per_nav() {
+    let duplicated = document(
+        "<h1>T</h1><main><nav aria-label=\"Principal\">         <a href=\"/\" aria-current=\"page\">A</a>         <a href=\"/b\" aria-current=\"page\">B</a></nav></main>",
+    );
+    assert_eq!(rules(&duplicated), ["aria_current_unique_per_nav"]);
+
+    let separate = document(
+        "<h1>T</h1><main>         <nav aria-label=\"Principal\"><a href=\"/\" aria-current=\"page\">A</a></nav>         <nav aria-label=\"Paginação\"><a href=\"/2\" aria-current=\"page\">2</a></nav>         </main>",
+    );
+    assert_eq!(check(&separate), Vec::<Finding>::new());
+
+    let outside = document(
+        "<h1>T</h1><main><a href=\"/\" aria-current=\"page\">A</a>         <a href=\"/b\" aria-current=\"page\">B</a></main>",
+    );
+    assert_eq!(
+        check(&outside),
+        Vec::<Finding>::new(),
+        "fora de nav não é o escopo"
+    );
+
+    let explicit_false = document(
+        "<h1>T</h1><main><nav aria-label=\"Principal\"><a href=\"/\" aria-current=\"false\">A</a><a href=\"/b\" aria-current=\"FALSE\">B</a></nav></main>",
+    );
+    assert_eq!(
+        check(&explicit_false),
+        Vec::<Finding>::new(),
+        "`false` não é item atual"
+    );
+}
+
+#[test]
 fn aria_refs_resolve() {
     let orphan = document("<h1>T</h1><main><div aria-labelledby=\"nope\">x</div></main>");
     assert_eq!(rules(&orphan), ["aria_refs_resolve"]);
