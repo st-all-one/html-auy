@@ -90,7 +90,8 @@ fn render_page() -> Page {
 
 Isso compila com o crate padrão. Para uma aplicação real, você vai querer um `enum` de mensagens
 (veja [Texto e i18n](05-texto-e-i18n.md)), assets ([Shell e assets](08-shell-assets-e-tema.md)) e um
-adaptador HTTP ([HTTP e integrações](12-http-e-integracoes.md)).
+adaptador HTTP ([HTTP e integrações](12-http-e-integracoes.md)). O esqueleto completo está em
+[Projeto mínimo com Axum](16-projeto-minimo-axum.md).
 
 ## Comandos de verificação
 

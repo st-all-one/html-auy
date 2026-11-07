@@ -1,4 +1,4 @@
-[← Receitas](14-receitas.md) · [Índice](README.md) · [Próximo →](99-referencia-rapida.md)
+[← Receitas](14-receitas.md) · [Índice](README.md) · [Próximo →](16-projeto-minimo-axum.md)
 
 # 15 — Como a biblioteca funciona
 
@@ -190,4 +190,4 @@ Ele **faz**:
 
 ---
 
-[← Receitas](14-receitas.md) · [Índice](README.md) · [Próximo →](99-referencia-rapida.md)
+[← Receitas](14-receitas.md) · [Índice](README.md) · [Próximo →](16-projeto-minimo-axum.md)

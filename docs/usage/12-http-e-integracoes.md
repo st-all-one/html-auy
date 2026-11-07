@@ -187,6 +187,9 @@ GET /carrinho (HX-Request)
 - `Asset` não carrega `integrity`; SRI de `link`/`script` não é emitido no `0.1`.
 - `style=` inline muda a CSP; trate como decisão de segurança, não como detalhe de HTTP.
 
+Para o esqueleto completo de uma aplicação — Cargo, `PageResponse`, rotas, assets, erros e
+formulários — veja [Projeto mínimo com Axum](16-projeto-minimo-axum.md).
+
 ---
 
 [← Acessibilidade](11-acessibilidade.md) · [Índice](README.md) · [Próximo →](13-testes-e-diagnostico.md)

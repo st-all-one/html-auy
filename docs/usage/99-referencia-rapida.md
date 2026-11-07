@@ -1,4 +1,4 @@
-[← Arquitetura](15-arquitetura.md) · [Índice](README.md)
+[← Projeto mínimo com Axum](16-projeto-minimo-axum.md) · [Índice](README.md)
 
 # 99 — Referência rápida
 
@@ -212,4 +212,4 @@ Regras: `main_unique`, `single_h1`, `heading_levels_no_skips`, `ids_unique`,
 
 ---
 
-[← Arquitetura](15-arquitetura.md) · [Índice](README.md)
+[← Projeto mínimo com Axum](16-projeto-minimo-axum.md) · [Índice](README.md)

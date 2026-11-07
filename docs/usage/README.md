@@ -87,6 +87,7 @@ a saída exata e a fronteira HTTP, está em [Primeira página](02-primeira-pagin
 | [10 — Segurança](10-seguranca.md) | O que é impossível injetar, o que é escape hatch e como fica a CSP? |
 | [11 — Acessibilidade](11-acessibilidade.md) | O que vem por construção e o que ainda precisa de gate? |
 | [12 — HTTP e integrações](12-http-e-integracoes.md) | Como responder, cachear, fazer `303`/`422` e resposta parcial? |
+| [16 — Projeto mínimo com Axum](16-projeto-minimo-axum.md) | Como juntar Cargo, adapter, views, assets, erros e formulários? |
 
 ### Qualidade e referência
 
@@ -103,7 +104,8 @@ a saída exata e a fronteira HTTP, está em [Primeira página](02-primeira-pagin
 - **Formulário:** 02 → 06 → 10 → 12.
 - **Migração de Blade/template:** 03 → 04 → 06 → 09 → 14.
 - **Revisão de segurança:** 04 → 08 → 10 → 11.
-- **Integração HTTP:** 02 → 08 → 12 → 13.
+- **Integração HTTP:** 02 → 08 → 12 → 16 → 13.
+- **Primeiro projeto Axum:** 01 → 02 → 16 → 06 → 12.
 - **Entender a implementação:** 15 → 04 → 10 → 13.
 
 ## Convenções desta wiki
