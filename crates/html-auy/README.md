@@ -49,6 +49,6 @@ Rust 1.92, edition 2024. The development toolchain is pinned; the MSRV is tested
 
 ## License
 
-MIT. See `LICENSE`.
+MIT OR Apache-2.0. See `LICENSE-MIT` and `LICENSE-APACHE`.
 
 Repository: <https://github.com/st-all-one/html-auy>

@@ -65,7 +65,7 @@ Sim: tokens são dados; o `/theme.css` muda de `ETag` e a próxima request receb
 endpoint privado `no-store`.
 
 **E se o projeto morrer?**
-O código é MIT e o crate `html-auy` 0.1.0 continua disponível no crates.io; o consumidor pode
+O código é MIT OR Apache-2.0 e o crate `html-auy` 0.1.0 continua disponível no crates.io; o consumidor pode
 vendorizar a versão que usa, mantém os snapshots como contrato e estes documentos como decisão
 registrada. Não há dependência de serviço ou runtime externo.
 
@@ -80,4 +80,4 @@ acessibilidade por construção. Se você não precisa das três, use maud — e
 [`14-alternativas.md`](14-alternativas.md) §3.
 
 **Licença e nome.**
-MIT. `html-auy` é o nome proposto originalmente, sem significado técnico interno.
+MIT OR Apache-2.0. `html-auy` é o nome proposto originalmente, sem significado técnico interno.

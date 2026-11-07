@@ -1,124 +1,124 @@
-# Accessibility in `html-auy`
+# Acessibilidade no `html-auy`
 
-This is the English companion to [`05-acessibilidade.md`](05-acessibilidade.md). It describes the accessibility model implemented by the crate, the boundary between compile-time guarantees and consumer-owned browser gates, and the concrete APIs an application should use.
+Este documento descreve o modelo de acessibilidade implementado pelo crate, a fronteira entre as garantias de compilação e os gates do consumidor, e as APIs concretas que uma aplicação deve usar. Ele complementa [`05-acessibilidade.md`](05-acessibilidade.md), que mantém o mapeamento WCAG 2.2 AA/eMAG.
 
-The target is **WCAG 2.2 AA** for the project context, with eMAG concerns covered through the same mechanisms. Accessibility is not a post-render checklist: it is emitted by the vocabulary and by primitives, then checked again over the final document where the local compiler cannot see the whole page.
+O alvo é **WCAG 2.2 AA** no contexto do projeto. Acessibilidade não é uma revisão feita no fim: ela é emitida pelo vocabulário e pelos primitivos, e depois verificada sobre o documento final onde o compilador local não consegue ver a página inteira.
 
-## 1. Strategy
+## 1. Estratégia
 
-The project uses four layers, in decreasing order of strength:
+O projeto usa quatro camadas, em ordem decrescente de força:
 
-1. **Absence of API / type-level requirements.** The wrong thing cannot be constructed: `img` without `Alt`, `Video::new` without captions, a state-changing `Form` without `CsrfToken`.
-2. **Primitive defaults and macro validation.** `Field`, `Img`, `Page`, `ShellData`, and `Form` emit the plumbing; `html!` rejects invalid nesting, missing required attributes, unresolved `label for`, and forbidden attributes in the local block.
-3. **Final-document audit (`N4`).** `html_auy::audit::check` runs over the assembled HTML behind `feature = "audit"`. It catches document-wide problems that no fragment can decide: duplicate ids, multiple `h1`s, skipped heading levels, landmark name collisions, unresolved ARIA references, and repeated `aria-current`.
-4. **Consumer browser gates (`N5`).** `axe`, `sniffCSS`, keyboard tests, and end-to-end tests cover computed style, contrast, target size, focus order, occlusion, and post-swap behavior.
+1. **Ausência de API / exigência de tipo.** O errado não constrói: `img` sem `Alt`, `Video::new` sem legendas, formulário de escrita sem `CsrfToken`.
+2. **Defaults dos primitivos e validação da macro.** `Field`, `Img`, `Page`, `ShellData` e `Form` emitem a plumbing; `html!` recusa aninhamento inválido, atributo obrigatório ausente, `label for` órfão e atributo proibido no bloco local.
+3. **Audit de documento (`N4`).** `html_auy::audit::check` roda sobre o HTML montado atrás de `feature = "audit"`. Ele pega problemas que nenhum fragmento isolado decide: `id` duplicado, múltiplos `h1`, salto de nível, colisão de nomes de landmark, referência ARIA órfã e `aria-current` repetido.
+4. **Gates do consumidor no navegador (`N5`).** `axe`, `sniffCSS`, testes de teclado e testes ponta a ponta cobrem estilo computado, contraste, alvo de toque, ordem de foco, oclusão e comportamento pós-swap.
 
-There is deliberately no advisory lint layer. A rule either makes valid code fail to compile, or it is a test that fails in CI. A warning that fires twenty times per page is not treated as an accessibility guarantee.
+Não existe camada advisory. Uma regra ou faz código válido deixar de compilar, ou é um teste que falha no CI. Aviso que dispara vinte vezes por página não é tratado como garantia de acessibilidade.
 
-## 2. What the crate guarantees
+## 2. O que o crate garante
 
-### 2.1 Images and non-text content
+### 2.1 Imagens e conteúdo não textual
 
-- `Img::new` requires `Src`, `Alt`, `WidthPx`, and `HeightPx`.
-- `Alt::new("")` means explicit decoration; a missing or accidental empty alt does not exist as a path.
-- Decorative SVG has a typed path; informative SVG requires a name.
-- Intrinsic dimensions are required to prevent layout shift and empty reserved space.
+- `Img::new` exige `Src`, `Alt`, `WidthPx` e `HeightPx`.
+- `Alt::new("")` significa decoração explícita; não existe caminho para alt vazio acidental.
+- SVG decorativo tem caminho tipado; SVG informativo exige nome.
+- As dimensões intrínsecas são obrigatórias para evitar layout shift e espaço reservado vazio.
 
 ```rust
 let image = Img::new(
-    Src::parse("/media/cover.avif").expect("valid source"),
-    Alt::new("Bus at the terminal"),
+    Src::parse("/media/capa.avif").expect("fonte válida"),
+    Alt::new("Ônibus no terminal"),
     WidthPx::new(720),
     HeightPx::new(480),
 );
 ```
 
-### 2.2 Forms and accessible names
+### 2.2 Formulários e nomes acessíveis
 
-`Field` derives the pieces that are normally forgotten:
+`Field` deriva as peças que normalmente são esquecidas:
 
-- `<label for="...">` and the input `id`;
-- `aria-describedby` for help and error spans;
-- `aria-invalid="true"` when an error exists;
-- `required` when required;
-- the required `*` outside the `<label>`, so it does not enter the accessible name;
-- a group `<fieldset>` + `<legend>` for checkbox/radio groups.
+- `<label for="...">` e o `id` do input;
+- `aria-describedby` para os `<span>` de ajuda e erro;
+- `aria-invalid="true"` quando há erro;
+- `required` quando obrigatório;
+- o `*` de obrigatório fora do `<label>`, para não entrar no nome acessível;
+- `<fieldset>` + `<legend>` para grupos de checkbox/radio.
 
 ```rust
 let name = FieldState::new(AttrVal::new(&state.name))
     .required(true)
-    .help(Text::new("As shown on your document"))
-    .error(Text::new("Enter the full name"));
+    .help(Text::new("Como consta no documento"))
+    .error(Text::new("Informe o nome completo"));
 
-let field = Field::text(FieldName::new("name"), M::Name, &name);
+let field = Field::text(FieldName::new("nome"), M::Name, &name);
 ```
 
-Rules that follow from the local block:
+Regras que decorrem do bloco local:
 
-- a control without an accessible name does not compile;
-- `aria-hidden="true"` on a focusable control is rejected;
-- `label for` must resolve to an `id` in the same block;
-- `th` requires `scope`;
-- `button` requires `type`;
-- `autocomplete` only comes from `Autocomplete::parse`; it is a closed vocabulary, not a free string.
+- controle sem nome acessível não compila;
+- `aria-hidden="true"` em controle focável é recusado;
+- `label for` precisa resolver um `id` do mesmo bloco;
+- `th` exige `scope`;
+- `button` exige `type`;
+- `autocomplete` só sai de `Autocomplete::parse`; é vocabulário fechado, não string livre.
 
-Passkey/authentication support is typed:
+O caminho de passkey/autenticação é tipado:
 
 ```rust
 let state = FieldState::new(AttrVal::new(""))
-    .autocomplete(Autocomplete::parse("username webauthn").expect("valid token"));
+    .autocomplete(Autocomplete::parse("username webauthn").expect("token válido"));
 
 let password = Field::input(
-    FieldName::new("user"),
+    FieldName::new("usuario"),
     M::User,
     InputType::Password,
     &state,
 );
 ```
 
-The crate emits the accessible form contract; the consumer owns the login flow, CAPTCHA policy, paste behavior, and passkey ceremony.
+O crate emite o contrato acessível do formulário; o consumidor é dono do fluxo de login, da política de CAPTCHA, do comportamento de colar e da cerimônia de passkey.
 
-### 2.3 Page structure, skip link, and help
+### 2.3 Estrutura da página, skip link e ajuda
 
-`Page` is the only document constructor. It emits:
+`Page` é o único construtor de documento. Ele emite:
 
-- `<!DOCTYPE html>`, `<html lang>`, `<head>`, `<body>`;
-- `<title>` from required `ShellData`;
-- one `<main id="main" tabindex="-1">`;
-- one persistent `<div role="status" aria-atomic="true"></div>`;
-- one `<h1>` from `ShellData` in the normal path;
-- the skip link when `ShellData::skip` is provided.
+- `<!DOCTYPE html>`, `<html lang>`, `<head>` e `<body>`;
+- `<title>` a partir do `ShellData` obrigatório;
+- um `<main id="main" tabindex="-1">`;
+- uma região viva persistente `<div role="status" aria-atomic="true"></div>`;
+- um `<h1>` a partir do `ShellData` no caminho normal;
+- o skip link quando `ShellData::skip` é fornecido.
 
-The skip link is the first focusable element:
+O skip link é o primeiro elemento focável:
 
 ```rust
 let data = ShellData::new(
-    Text::new("Requests"),
-    Text::new("Requests"),
-    Lang::parse("en").expect("language"),
+    Text::new("Solicitações"),
+    Text::new("Solicitações"),
+    Lang::parse("pt-BR").expect("idioma"),
 )
-.skip(Text::new("Skip to content"));
+.skip(Text::new("Pular para o conteúdo"));
 ```
 
-Consistent help is a fixed shell slot:
+A ajuda consistente ocupa um slot fixo do shell:
 
 ```rust
 let help = html! {
-    p { Text::new("Need help? Contact the service desk.") }
+    p { Text::new("Precisa de ajuda? Fale com o atendimento.") }
 };
 
 let data = ShellData::new(title, heading, lang).help(help);
 ```
 
-`help` is emitted after the header and before `before_main`/`<main>`, so it occupies the same structural location on every page that provides it. The consumer owns the content and whether the slot exists.
+`help` é emitido depois do header e antes de `before_main`/`<main>`, então ocupa a mesma posição estrutural em todas as páginas que fornecem o bloco. O consumidor decide o conteúdo e se o slot existe.
 
-### 2.4 Landmarks, headings, and `aria-current`
+### 2.4 Landmarks, headings e `aria-current`
 
-- `Regions` owns header, before-main, after-main, and footer contributions.
-- With two or more `nav`/`aside` landmarks, each needs a distinct accessible name.
-- `audit` enforces `landmark_names_distinct` and `landmark_names_required`.
-- `Page` emits one `h1`; views normally use `h2`–`h6`; `audit` enforces exactly one `h1` and no skipped heading levels.
-- `aria-current` is unique within each nearest `<nav>`; separate navigations can each have their own current item. The audit rule ignores `aria-current="false"`.
+- `Regions` é dono das contribuições de header, before-main, after-main e footer.
+- Com dois ou mais landmarks `nav`/`aside`, cada um precisa de nome acessível distinto.
+- O `audit` cobra `landmark_names_distinct` e `landmark_names_required`.
+- `Page` emite um `h1`; a view normalmente usa `h2`–`h6`; o `audit` cobra exatamente um `h1` e nenhum salto de nível.
+- `aria-current` é único dentro de cada `<nav>` mais próximo; navegações separadas podem ter seu próprio item atual. A regra de audit ignora `aria-current="false"`.
 
 ```rust
 let mut regions = Regions::new();
@@ -131,57 +131,57 @@ regions.header = Some(html! {
 });
 ```
 
-### 2.5 Live status
+### 2.5 Região viva
 
-The shell always emits a persistent empty status region:
+O shell sempre emite uma região de status persistente e vazia:
 
 ```html
 <div role="status" aria-atomic="true"></div>
 ```
 
-The consumer fills it through swaps or scripted updates. A non-persistent region inserted after the update may not be announced reliably. Do not add a second `aria-live` to a `role="status"`/`role="alert"`; the role already implies the live behavior.
+O consumidor a preenche por swap ou atualização de script. Uma região inserida apenas depois da atualização pode não ser anunciada de forma confiável. Não adicione um segundo `aria-live` a um `role="status"`/`role="alert"`; o papel já implica o comportamento de região viva.
 
-### 2.6 Media alternatives
+### 2.6 Alternativas de mídia
 
-The media vocabulary encodes the distinction between captions, audio description, and a full textual alternative:
+O vocabulário de mídia separa legendas, audiodescrição e alternativa textual completa:
 
-- `Video::new(src, Track::captions(...))` requires captions for prerecorded video (WCAG 1.2.2).
-- `Track::descriptions(src, label)` is the typed audio-description track (WCAG 1.2.3/1.2.5).
-- `Video::transcript(Transcript)` is a complete textual alternative for video when no description track exists; it is not a substitute for the descriptive track required by 1.2.5.
-- `Audio::transcript(Transcript)` is the textual alternative for prerecorded audio (WCAG 1.2.1). A `Track` is not a transcript for audio because audio has no visual caption area.
+- `Video::new(src, Track::captions(...))` exige legendas para vídeo pré-gravado (WCAG 1.2.2).
+- `Track::descriptions(src, label)` é a faixa tipada de audiodescrição (WCAG 1.2.3/1.2.5).
+- `Video::transcript(Transcript)` é a alternativa textual completa para vídeo quando não há faixa descritiva; não substitui a faixa de audiodescrição exigida por 1.2.5.
+- `Audio::transcript(Transcript)` é a alternativa textual para áudio pré-gravado (WCAG 1.2.1). `Track` não substitui transcrição de áudio, porque áudio não tem área visual de legenda.
 
 ```rust
 use html_auy::{Audio, Href, LUrl, Src, Text, Transcript};
 
 let transcript = Transcript::new(
-    Href::internal(LUrl::new("/media/episode-transcript").expect("route")),
-    Text::new("Episode transcript"),
+    Href::internal(LUrl::new("/media/episodio-transcricao").expect("rota")),
+    Text::new("Transcrição do episódio"),
 );
 
-let audio = Audio::new(Src::parse("/media/episode.mp3").expect("source"))
+let audio = Audio::new(Src::parse("/media/episodio.mp3").expect("fonte"))
     .transcript(transcript);
 ```
 
-`Audio::transcript` and `Video::transcript` wrap the media in `<figure>` and add a `<figcaption>` containing the transcript link. The figure is the semantic relationship between the media and its alternative.
+`Audio::transcript` e `Video::transcript` envolvem a mídia em `<figure>` e adicionam `<figcaption>` com o link da transcrição. A figure é a relação semântica entre a mídia e sua alternativa.
 
-### 2.7 ARIA and attributes
+### 2.7 ARIA e atributos
 
-- `aria_label` accepts `Label` (`Label::text`/`Label::sr_only`), not `&str`.
-- `role` is an enum per element, not a free string.
-- `aria-checked`, `aria-expanded`, and `aria-current` are allowed only where the role permits them.
-- `aria-label` over visible text is rejected when the name diverges.
-- `data-*` is scalar and validated; do not serialize JSON into an attribute.
-- `accesskey` is forbidden: keyboard activation differs across browsers and screen readers and can collide with native shortcuts.
-- `popover="hint"` is a declared global value for tooltip/hint surfaces; `popovertarget` resolution is checked by the audit.
-- `draggable` is forbidden; drag interactions need explicit button/keyboard alternatives.
+- `aria_label` aceita `Label` (`Label::text`/`Label::sr_only`), não `&str`.
+- `role` é enum por elemento, não string livre.
+- `aria-checked`, `aria-expanded` e `aria-current` só existem onde o papel permite.
+- `aria-label` sobre texto visível divergente é recusado.
+- `data-*` é escalar e validado; não serialize JSON no atributo.
+- `accesskey` é proibido: a ativação varia por navegador/leitor de tela e pode colidir com atalhos nativos.
+- `popover="hint"` é valor global declarado para dicas/tooltips; a resolução de `popovertarget` é cobrada pelo audit.
+- `draggable` é proibido; interações de arrastar precisam de alternativa explícita por botão/teclado.
 
-### 2.8 `Alt+1` and custom shortcuts
+### 2.8 `Alt+1` e atalhos próprios
 
-The crate does not implement `Alt+1`. It provides the skip link and landmark navigation. `accesskey` is intentionally forbidden. If a product requires `Alt+1`, that is a consumer-level keyboard listener or platform decision, not an HTML vocabulary feature. The crate cannot guarantee activation across browser/screen-reader combinations.
+O crate não implementa `Alt+1`. Ele fornece o skip link e a navegação por landmarks. `accesskey` é proibido por decisão. Se um produto exige `Alt+1`, isso é um listener de teclado ou uma decisão de plataforma do consumidor, não um atributo do vocabulário HTML. O crate não consegue garantir a ativação entre combinações de navegador e leitor de tela.
 
-## 3. Document-wide audit
+## 3. Audit de documento
 
-Enable `audit` in tests or CI:
+Ative `audit` nos testes ou no CI:
 
 ```toml
 [dev-dependencies]
@@ -193,71 +193,71 @@ let findings = html_auy::audit::check(page.markup().as_str());
 assert!(findings.is_empty(), "{findings:#?}");
 ```
 
-`Finding` exposes the rule, message, and node information; output is deterministic and follows document order with rule-order tie-breaking.
+`Finding` expõe a regra, a mensagem e informação do nó; a saída é determinística e segue a ordem do documento, com a ordem fixa das regras desempatando achados no mesmo nó.
 
-The 13 rules are:
+As 13 regras são:
 
-| Rule | What it catches |
+| Regra | O que detecta |
 |---|---|
-| `main_unique` | zero or multiple `<main>` elements |
-| `single_h1` | zero or multiple `<h1>` elements |
-| `heading_levels_no_skips` | `h2` → `h4` and similar skips |
-| `ids_unique` | duplicate `id` |
-| `landmark_names_distinct` | same-type landmarks with the same name |
-| `landmark_names_required` | repeated `nav`/`aside` without an accessible name |
-| `aria_current_unique_per_nav` | more than one current `aria-current` in the same `<nav>`; `false` is ignored |
-| `aria_refs_resolve` | `aria-labelledby`/`describedby`/`controls` pointing to a missing id |
-| `popover_target_resolves` | `popovertarget` without a matching `popover` |
-| `no_content_derived_identifiers` | `id`/`name` outside the stable generated alphabet |
-| `no_inline_script` | `<script>` without `src` and not `application/ld+json` |
-| `no_style_attribute` | any `style=` |
-| `no_event_handler` | any `on*` |
+| `main_unique` | zero ou mais de um `<main>` |
+| `single_h1` | zero ou mais de um `<h1>` |
+| `heading_levels_no_skips` | `h2` → `h4` e saltos equivalentes |
+| `ids_unique` | `id` repetido |
+| `landmark_names_distinct` | landmarks do mesmo tipo com o mesmo nome |
+| `landmark_names_required` | `nav`/`aside` repetidos sem nome acessível |
+| `aria_current_unique_per_nav` | mais de um `aria-current` atual no mesmo `<nav>`; `false` é ignorado |
+| `aria_refs_resolve` | `aria-labelledby`/`describedby`/`controls` apontando para id inexistente |
+| `popover_target_resolves` | `popovertarget` sem `popover` correspondente |
+| `no_content_derived_identifiers` | `id`/`name` fora do alfabeto estável gerado |
+| `no_inline_script` | `<script>` sem `src` e que não é `application/ld+json` |
+| `no_style_attribute` | qualquer `style=` |
+| `no_event_handler` | qualquer `on*` |
 
-`audit` is not a sanitizer. It is a final-document test. It does not prove that alt text is useful, that a link name is descriptive in context, or that the rendered layout is usable.
+`audit` não é sanitizador. É um teste de documento final. Ele não prova que o alt é útil, que o nome do link é descritivo no contexto ou que o layout renderizado é utilizável.
 
-## 4. What remains a consumer gate
+## 4. O que continua gate do consumidor
 
-The crate cannot measure or guarantee:
+O crate não mede nem garante:
 
-- contrast against composited backgrounds;
-- target size in CSS pixels;
-- visible focus, focus not obscured, or focus order inside dialogs/popovers;
-- text resize/reflow and text spacing;
-- orientation restrictions;
-- animation, `prefers-reduced-motion`, `forced-colors`, `prefers-contrast`, or reduced transparency;
-- occlusion, sticky headers covering focused elements, or transform/overflow edge cases;
-- post-swap htmx behavior;
-- the quality, not merely presence, of alt text and link text.
+- contraste contra fundos compostos;
+- tamanho de alvo em pixels CSS;
+- foco visível, foco não obscurecido ou ordem de foco dentro de diálogos/popovers;
+- redimensionamento de texto, reflow e espaçamento de texto;
+- restrição de orientação;
+- animação, `prefers-reduced-motion`, `forced-colors`, `prefers-contrast` ou transparência reduzida;
+- oclusão, cabeçalho fixo cobrindo foco ou casos de transform/overflow;
+- comportamento pós-swap do htmx;
+- a qualidade, e não apenas a presença, do alt e do texto do link.
 
-Use `axe`, `sniffCSS`, browser keyboard tests, and content review for those. The project provides mechanisms and a document audit, not a browser.
+Use `axe`, `sniffCSS`, testes de teclado no navegador e revisão de conteúdo para essas camadas. O projeto entrega mecanismos e um audit de documento, não um navegador.
 
-## 5. Testing accessibility
+## 5. Testes de acessibilidade
 
-The repository tests the mechanisms at several levels:
+O repositório verifica os mecanismos em vários níveis:
 
-- `trybuild` UI tests for rejected markup and actionable diagnostics;
-- golden/snapshot tests for canonical HTML output;
-- unit and property tests for value invariants;
-- parser fuzzing outside the main workspace;
-- `audit` tests over complete pages with `feature = "audit"`;
-- spec validation and docs traceability in `tools/validate_spec.py`;
-- consumer-side `axe`/`sniffCSS`/keyboard/e2e gates.
+- testes `trybuild` para markup recusado e diagnóstico acionável;
+- testes golden/snapshot para a saída HTML canônica;
+- testes unitários e de propriedade para invariantes de valores;
+- fuzz do parser fora do workspace principal;
+- testes de `audit` sobre páginas completas com `feature = "audit"`;
+- validação da spec e rastreabilidade da documentação em `tools/validate_spec.py`;
+- gates do consumidor com `axe`/`sniffCSS`/teclado/e2e.
 
-A code change that alters an accessibility primitive should update the corresponding compile-time test, golden output, and audit behavior. A new rule that only the final document can decide belongs in `audit`, not in `html!`.
+Uma mudança que altere um primitivo de acessibilidade deve atualizar o teste de compilação, a saída golden e o comportamento de audit correspondente. Uma regra nova que só o documento final decide pertence ao `audit`, não ao `html!`.
 
-## 6. Design rules
+## 6. Regras de projeto
 
-1. **Correct by default.** The primitive emits the plumbing; the developer chooses the component, not the ARIA.
-2. **Visible escape hatches.** `Alt::decorative()`, sr-only labels, and explicit transcript links make the exception explicit.
-3. **No silent advisory.** A rule either fails compilation or fails a test.
-4. **One source of document structure.** `Page` owns the document; views own the `<main>` content; regions own landmarks.
-5. **Noisy rule = primitive bug.** If a rule fires repeatedly on one page, fix the primitive instead of asking every view to work around it.
-6. **The boundary is stated.** If the crate cannot observe it, the consumer must gate it.
+1. **Correto por default.** O primitivo emite a plumbing; o desenvolvedor escolhe o componente, não o ARIA.
+2. **Escapulidas visíveis.** `Alt::decorative()`, labels sr-only e links de transcrição explícitos tornam a exceção visível.
+3. **Nada de advisory silencioso.** Uma regra ou falha a compilação, ou falha um teste.
+4. **Uma fonte de estrutura de documento.** `Page` é dono do documento; a view é dona do conteúdo do `<main>`; as regiões são donas dos landmarks.
+5. **Regra ruidosa é bug do primitivo.** Se uma regra dispara repetidamente na mesma página, corrija o primitivo em vez de pedir workaround em cada view.
+6. **A fronteira é declarada.** Se o crate não consegue observar, o consumidor precisa do gate.
 
-## 7. Related docs
+## 7. Documentos relacionados
 
-- [`05-acessibilidade.md`](05-acessibilidade.md) — full Portuguese WCAG 2.2 AA/eMAG mapping.
-- [`04-validacao.md`](04-validacao.md) — validation levels and invariant scopes.
-- [`23-acessibilidade-e-css.md`](23-acessibilidade-e-css.md) — what is decidable in the crate versus browser CSS.
-- [`usage/11-acessibilidade.md`](usage/11-acessibilidade.md) — operational accessibility guide.
-- [`12-testes.md`](12-testes.md) — test layers and CI gates.
+- [`05-acessibilidade.md`](05-acessibilidade.md) — mapeamento completo WCAG 2.2 AA/eMAG em português.
+- [`04-validacao.md`](04-validacao.md) — níveis de validação e escopos das invariantes.
+- [`23-acessibilidade-e-css.md`](23-acessibilidade-e-css.md) — o que é decidível no crate versus CSS de navegador.
+- [`usage/11-acessibilidade.md`](usage/11-acessibilidade.md) — guia operacional de acessibilidade.
+- [`12-testes.md`](12-testes.md) — camadas de teste e gates de CI.

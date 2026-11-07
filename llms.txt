@@ -8,7 +8,7 @@ Version `0.1.0`. Rust 1.92+ (edition 2024). `#![no_std]` + `alloc`. No framework
 
 - Public crate: `html-auy`; Rust crate name: `html_auy`.
 - Repository: <https://github.com/st-all-one/html-auy>
-- License: MIT.
+- License: MIT OR Apache-2.0.
 - Default build: no external parser/runtime dependency; `audit` is the only optional feature.
 - `audit` adds `html5ever` + `markup5ever_rcdom` and `html_auy::audit::check`.
 - Spec: 111 elements and 71 invariants: 59 `block`, 4 `type`, 8 `output`.
@@ -192,7 +192,7 @@ python3 tools/check_links.py
 - [Element vocabulary](https://github.com/st-all-one/html-auy/blob/main/docs/03-vocabulario-de-elementos.md)
 - [Validation](https://github.com/st-all-one/html-auy/blob/main/docs/04-validacao.md)
 - [Accessibility](https://github.com/st-all-one/html-auy/blob/main/docs/05-acessibilidade.md)
-- [Accessibility architecture (English)](https://github.com/st-all-one/html-auy/blob/main/docs/acessibility.md)
+- [Accessibility architecture (Portuguese)](https://github.com/st-all-one/html-auy/blob/main/docs/acessibility.md)
 - [LLM usage skill](https://github.com/st-all-one/html-auy/blob/main/SKILL.md)
 - [Shell and theme](https://github.com/st-all-one/html-auy/blob/main/docs/06-shell-e-tema.md)
 - [Security](https://github.com/st-all-one/html-auy/blob/main/docs/08-seguranca.md)

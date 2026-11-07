@@ -10,7 +10,7 @@ This document is the dense, full reference for an LLM working on or with this re
 - Public crate: `html-auy` (Rust name `html_auy`)
 - Macro crates: `html-auy-macros` (proc-macro) and `html-auy-macros-core` (parser/validator/codegen)
 - Version: `0.1.0`
-- License: MIT
+- License: MIT OR Apache-2.0
 - Edition: 2024
 - MSRV: Rust 1.92
 - Development toolchain: pinned separately in `rust-toolchain.toml` (1.99); do not confuse pinned toolchain and MSRV.
@@ -740,7 +740,7 @@ Workspace members are only the three public crates. `fuzz/` and `sniff-css/` are
 Primary references:
 
 - [README](https://github.com/st-all-one/html-auy/blob/main/README.md)
-- [Accessibility architecture (English)](https://github.com/st-all-one/html-auy/blob/main/docs/acessibility.md)
+- [Accessibility architecture (Portuguese)](https://github.com/st-all-one/html-auy/blob/main/docs/acessibility.md)
 - [LLM usage skill](https://github.com/st-all-one/html-auy/blob/main/SKILL.md)
 - [Usage wiki](https://github.com/st-all-one/html-auy/blob/main/docs/usage/README.md)
 - [Installation](https://github.com/st-all-one/html-auy/blob/main/docs/usage/01-instalacao.md)

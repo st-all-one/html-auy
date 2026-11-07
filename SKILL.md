@@ -1,6 +1,13 @@
 ---
 name: html-auy
-description: Correctly generate, review, and migrate Rust HTML with the html-auy typed vocabulary; use when code imports html_auy, asks for html!, Page, ShellData, View, Form, Field, media helpers, or audit.
+description: >
+  Produce correct Rust HTML with html-auy: typed escape contexts, deterministic
+  Markup, compile-time vocabulary validation, accessible shell/forms/media, and
+  final-document audit. Load when writing, reviewing, or migrating html-auy code.
+category: rust
+version: "0.1.0"
+tags: [rust, html, accessibility, a11y, templates, security]
+license: "MIT OR Apache-2.0"
 ---
 
 # html-auy — correct usage skill

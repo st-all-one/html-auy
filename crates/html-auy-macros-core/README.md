@@ -9,4 +9,4 @@ proc-macro crate depends on it; applications should use `html-auy` instead.
 
 ## License
 
-MIT. See `LICENSE`.
+MIT OR Apache-2.0. See `LICENSE-MIT` and `LICENSE-APACHE`.

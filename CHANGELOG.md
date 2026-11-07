@@ -16,6 +16,11 @@ All notable changes to `html-auy` are documented here. The format follows
 - `audit::check` rule `aria_current_unique_per_nav`.
 - Specific `accesskey` diagnostic pointing to the skip link instead of `Alt+1`.
 
+### Changed
+
+- The project is now dual-licensed under `MIT OR Apache-2.0`; both `LICENSE-MIT` and
+  `LICENSE-APACHE` are shipped at the workspace root and in each published crate.
+
 ## [0.1.0] - 2026-11-07
 
 First public release.
