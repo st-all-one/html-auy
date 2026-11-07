@@ -142,17 +142,9 @@ fn nested_list_is_allowed_inside_li() {
 }
 
 #[test]
-fn bare_text_is_escaped() {
-    let drawn = html! { p { "a < b & c" } };
+fn text_new_is_escaped() {
+    let drawn = html! { p { (Text::new("a < b & c")) } };
     assert_eq!(drawn.as_str(), "<p>a &lt; b &amp; c</p>");
-}
-
-#[test]
-fn literal_strings_use_rust_escapes_and_raw_forms() {
-    let drawn = html! { p { "a\x20b" } };
-    assert_eq!(drawn.as_str(), "<p>a b</p>");
-    let drawn = html! { p { r"a < b" } };
-    assert_eq!(drawn.as_str(), "<p>a &lt; b</p>");
 }
 
 #[test]

@@ -468,18 +468,14 @@ fn parse_for(cursor: &mut Cursor, diags: &mut Vec<Diag>, span: Span) -> Option<F
 
 fn parse_expression(cursor: &mut Cursor, diags: &mut Vec<Diag>) -> Option<Item> {
     if let Some(TokenTree::Literal(literal)) = cursor.peek() {
-        if literal_text(literal).is_some() {
-            let span = literal.span();
-            let literal = literal.clone();
-            cursor.bump();
-            return Some(Item::Child(Child {
-                expr: TokenStream::from(TokenTree::Literal(literal)),
-                span,
-            }));
-        }
         diags.push(
-            Diag::new(literal.span(), "literal não é texto")
-                .hint("use uma string (`\"…\"`), `Msg` ou `(expressão)`"),
+            Diag::new(
+                literal.span(),
+                "texto literal não é permitido; use uma variante de `Msg`",
+            )
+            .hint(
+                "mensagem estática: `Msg::Texto`; dado dinâmico: `Text::new(&valor)`; composição: `(minha_markup)`",
+            ),
         );
         cursor.bump();
         return None;

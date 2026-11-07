@@ -34,7 +34,7 @@ tem **um** tipo, com **um** construtor seguro e nenhum construtor cru.
 
 | Tipo | Contexto | Construção | Regras |
 |---|---|---|---|
-| `Text<'a>` | texto de conteúdo | `Text::new(&str)` · `Text::msg(Msg)` | escapa `&` `<` `>` `"` `'` e NUL; **nunca** vira markup. `&str`/`String` também são `Render` escapado, e o literal `"…"` no `html!` vira esse caminho |
+| `Text<'a>` | texto de conteúdo | `Text::new(&str)` · `Text::msg(Msg)` | escapa `&` `<` `>` `"` `'` e NUL; **nunca** vira markup |
 | `AttrVal<'a>` | valor de atributo comum | `AttrVal::new` | escapa os 5 + `\r` `\n` `\t` como entidades numéricas |
 | `Href` | link | `Href::internal(LUrl)` · `Href::fragment(Fragment)` · `Href::external(https)` · `Href::mailto` · `Href::tel` | **recusa** `javascript:`, `data:`, `vbscript:`; normaliza esquema em minúsculas |
 | `LUrl` | rota interna | `LUrl::new("/…")` · `LUrl::with_segments(base, &[seg])` | começa com `/`, sem `//`, sem `:`, sem `..` (nem `%2e%2e`); o locale/rota é helper do consumidor (C2) |
@@ -102,8 +102,9 @@ html! { div class=(Class::of(&[Token::Card, Token::Flat])) { … } }
 - `ClassToken` segue o mesmo desenho de `Msg` (D31): **o crate não conhece o vocabulário do consumidor**,
   só o contrato. `Tone` (primária/secundária/…) é do crate porque é identidade visual da biblioteca.
 - Merge é feito em `Class`, com deduplicação e ordem estável (bytes determinísticos).
-- `class="a b"` (literal estático) é aceito e canonicalizado no codegen; `Class::new("a b")`
-  faz o mesmo em runtime. `Class::of` continua sendo o caminho do enum gerado de `tokens.css`.
+- `class="a b"`, `Class::new("a b")` e `Class::of(&[Token::…])` são equivalentes: todos produzem
+  a mesma lista canônica. O literal é canonicalizado no codegen; `Class::new` faz o mesmo em
+  runtime e `Class::of` continua sendo o caminho do enum gerado de `tokens.css`.
 - O que não existe é `class` vindo de dado não estático: a lista é `&'static str` ou `Class`; o
   escape e a ordem são do crate.
 
@@ -119,8 +120,8 @@ impl Text<'static> { pub fn msg<M: Msg>(m: M) -> Self; }
 //   impl html::Msg for Msg { fn as_str(self) -> &'static str { … } }
 ```
 
-- Texto visível pode ser `Msg` (i18n), `Text::new(&dado)` (dinâmico) ou o literal `"Olá"` no
-  `html!` (escapado). `Msg` continua sendo o caminho quando há catálogo/tradução.
+- Todo texto **visível** entra por `Msg` (i18n) ou `Text::new(&dado)` (dinâmico); literal `"Olá"`
+  no `html!` é recusado pelo parser.
 - `Label::text(m)` e `Label::sr_only(m)` recebem `M: Msg` e produzem nomes acessíveis traduzidos.
 - A paridade de tradução é gate **do consumidor**: variante sem string nos 4 locales = erro lá.
 - **Por que trait e não `enum Msg` no crate (D31):** o crate não pode resolver locale — isso exige

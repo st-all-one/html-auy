@@ -165,6 +165,13 @@ fn emit_element(element: &Element, writer: &Ident, depth: usize) -> TokenStream 
     quote! { #open #attrs #close_open #children #close }
 }
 
+fn canonical_class(value: &str) -> String {
+    let mut tokens: Vec<&str> = value.split_whitespace().collect();
+    tokens.sort_unstable();
+    tokens.dedup();
+    tokens.join(" ")
+}
+
 fn emit_attr(element: &Element, attr: &Attr, name: &str, writer: &Ident) -> TokenStream {
     let name_literal = Literal::string(name);
     match &attr.value {
@@ -173,11 +180,16 @@ fn emit_attr(element: &Element, attr: &Attr, name: &str, writer: &Ident) -> Toke
                 // O validador recusa; sem codegen para não emitir `disabled="false"`.
                 return TokenStream::new();
             }
-            let value = Literal::string(text);
             let at = *span;
             if name == "class" {
-                return quote_spanned! {at=> #writer.attr_class_static(#value); };
+                let normalized = canonical_class(text);
+                if normalized.is_empty() {
+                    return TokenStream::new();
+                }
+                let value = Literal::string(&normalized);
+                return quote_spanned! {at=> #writer.attr_static(#name_literal, #value); };
             }
+            let value = Literal::string(text);
             quote_spanned! {at=> #writer.attr_static(#name_literal, #value); }
         }
         AttrValue::Computed { expr, span } => {

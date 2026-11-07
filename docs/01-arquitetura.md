@@ -134,7 +134,7 @@ O módulo **não pode**:
 
 - emitir `<html>`, `<head>`, `<style>`, `style=`, `on*`, `<script>` inline;
 - resolver rota por string (só `LUrl`);
-- depender de texto literal para i18n (literal é permitido e escapado; `Msg` é o caminho dos 4 locales).
+- escrever texto literal visível (só `Msg`/`Text::new`, para garantir 4 locales).
 
 ## 5. Onde vivem as coisas (mapa)
 

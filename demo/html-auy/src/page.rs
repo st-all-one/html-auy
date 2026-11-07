@@ -1,6 +1,8 @@
 //! Portal EXAMPLE.html implementado com `html!` + o contrato de valores do crate.
 
-use html::{Alt, AttrVal, Class, Fragment, HeightPx, Href, Label, Markup, Src, WidthPx, html};
+use html::{
+    Alt, AttrVal, Class, Fragment, HeightPx, Href, Label, Markup, Src, Text, WidthPx, html,
+};
 
 const HEAD: &str = include_str!("../assets/head.html");
 
@@ -21,10 +23,10 @@ fn header_controls() -> Markup {
                 button class=(Class::new(control.class)) title=(AttrVal::new(control.title)) type="button" {
                     @if !control.icon.is_empty() {
                         span class="material-symbols-outlined text-[14px]" {
-                            (control.icon)
+                            (Text::new(control.icon))
                         }
                     }
-                    span { (control.label) }
+                    span { (Text::new(control.label)) }
                 }
             }
         }
@@ -44,7 +46,7 @@ fn service_grid() -> Markup {
                                 "bg-surface-container flex group-hover:bg-primary group-hover:text-on-primary h-12 items-center justify-center rounded text-primary transition-colors w-12"
                             })) {
                                 span class="material-symbols-outlined text-[26px]" {
-                                    (service.icon)
+                                    (Text::new(service.icon))
                                 }
                             }
                             span class=(Class::new(if service.alternate {
@@ -52,7 +54,7 @@ fn service_grid() -> Markup {
                             } else {
                                 "bg-secondary-fixed font-caption font-semibold px-2 py-0.5 rounded text-caption text-secondary tracking-wider uppercase"
                             })) {
-                                (service.badge)
+                                (Text::new(service.badge))
                             }
                         }
                         h3 class=(Class::new(if service.alternate {
@@ -60,16 +62,16 @@ fn service_grid() -> Markup {
                         } else {
                             "font-bold font-title-md group-hover:text-primary mb-1 text-on-surface text-title-md"
                         })) {
-                            (service.title)
+                            (Text::new(service.title))
                         }
                         p class="font-body-sm text-body-sm text-on-surface-variant" {
-                            (service.body)
+                            (Text::new(service.body))
                         }
                     }
                     div class="mt-4 pt-3 flex items-center justify-between text-caption font-caption text-on-surface-variant" {
-                        span { (service.footer) }
+                        span { (Text::new(service.footer)) }
                         span class="material-symbols-outlined text-[18px] text-secondary group-hover:translate-x-1 transition-transform" {
-                            "arrow_forward"
+                            (Text::new("arrow_forward"))
                         }
                     }
                 }
@@ -88,18 +90,18 @@ fn header() -> Markup {
                         span class="w-3.5 h-2.5 bg-secondary inline-block rounded-none border border-outline-variant/30" {
                         }
                         span class="font-label-sm text-label-sm tracking-wider uppercase opacity-90" {
-                            "República Federativa do Brasil"
+                            (Text::new("República Federativa do Brasil"))
                         }
                     }
                     div class="hidden md:flex items-center gap-space-md opacity-80" {
                         a class="hover:text-surface transition-colors" href=(anchor("#conteudo")) {
-                            "Ir para o Conteúdo [1]"
+                            (Text::new("Ir para o Conteúdo [1]"))
                         }
                         a class="hover:text-surface transition-colors" href=(anchor("#menu")) {
-                            "Ir para o Menu [2]"
+                            (Text::new("Ir para o Menu [2]"))
                         }
                         a class="hover:text-surface transition-colors" href=(anchor("#busca")) {
-                            "Ir para a Busca [3]"
+                            (Text::new("Ir para a Busca [3]"))
                         }
                     }
                 }
@@ -109,10 +111,10 @@ fn header() -> Markup {
                     }
                     a class="font-label-sm text-label-sm hover:underline flex items-center gap-1" data_path="ouvidoria-e-sic" href=(hash()) {
                         span class="material-symbols-outlined text-[14px]" {
-                            "info"
+                            (Text::new("info"))
                         }
                         span {
-                            "LAI nº 12.527"
+                            (Text::new("LAI nº 12.527"))
                         }
                     }
                 }
@@ -123,38 +125,38 @@ fn header() -> Markup {
                 div class="flex items-center gap-space-md" {
                     div class="w-12 h-12 rounded bg-surface-container flex items-center justify-center border border-outline-variant/40" {
                         span class="material-symbols-outlined text-primary text-[28px]" {
-                            "account_balance"
+                            (Text::new("account_balance"))
                         }
                     }
                     div {
                         div class="font-label-sm text-label-sm uppercase tracking-widest text-secondary font-bold" {
-                            "Portal Cívico Unificado"
+                            (Text::new("Portal Cívico Unificado"))
                         }
                         div class="font-headline-sm text-headline-sm font-headline-sm text-on-surface leading-tight" {
-                            "Governo Municipal"
+                            (Text::new("Governo Municipal"))
                         }
                     }
                 }
                 div class="hidden xl:flex items-center bg-surface-container-low p-1 rounded border border-outline-variant/30" {
                     a class="flex items-center gap-2 px-space-md py-1.5 rounded font-label-md text-label-md font-semibold bg-surface-container-lowest text-primary shadow-[0_1px_4px_rgba(0,0,0,0.05)] border border-outline-variant/40" data_path="prefeitura-secretarias" href=(hash()) {
                         span class="material-symbols-outlined text-[18px] text-primary" {
-                            "domain"
+                            (Text::new("domain"))
                         }
                         span {
-                            "Poder Executivo "
+                            (Text::new("Poder Executivo "))
                             span class="font-caption text-caption opacity-75 font-normal" {
-                                "(Prefeitura)"
+                                (Text::new("(Prefeitura)"))
                             }
                         }
                     }
                     a class="flex items-center gap-2 px-space-md py-1.5 rounded font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors" data_path="camara-vereadores" href=(hash()) {
                         span class="material-symbols-outlined text-[18px] text-secondary" {
-                            "gavel"
+                            (Text::new("gavel"))
                         }
                         span {
-                            "Poder Legislativo "
+                            (Text::new("Poder Legislativo "))
                             span class="font-caption text-caption opacity-75 font-normal" {
-                                "(Câmara)"
+                                (Text::new("(Câmara)"))
                             }
                         }
                     }
@@ -163,22 +165,22 @@ fn header() -> Markup {
                     div class="relative flex items-center" {
                         input class="w-full bg-surface-container-low border border-outline-variant/40 rounded h-11 pl-10 pr-4 font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:border-primary focus:bg-surface-container-lowest transition-all" placeholder=(AttrVal::new("Buscar leis, processos, serviços, diários oficiais...")) type="text" name="q" aria_label=(Label::text(Msg::Search));
                         span class="material-symbols-outlined absolute left-3 text-on-surface-variant text-[20px]" {
-                            "search"
+                            (Text::new("search"))
                         }
                     }
                 }
                 div class="flex items-center gap-space-md" {
                     a class="hidden sm:flex items-center gap-1.5 px-space-md h-10 rounded border border-secondary text-secondary hover:bg-secondary-fixed hover:text-on-secondary-fixed font-label-md text-label-md font-medium transition-colors" data_path="portal-da-transparencia" href=(hash()) {
                         span class="material-symbols-outlined text-[18px]" {
-                            "policy"
+                            (Text::new("policy"))
                         }
                         span {
-                            "Transparência"
+                            (Text::new("Transparência"))
                         }
                     }
                     div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center" {
                         span class="material-symbols-outlined text-on-primary text-[18px]" {
-                            "person"
+                            (Text::new("person"))
                         }
                     }
                 }
@@ -189,7 +191,7 @@ fn header() -> Markup {
                 nav class="flex items-center gap-space-lg overflow-x-auto h-12 font-label-md text-label-md scrollbar-none" data_active_classes="text-primary border-b-2 border-primary font-bold" {
                     for (path, label) in NAV {
                         a class="text-on-surface-variant hover:text-on-surface py-3 inline-block whitespace-nowrap transition-colors" data_path=(AttrVal::new(path)) href=(hash()) {
-                            (label)
+                            (Text::new(label))
                         }
                     }
                 }
@@ -212,55 +214,55 @@ fn main_content() -> Markup {
                     span class="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-surface-container-lowest text-primary text-label-sm font-label-sm uppercase tracking-widest shadow-sm" {
                         span class="w-2 h-2 rounded-full bg-secondary" {
                         }
-                        " Ambiente Cívico Integrado "
+                        (Text::new(" Ambiente Cívico Integrado "))
                     }
                     span class="text-caption font-caption text-on-surface-variant flex items-center gap-1" {
                         span class="material-symbols-outlined text-[14px] text-secondary" {
-                            "verified"
+                            (Text::new("verified"))
                         }
-                        " Emissão em tempo real com certificação ICP-Brasil "
+                        (Text::new(" Emissão em tempo real com certificação ICP-Brasil "))
                     }
                 }
                 div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-end" {
                     div class="lg:col-span-8" {
                         h1 class="font-headline-xl text-headline-xl text-on-surface leading-tight tracking-tight mb-space-sm" {
-                            "Transparência, Cidadania e Gestão Democrática Municipal"
+                            (Text::new("Transparência, Cidadania e Gestão Democrática Municipal"))
                         }
                         p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl" {
-                            " Acesso unificado e irrestrito aos atos oficiais, tramitações e deliberações conjuntas do "
+                            (Text::new(" Acesso unificado e irrestrito aos atos oficiais, tramitações e deliberações conjuntas do "))
                             strong class="text-on-surface font-semibold" {
-                                "Poder Executivo (Prefeitura)"
+                                (Text::new("Poder Executivo (Prefeitura)"))
                             }
-                            " e do "
+                            (Text::new(" e do "))
                             strong class="text-on-surface font-semibold" {
-                                "Poder Legislativo (Câmara de Vereadores)"
+                                (Text::new("Poder Legislativo (Câmara de Vereadores)"))
                             }
-                            " em consonância com a Lei de Acesso à Informação. "
+                            (Text::new(" em consonância com a Lei de Acesso à Informação. "))
                         }
                     }
                     div class="lg:col-span-4 flex lg:justify-end" {
                         div class="bg-surface-container-lowest p-space-md rounded shadow-sm text-left w-full lg:w-auto min-w-[260px]" {
                             div class="text-caption font-caption text-on-surface-variant uppercase tracking-wider mb-1" {
-                                "Status Operacional dos Poderes"
+                                (Text::new("Status Operacional dos Poderes"))
                             }
                             div class="flex items-center justify-between text-body-sm font-body-sm text-on-surface py-1" {
                                 span class="flex items-center gap-2" {
                                     span class="w-2 h-2 rounded-full bg-secondary" {
                                     }
-                                    " Paço Municipal "
+                                    (Text::new(" Paço Municipal "))
                                 }
                                 span class="font-label-sm text-label-sm text-secondary font-medium" {
-                                    "Expediente Normal"
+                                    (Text::new("Expediente Normal"))
                                 }
                             }
                             div class="flex items-center justify-between text-body-sm font-body-sm text-on-surface py-1" {
                                 span class="flex items-center gap-2" {
                                     span class="w-2 h-2 rounded-full bg-secondary" {
                                     }
-                                    " Plenário da Câmara "
+                                    (Text::new(" Plenário da Câmara "))
                                 }
                                 span class="font-label-sm text-label-sm text-secondary font-medium" {
-                                    "Pauta Publicada"
+                                    (Text::new("Pauta Publicada"))
                                 }
                             }
                         }
@@ -268,43 +270,43 @@ fn main_content() -> Markup {
                 }
                 div class="mt-8 bg-surface-container-lowest p-space-md lg:p-space-lg rounded shadow-md" {
                     label class="block font-label-md text-label-md text-on-surface font-semibold mb-2" for="input-civic-search" {
-                        " Pesquisa Geral Integrada nos Dois Poderes "
+                        (Text::new(" Pesquisa Geral Integrada nos Dois Poderes "))
                     }
                     div class="relative flex items-center" {
                         span class="material-symbols-outlined absolute left-4 text-on-surface-variant text-[24px]" {
-                            "search"
+                            (Text::new("search"))
                         }
                         input class="w-full bg-surface-container-low rounded h-14 pl-12 pr-32 font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:bg-surface-container-lowest shadow-inner transition-all" id="input-civic-search" placeholder=(AttrVal::new("Buscar leis, decretos, processos, vereadores, obras, certidões ou licitações...")) type="text" name="q";
                         button class="absolute right-2 px-6 h-10 rounded bg-primary text-on-primary font-label-md text-label-md font-semibold hover:bg-primary-container transition-colors flex items-center gap-2" type="button" {
                             span {
-                                "Consultar"
+                                (Text::new("Consultar"))
                             }
                             span class="material-symbols-outlined text-[18px]" {
-                                "arrow_forward"
+                                (Text::new("arrow_forward"))
                             }
                         }
                     }
                     div class="mt-4 flex flex-wrap items-center gap-2" {
                         span class="text-caption font-caption text-on-surface-variant uppercase tracking-wider mr-2" {
-                            "Consultas Rápidas:"
+                            (Text::new("Consultas Rápidas:"))
                         }
                         a class="px-3 py-1 rounded bg-surface-container text-primary hover:bg-secondary-fixed hover:text-on-secondary-fixed text-label-sm font-label-sm font-medium transition-colors" href=(hash()) {
-                            " IPTU 2026 "
+                            (Text::new(" IPTU 2026 "))
                         }
                         a class="px-3 py-1 rounded bg-surface-container text-primary hover:bg-secondary-fixed hover:text-on-secondary-fixed text-label-sm font-label-sm font-medium transition-colors" href=(hash()) {
-                            " Diário Oficial de Hoje "
+                            (Text::new(" Diário Oficial de Hoje "))
                         }
                         a class="px-3 py-1 rounded bg-surface-container text-primary hover:bg-secondary-fixed hover:text-on-secondary-fixed text-label-sm font-label-sm font-medium transition-colors" href=(hash()) {
-                            " Sessões da Câmara "
+                            (Text::new(" Sessões da Câmara "))
                         }
                         a class="px-3 py-1 rounded bg-surface-container text-primary hover:bg-secondary-fixed hover:text-on-secondary-fixed text-label-sm font-label-sm font-medium transition-colors" href=(hash()) {
-                            " Pauta de Votação "
+                            (Text::new(" Pauta de Votação "))
                         }
                         a class="px-3 py-1 rounded bg-surface-container text-primary hover:bg-secondary-fixed hover:text-on-secondary-fixed text-label-sm font-label-sm font-medium transition-colors" href=(hash()) {
-                            " Concursos & Editais "
+                            (Text::new(" Concursos & Editais "))
                         }
                         a class="px-3 py-1 rounded bg-surface-container text-primary hover:bg-secondary-fixed hover:text-on-secondary-fixed text-label-sm font-label-sm font-medium transition-colors" href=(hash()) {
-                            " Carta de Serviços SUS "
+                            (Text::new(" Carta de Serviços SUS "))
                         }
                     }
                 }
@@ -314,14 +316,14 @@ fn main_content() -> Markup {
             div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4" {
                 div {
                     div class="font-label-sm text-label-sm text-secondary uppercase tracking-widest font-bold" {
-                        "Pilares da República Municipal"
+                        (Text::new("Pilares da República Municipal"))
                     }
                     h2 class="font-headline-lg text-headline-lg text-on-surface" {
-                        "Poderes Constituídos do Município"
+                        (Text::new("Poderes Constituídos do Município"))
                     }
                 }
                 p class="font-body-sm text-body-sm text-on-surface-variant max-w-md" {
-                    " Separação harmônica com canais diretos para acompanhamento orçamentário, tramitação de projetos e agendas dos mandatários. "
+                    (Text::new(" Separação harmônica com canais diretos para acompanhamento orçamentário, tramitação de projetos e agendas dos mandatários. "))
                 }
             }
             div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg" {
@@ -335,32 +337,32 @@ fn main_content() -> Markup {
                                 div class="flex items-center gap-3" {
                                     div class="w-10 h-10 rounded bg-surface-container-lowest text-primary flex items-center justify-center shadow" {
                                         span class="material-symbols-outlined text-[24px]" {
-                                            "domain"
+                                            (Text::new("domain"))
                                         }
                                     }
                                     div {
                                         span class="font-label-sm text-label-sm uppercase tracking-wider text-surface-variant" {
-                                            "Poder Executivo"
+                                            (Text::new("Poder Executivo"))
                                         }
                                         h3 class="font-headline-sm text-headline-sm font-bold text-on-primary" {
-                                            "Prefeitura Municipal"
+                                            (Text::new("Prefeitura Municipal"))
                                         }
                                     }
                                 }
                                 span class="px-2.5 py-1 rounded bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-semibold" {
-                                    " Paço da Cidade "
+                                    (Text::new(" Paço da Cidade "))
                                 }
                             }
                         }
                         div class="p-space-lg space-y-space-md" {
                             p class="font-body-md text-body-md text-on-surface-variant" {
-                                " Administração direta e indireta responsável pela execução de políticas públicas, infraestrutura urbana, saúde, educação infantil e zeladoria. "
+                                (Text::new(" Administração direta e indireta responsável pela execução de políticas públicas, infraestrutura urbana, saúde, educação infantil e zeladoria. "))
                             }
                             div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2" {
                                 for (icon, label) in EXEC_QUICK {
                                     a class="p-3 bg-surface-container-low rounded text-center hover:bg-surface-container-high transition-colors" href=(hash()) {
-                                        span class="material-symbols-outlined text-primary text-[22px] mb-1" { (icon) }
-                                        span class="block font-label-sm text-label-sm text-on-surface font-semibold" { (label) }
+                                        span class="material-symbols-outlined text-primary text-[22px] mb-1" { (Text::new(icon)) }
+                                        span class="block font-label-sm text-label-sm text-on-surface font-semibold" { (Text::new(label)) }
                                     }
                                 }
                             }
@@ -368,23 +370,23 @@ fn main_content() -> Markup {
                                 div class="flex items-center justify-between text-body-sm font-body-sm py-2 px-3 bg-surface-container-low rounded" {
                                     span class="flex items-center gap-2 text-on-surface font-medium" {
                                         span class="material-symbols-outlined text-[18px] text-secondary" {
-                                            "map"
+                                            (Text::new("map"))
                                         }
-                                        " Obras em Andamento no Município "
+                                        (Text::new(" Obras em Andamento no Município "))
                                     }
                                     span class="font-label-sm text-label-sm font-bold text-primary" {
-                                        "34 ativas"
+                                        (Text::new("34 ativas"))
                                     }
                                 }
                                 div class="flex items-center justify-between text-body-sm font-body-sm py-2 px-3 bg-surface-container-low rounded" {
                                     span class="flex items-center gap-2 text-on-surface font-medium" {
                                         span class="material-symbols-outlined text-[18px] text-secondary" {
-                                            "assignment_turned_in"
+                                            (Text::new("assignment_turned_in"))
                                         }
-                                        " Carta Geral de Serviços ao Cidadão "
+                                        (Text::new(" Carta Geral de Serviços ao Cidadão "))
                                     }
                                     span class="font-label-sm text-label-sm font-bold text-primary" {
-                                        "142 itens"
+                                        (Text::new("142 itens"))
                                     }
                                 }
                             }
@@ -393,17 +395,17 @@ fn main_content() -> Markup {
                     div class="p-space-lg pt-0 flex flex-wrap gap-space-sm items-center justify-between" {
                         a class="inline-flex items-center gap-2 px-space-md py-2.5 rounded bg-primary text-on-primary font-label-md text-label-md font-semibold hover:bg-primary-container transition-colors" href=(hash()) {
                             span {
-                                "Acessar Gabinete & Secretarias"
+                                (Text::new("Acessar Gabinete & Secretarias"))
                             }
                             span class="material-symbols-outlined text-[16px]" {
-                                "chevron_right"
+                                (Text::new("chevron_right"))
                             }
                         }
                         a class="inline-flex items-center gap-1.5 text-label-md font-label-md text-secondary hover:underline font-semibold" href=(hash()) {
                             span class="material-symbols-outlined text-[18px]" {
-                                "calendar_month"
+                                (Text::new("calendar_month"))
                             }
-                            " Agendamento no Paço "
+                            (Text::new(" Agendamento no Paço "))
                         }
                     }
                 }
@@ -417,32 +419,32 @@ fn main_content() -> Markup {
                                 div class="flex items-center gap-3" {
                                     div class="w-10 h-10 rounded bg-surface-container-lowest text-secondary flex items-center justify-center shadow" {
                                         span class="material-symbols-outlined text-[24px]" {
-                                            "gavel"
+                                            (Text::new("gavel"))
                                         }
                                     }
                                     div {
                                         span class="font-label-sm text-label-sm uppercase tracking-wider text-surface-variant" {
-                                            "Poder Legislativo"
+                                            (Text::new("Poder Legislativo"))
                                         }
                                         h3 class="font-headline-sm text-headline-sm font-bold text-on-primary" {
-                                            "Câmara Municipal"
+                                            (Text::new("Câmara Municipal"))
                                         }
                                     }
                                 }
                                 span class="px-2.5 py-1 rounded bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-semibold" {
-                                    " 15 Vereadores "
+                                    (Text::new(" 15 Vereadores "))
                                 }
                             }
                         }
                         div class="p-space-lg space-y-space-md" {
                             p class="font-body-md text-body-md text-on-surface-variant" {
-                                " Órgão representativo popular incumbido de legislar, fiscalizar as contas do Executivo e debater as demandas da sociedade civil organizada. "
+                                (Text::new(" Órgão representativo popular incumbido de legislar, fiscalizar as contas do Executivo e debater as demandas da sociedade civil organizada. "))
                             }
                             div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2" {
                                 for (icon, label) in LEG_QUICK {
                                     a class="p-3 bg-surface-container-low rounded text-center hover:bg-surface-container-high transition-colors" href=(hash()) {
-                                        span class="material-symbols-outlined text-secondary text-[22px] mb-1" { (icon) }
-                                        span class="block font-label-sm text-label-sm text-on-surface font-semibold" { (label) }
+                                        span class="material-symbols-outlined text-secondary text-[22px] mb-1" { (Text::new(icon)) }
+                                        span class="block font-label-sm text-label-sm text-on-surface font-semibold" { (Text::new(label)) }
                                     }
                                 }
                             }
@@ -450,25 +452,25 @@ fn main_content() -> Markup {
                                 div class="flex items-center justify-between text-body-sm font-body-sm py-2 px-3 bg-surface-container-low rounded" {
                                     span class="flex items-center gap-2 text-on-surface font-medium" {
                                         span class="material-symbols-outlined text-[18px] text-secondary" {
-                                            "mic"
+                                            (Text::new("mic"))
                                         }
-                                        " Transmissão ao Vivo do Plenário "
+                                        (Text::new(" Transmissão ao Vivo do Plenário "))
                                     }
                                     span class="font-label-sm text-label-sm font-semibold text-secondary flex items-center gap-1" {
                                         span class="w-2 h-2 rounded-full bg-secondary" {
                                         }
-                                        " Canal Aberto HD "
+                                        (Text::new(" Canal Aberto HD "))
                                     }
                                 }
                                 div class="flex items-center justify-between text-body-sm font-body-sm py-2 px-3 bg-surface-container-low rounded" {
                                     span class="flex items-center gap-2 text-on-surface font-medium" {
                                         span class="material-symbols-outlined text-[18px] text-secondary" {
-                                            "query_stats"
+                                            (Text::new("query_stats"))
                                         }
-                                        " Cota Parlamentar e Verbas de Gabinete "
+                                        (Text::new(" Cota Parlamentar e Verbas de Gabinete "))
                                     }
                                     span class="font-label-sm text-label-sm font-bold text-primary" {
-                                        "100% Pública"
+                                        (Text::new("100% Pública"))
                                     }
                                 }
                             }
@@ -477,17 +479,17 @@ fn main_content() -> Markup {
                     div class="p-space-lg pt-0 flex flex-wrap gap-space-sm items-center justify-between" {
                         a class="inline-flex items-center gap-2 px-space-md py-2.5 rounded bg-secondary text-on-secondary font-label-md text-label-md font-semibold hover:bg-on-secondary-fixed-variant transition-colors" href=(hash()) {
                             span {
-                                "Conhecer os 15 Vereadores"
+                                (Text::new("Conhecer os 15 Vereadores"))
                             }
                             span class="material-symbols-outlined text-[16px]" {
-                                "chevron_right"
+                                (Text::new("chevron_right"))
                             }
                         }
                         a class="inline-flex items-center gap-1.5 text-label-md font-label-md text-primary hover:underline font-semibold" href=(hash()) {
                             span class="material-symbols-outlined text-[18px]" {
-                                "how_to_vote"
+                                (Text::new("how_to_vote"))
                             }
-                            " Pauta de Votações "
+                            (Text::new(" Pauta de Votações "))
                         }
                     }
                 }
@@ -499,32 +501,32 @@ fn main_content() -> Markup {
                     div {
                         div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded bg-surface-container-lowest text-primary text-label-sm font-label-sm font-bold uppercase tracking-wider mb-2" {
                             span class="material-symbols-outlined text-[16px] text-secondary" {
-                                "verified_user"
+                                (Text::new("verified_user"))
                             }
-                            " Transparência Fiscal em Tempo Real • Exercício 2025 "
+                            (Text::new(" Transparência Fiscal em Tempo Real • Exercício 2025 "))
                         }
                         h2 class="font-headline-lg text-headline-lg text-on-surface" {
-                            "Execução Orçamentária e Balanço Constitucional"
+                            (Text::new("Execução Orçamentária e Balanço Constitucional"))
                         }
                     }
                     div class="flex flex-wrap items-center gap-2" {
                         button class="inline-flex items-center gap-1.5 px-3 py-2 bg-surface-container-lowest rounded text-primary hover:bg-surface-container-high text-label-sm font-label-sm font-semibold shadow-sm transition-colors" type="button" {
                             span class="material-symbols-outlined text-[16px]" {
-                                "picture_as_pdf"
+                                (Text::new("picture_as_pdf"))
                             }
-                            " RGF / RREO (PDF) "
+                            (Text::new(" RGF / RREO (PDF) "))
                         }
                         button class="inline-flex items-center gap-1.5 px-3 py-2 bg-surface-container-lowest rounded text-primary hover:bg-surface-container-high text-label-sm font-label-sm font-semibold shadow-sm transition-colors" type="button" {
                             span class="material-symbols-outlined text-[16px]" {
-                                "dataset"
+                                (Text::new("dataset"))
                             }
-                            " Dados Abertos (CSV/API) "
+                            (Text::new(" Dados Abertos (CSV/API) "))
                         }
                         span class="inline-flex items-center gap-1 px-3 py-2 bg-secondary-fixed text-on-secondary-fixed rounded text-label-sm font-label-sm font-semibold" {
                             span class="material-symbols-outlined text-[16px]" {
-                                "check_circle"
+                                (Text::new("check_circle"))
                             }
-                            " TCE Homologado "
+                            (Text::new(" TCE Homologado "))
                         }
                     }
                 }
@@ -532,30 +534,30 @@ fn main_content() -> Markup {
                     div class="bg-surface-container-lowest p-space-lg rounded shadow-sm" {
                         div class="flex items-center justify-between text-on-surface-variant mb-2" {
                             span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold" {
-                                "Orçamento Fixado (LOA)"
+                                (Text::new("Orçamento Fixado (LOA)"))
                             }
                             span class="material-symbols-outlined text-primary text-[20px]" {
-                                "account_balance"
+                                (Text::new("account_balance"))
                             }
                         }
                         div class="font-headline-md text-headline-md text-primary font-bold tracking-tight" {
-                            " R$ 428.500.000,00 "
+                            (Text::new(" R$ 428.500.000,00 "))
                         }
                         p class="font-caption text-caption text-on-surface-variant mt-2" {
-                            " Lei Orçamentária Anual nº 1.842 devidamente sancionada. "
+                            (Text::new(" Lei Orçamentária Anual nº 1.842 devidamente sancionada. "))
                         }
                     }
                     div class="bg-surface-container-lowest p-space-lg rounded shadow-sm" {
                         div class="flex items-center justify-between text-on-surface-variant mb-2" {
                             span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold" {
-                                "Receita Arrecadada"
+                                (Text::new("Receita Arrecadada"))
                             }
                             span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-bold" {
-                                "26,2%"
+                                (Text::new("26,2%"))
                             }
                         }
                         div class="font-headline-md text-headline-md text-secondary font-bold tracking-tight" {
-                            " R$ 112.430.820,00 "
+                            (Text::new(" R$ 112.430.820,00 "))
                         }
                         div class="w-full bg-surface-container-low h-2 rounded mt-3 overflow-hidden" {
                             div class="bg-secondary h-full rounded w-26-2" {
@@ -563,24 +565,24 @@ fn main_content() -> Markup {
                         }
                         div class="flex justify-between items-center text-caption font-caption text-on-surface-variant mt-2" {
                             span {
-                                "IPTU, ISS, FPM, ICMS"
+                                (Text::new("IPTU, ISS, FPM, ICMS"))
                             }
                             span class="text-on-surface font-medium" {
-                                "Meta 1º Quadrimestre Atingida"
+                                (Text::new("Meta 1º Quadrimestre Atingida"))
                             }
                         }
                     }
                     div class="bg-surface-container-lowest p-space-lg rounded shadow-sm" {
                         div class="flex items-center justify-between text-on-surface-variant mb-2" {
                             span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold" {
-                                "Despesas Liquidadas"
+                                (Text::new("Despesas Liquidadas"))
                             }
                             span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-high text-primary font-bold" {
-                                "22,9%"
+                                (Text::new("22,9%"))
                             }
                         }
                         div class="font-headline-md text-headline-md text-on-surface font-bold tracking-tight" {
-                            " R$ 98.120.450,00 "
+                            (Text::new(" R$ 98.120.450,00 "))
                         }
                         div class="w-full bg-surface-container-low h-2 rounded mt-3 overflow-hidden" {
                             div class="bg-primary-container h-full rounded w-22-9" {
@@ -588,10 +590,10 @@ fn main_content() -> Markup {
                         }
                         div class="flex justify-between items-center text-caption font-caption text-on-surface-variant mt-2" {
                             span {
-                                "Investimentos, Custeio e Folha"
+                                (Text::new("Investimentos, Custeio e Folha"))
                             }
                             span class="text-on-surface font-medium" {
-                                "Superávit Primário Corrente"
+                                (Text::new("Superávit Primário Corrente"))
                             }
                         }
                     }
@@ -599,10 +601,10 @@ fn main_content() -> Markup {
                 div class="bg-surface-container-lowest p-space-lg rounded shadow-sm" {
                     div class="flex flex-col md:flex-row md:items-center justify-between mb-4" {
                         h3 class="font-title-md text-title-md text-on-surface font-bold" {
-                            " Limites e Aplicações Constitucionais Obrigatórias "
+                            (Text::new(" Limites e Aplicações Constitucionais Obrigatórias "))
                         }
                         span class="text-caption font-caption text-on-surface-variant" {
-                            " Atualizado com base nos lançamentos contábeis das últimas 24h "
+                            (Text::new(" Atualizado com base nos lançamentos contábeis das últimas 24h "))
                         }
                     }
                     div class="grid grid-cols-1 md:grid-cols-2 gap-space-lg" {
@@ -610,14 +612,14 @@ fn main_content() -> Markup {
                             div class="flex items-center justify-between mb-2" {
                                 div class="flex items-center gap-2" {
                                     span class="material-symbols-outlined text-secondary text-[22px]" {
-                                        "health_and_safety"
+                                        (Text::new("health_and_safety"))
                                     }
                                     span class="font-label-md text-label-md font-bold text-on-surface" {
-                                        "Saúde Pública (SUS Municipal)"
+                                        (Text::new("Saúde Pública (SUS Municipal)"))
                                     }
                                 }
                                 span class="font-title-md text-title-md font-bold text-secondary" {
-                                    "21,4%"
+                                    (Text::new("21,4%"))
                                 }
                             }
                             div class="w-full bg-surface-container h-2.5 rounded overflow-hidden relative" {
@@ -627,13 +629,13 @@ fn main_content() -> Markup {
                             }
                             div class="flex items-center justify-between text-caption font-caption text-on-surface-variant mt-2" {
                                 span {
-                                    "Mínimo Constitucional: "
+                                    (Text::new("Mínimo Constitucional: "))
                                     strong {
-                                        "15,0%"
+                                        (Text::new("15,0%"))
                                     }
                                 }
                                 span class="text-secondary font-semibold" {
-                                    "+6,4% acima do limite"
+                                    (Text::new("+6,4% acima do limite"))
                                 }
                             }
                         }
@@ -641,14 +643,14 @@ fn main_content() -> Markup {
                             div class="flex items-center justify-between mb-2" {
                                 div class="flex items-center gap-2" {
                                     span class="material-symbols-outlined text-primary text-[22px]" {
-                                        "school"
+                                        (Text::new("school"))
                                     }
                                     span class="font-label-md text-label-md font-bold text-on-surface" {
-                                        "Educação Básica & FUNDEB"
+                                        (Text::new("Educação Básica & FUNDEB"))
                                     }
                                 }
                                 span class="font-title-md text-title-md font-bold text-primary" {
-                                    "27,8%"
+                                    (Text::new("27,8%"))
                                 }
                             }
                             div class="w-full bg-surface-container h-2.5 rounded overflow-hidden relative" {
@@ -658,13 +660,13 @@ fn main_content() -> Markup {
                             }
                             div class="flex items-center justify-between text-caption font-caption text-on-surface-variant mt-2" {
                                 span {
-                                    "Mínimo Constitucional: "
+                                    (Text::new("Mínimo Constitucional: "))
                                     strong {
-                                        "25,0%"
+                                        (Text::new("25,0%"))
                                     }
                                 }
                                 span class="text-primary font-semibold" {
-                                    "+2,8% acima do limite"
+                                    (Text::new("+2,8% acima do limite"))
                                 }
                             }
                         }
@@ -676,18 +678,18 @@ fn main_content() -> Markup {
             div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4" {
                 div {
                     div class="font-label-sm text-label-sm text-secondary uppercase tracking-widest font-bold" {
-                        "Atendimento Descentralizado"
+                        (Text::new("Atendimento Descentralizado"))
                     }
                     h2 class="font-headline-lg text-headline-lg text-on-surface" {
-                        "Serviços Essenciais ao Cidadão e Contribuinte"
+                        (Text::new("Serviços Essenciais ao Cidadão e Contribuinte"))
                     }
                 }
                 a class="font-label-md text-label-md text-secondary hover:underline font-semibold flex items-center gap-1" href=(hash()) {
                     span {
-                        "Ver Guia Completo de 142 Serviços"
+                        (Text::new("Ver Guia Completo de 142 Serviços"))
                     }
                     span class="material-symbols-outlined text-[16px]" {
-                        "arrow_forward"
+                        (Text::new("arrow_forward"))
                     }
                 }
             }
@@ -700,45 +702,45 @@ fn main_content() -> Markup {
                         div {
                             div class="flex items-center justify-between mb-4" {
                                 span class="px-2.5 py-1 rounded bg-tertiary-container text-on-tertiary font-label-sm text-label-sm font-semibold" {
-                                    " Diário Oficial do Município "
+                                    (Text::new(" Diário Oficial do Município "))
                                 }
                                 span class="text-caption font-caption text-on-surface-variant" {
-                                    "Hoje"
+                                    (Text::new("Hoje"))
                                 }
                             }
                             div class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider" {
-                                "Edição Ordinária"
+                                (Text::new("Edição Ordinária"))
                             }
                             div class="font-headline-md text-headline-md font-bold text-primary mt-1 mb-2" {
-                                " Edição nº 3.418 "
+                                (Text::new(" Edição nº 3.418 "))
                             }
                             p class="font-body-sm text-body-sm text-on-surface-variant mb-4" {
-                                " Publicação oficial de decretos, leis sancionadas, portarias de recursos humanos e homologações de licitações. "
+                                (Text::new(" Publicação oficial de decretos, leis sancionadas, portarias de recursos humanos e homologações de licitações. "))
                             }
                             div class="p-3 bg-surface-container-low rounded space-y-1 mb-6" {
                                 div class="flex items-center gap-1.5 text-secondary text-label-sm font-label-sm font-semibold" {
                                     span class="material-symbols-outlined text-[18px]" {
-                                        "lock"
+                                        (Text::new("lock"))
                                     }
-                                    " ICP-Brasil Padrão A1/A3 "
+                                    (Text::new(" ICP-Brasil Padrão A1/A3 "))
                                 }
                                 div class="font-caption text-caption text-on-surface-variant font-mono truncate" {
-                                    " SHA-256: 4e9f82d1c6a0b...89ef02b "
+                                    (Text::new(" SHA-256: 4e9f82d1c6a0b...89ef02b "))
                                 }
                             }
                         }
                         div class="space-y-2" {
                             a class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded bg-primary text-on-primary font-label-md text-label-md font-semibold hover:bg-primary-container transition-colors" href=(hash()) {
                                 span class="material-symbols-outlined text-[18px]" {
-                                    "download"
+                                    (Text::new("download"))
                                 }
                                 span {
-                                    "Baixar Diário Oficial (PDF)"
+                                    (Text::new("Baixar Diário Oficial (PDF)"))
                                 }
                             }
                             a class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded bg-surface-container text-primary font-label-md text-label-md font-medium hover:bg-surface-container-high transition-colors" href=(hash()) {
                                 span {
-                                    "Acervo Histórico de Edições"
+                                    (Text::new("Acervo Histórico de Edições"))
                                 }
                             }
                         }
@@ -748,18 +750,18 @@ fn main_content() -> Markup {
                             div class="flex items-center justify-between mb-4" {
                                 div {
                                     div class="font-label-sm text-label-sm text-secondary uppercase tracking-widest font-bold" {
-                                        "Atos Normativos Recentes"
+                                        (Text::new("Atos Normativos Recentes"))
                                     }
                                     h3 class="font-headline-sm text-headline-sm text-on-surface font-bold" {
-                                        "Últimas Publicações dos Dois Poderes"
+                                        (Text::new("Últimas Publicações dos Dois Poderes"))
                                     }
                                 }
                                 a class="font-label-md text-label-md text-secondary hover:underline font-semibold hidden sm:inline-flex items-center gap-1" href=(hash()) {
                                     span {
-                                        "Ver Todos os Atos"
+                                        (Text::new("Ver Todos os Atos"))
                                     }
                                     span class="material-symbols-outlined text-[16px]" {
-                                        "arrow_forward"
+                                        (Text::new("arrow_forward"))
                                     }
                                 }
                             }
@@ -769,27 +771,27 @@ fn main_content() -> Markup {
                                         div class="flex flex-wrap items-center justify-between gap-2 mb-1" {
                                             div class="flex items-center gap-2" {
                                                 span class=(Class::new(act.badge_class)) {
-                                                    (act.badge)
+                                                    (Text::new(act.badge))
                                                 }
                                                 span class="text-caption font-caption text-on-surface-variant" {
-                                                    (act.org)
+                                                    (Text::new(act.org))
                                                 }
                                             }
                                             span class="text-caption font-caption text-on-surface-variant" {
-                                                (act.when)
+                                                (Text::new(act.when))
                                             }
                                         }
                                         h4 class="font-title-sm text-title-sm font-semibold text-on-surface" {
-                                            (act.body)
+                                            (Text::new(act.body))
                                         }
                                         div class="mt-2 flex items-center justify-between text-caption font-caption text-on-surface-variant" {
                                             span {
-                                                (act.meta)
+                                                (Text::new(act.meta))
                                             }
                                             a class="text-secondary font-semibold hover:underline flex items-center gap-1" href=(hash()) {
-                                                (act.cta)
+                                                (Text::new(act.cta))
                                                 span class="material-symbols-outlined text-[14px]" {
-                                                    "arrow_forward"
+                                                    (Text::new("arrow_forward"))
                                                 }
                                             }
                                         }
@@ -809,33 +811,33 @@ fn main_content() -> Markup {
                             span class="px-3 py-1 rounded bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-bold flex items-center gap-1.5" {
                                 span class="w-2 h-2 rounded-full bg-secondary" {
                                 }
-                                " Plenário em Pauta "
+                                (Text::new(" Plenário em Pauta "))
                             }
                             span class="text-caption font-caption text-on-surface-variant" {
-                                "Câmara Municipal"
+                                (Text::new("Câmara Municipal"))
                             }
                         }
                         h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mb-2" {
-                            " Próxima Sessão Ordinária: Terça-feira, às 09:00h "
+                            (Text::new(" Próxima Sessão Ordinária: Terça-feira, às 09:00h "))
                         }
                         p class="font-body-md text-body-md text-on-surface-variant mb-6" {
-                            " Pauta prioritária para votação em 2º turno: Projeto de Lei Complementar do "
+                            (Text::new(" Pauta prioritária para votação em 2º turno: Projeto de Lei Complementar do "))
                             strong class="text-on-surface" {
-                                "Novo Plano Diretor Municipal"
+                                (Text::new("Novo Plano Diretor Municipal"))
                             }
-                            " e diretrizes de zoneamento sustentável para a próxima década. "
+                            (Text::new(" e diretrizes de zoneamento sustentável para a próxima década. "))
                         }
                         div class="p-space-md bg-surface-container-low rounded space-y-3 mb-6" {
                             div class="flex items-start gap-3" {
                                 span class="material-symbols-outlined text-secondary text-[24px] mt-0.5" {
-                                    "event_upcoming"
+                                    (Text::new("event_upcoming"))
                                 }
                                 div {
                                     div class="font-label-md text-label-md font-semibold text-on-surface" {
-                                        "Ordem do Dia Convocada"
+                                        (Text::new("Ordem do Dia Convocada"))
                                     }
                                     p class="font-body-sm text-body-sm text-on-surface-variant" {
-                                        " 1. Leitura de Expedientes do Poder Executivo • 2. Votação de 4 Moções Cívicas • 3. Debate Aberto sobre Habitação de Interesse Social. "
+                                        (Text::new(" 1. Leitura de Expedientes do Poder Executivo • 2. Votação de 4 Moções Cívicas • 3. Debate Aberto sobre Habitação de Interesse Social. "))
                                     }
                                 }
                             }
@@ -844,18 +846,18 @@ fn main_content() -> Markup {
                     div class="flex flex-wrap items-center gap-space-sm" {
                         a class="inline-flex items-center gap-2 px-space-md py-2.5 rounded bg-secondary text-on-secondary font-label-md text-label-md font-semibold hover:bg-on-secondary-fixed-variant transition-colors" href=(hash()) {
                             span class="material-symbols-outlined text-[18px]" {
-                                "live_tv"
+                                (Text::new("live_tv"))
                             }
                             span {
-                                "Acompanhar Transmissão"
+                                (Text::new("Acompanhar Transmissão"))
                             }
                         }
                         a class="inline-flex items-center gap-1.5 px-space-md py-2.5 rounded bg-surface-container text-primary font-label-md text-label-md font-medium hover:bg-surface-container-high transition-colors" href=(hash()) {
                             span class="material-symbols-outlined text-[18px]" {
-                                "feed"
+                                (Text::new("feed"))
                             }
                             span {
-                                "Baixar Ordem do Dia Completa"
+                                (Text::new("Baixar Ordem do Dia Completa"))
                             }
                         }
                     }
@@ -863,49 +865,49 @@ fn main_content() -> Markup {
                 div class="lg:col-span-5 bg-surface-container p-space-lg rounded shadow-sm flex flex-col justify-between" {
                     div {
                         div class="font-label-sm text-label-sm text-secondary uppercase tracking-widest font-bold mb-1" {
-                            "Controle Social Ativo"
+                            (Text::new("Controle Social Ativo"))
                         }
                         h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mb-3" {
-                            " Ouvidoria & Acesso à Informação "
+                            (Text::new(" Ouvidoria & Acesso à Informação "))
                         }
                         p class="font-body-sm text-body-sm text-on-surface-variant mb-6" {
-                            " O cidadão dispõe de canais auditados para peticionar aos dois poderes, solicitar dados sob a Lei nº 12.527/2011 e propor iniciativas de lei. "
+                            (Text::new(" O cidadão dispõe de canais auditados para peticionar aos dois poderes, solicitar dados sob a Lei nº 12.527/2011 e propor iniciativas de lei. "))
                         }
                         div class="space-y-3 mb-6" {
                             div class="p-3 bg-surface-container-lowest rounded shadow-sm flex items-center justify-between" {
                                 div class="flex items-center gap-2.5" {
                                     span class="material-symbols-outlined text-secondary text-[22px]" {
-                                        "record_voice_over"
+                                        (Text::new("record_voice_over"))
                                     }
                                     div {
                                         div class="font-label-sm text-label-sm font-bold text-on-surface" {
-                                            "Tribuna Popular & Audiências"
+                                            (Text::new("Tribuna Popular & Audiências"))
                                         }
                                         div class="font-caption text-caption text-on-surface-variant" {
-                                            "Inscrição para fala em plenário"
+                                            (Text::new("Inscrição para fala em plenário"))
                                         }
                                     }
                                 }
                                 span class="material-symbols-outlined text-on-surface-variant text-[20px]" {
-                                    "chevron_right"
+                                    (Text::new("chevron_right"))
                                 }
                             }
                             div class="p-3 bg-surface-container-lowest rounded shadow-sm flex items-center justify-between" {
                                 div class="flex items-center gap-2.5" {
                                     span class="material-symbols-outlined text-primary text-[22px]" {
-                                        "info"
+                                        (Text::new("info"))
                                     }
                                     div {
                                         div class="font-label-sm text-label-sm font-bold text-on-surface" {
-                                            "e-SIC Municipal Unificado"
+                                            (Text::new("e-SIC Municipal Unificado"))
                                         }
                                         div class="font-caption text-caption text-on-surface-variant" {
-                                            "Protocolar Pedido de Informação"
+                                            (Text::new("Protocolar Pedido de Informação"))
                                         }
                                     }
                                 }
                                 span class="material-symbols-outlined text-on-surface-variant text-[20px]" {
-                                    "chevron_right"
+                                    (Text::new("chevron_right"))
                                 }
                             }
                         }
@@ -913,14 +915,14 @@ fn main_content() -> Markup {
                     div class="p-space-md bg-surface-container-lowest rounded shadow-sm" {
                         div class="flex items-center justify-between" {
                             span class="text-caption font-caption text-on-surface-variant" {
-                                "Tempo Médio de Resposta e-SIC:"
+                                (Text::new("Tempo Médio de Resposta e-SIC:"))
                             }
                             span class="font-label-md text-label-md font-bold text-secondary" {
-                                "3,2 dias úteis"
+                                (Text::new("3,2 dias úteis"))
                             }
                         }
                         div class="text-caption font-caption text-on-surface-variant/80 mt-1" {
-                            " Meta legal LRF: até 20 dias • Índice de Atendimento: 99,4% "
+                            (Text::new(" Meta legal LRF: até 20 dias • Índice de Atendimento: 99,4% "))
                         }
                     }
                 }
@@ -938,119 +940,119 @@ fn footer() -> Markup {
                 div class="space-y-space-sm" {
                     div class="flex items-center gap-2 mb-space-sm" {
                         span class="material-symbols-outlined text-primary text-[28px]" {
-                            "domain"
+                            (Text::new("domain"))
                         }
                         div class="font-title-sm text-title-sm text-primary font-bold uppercase tracking-wider" {
-                            "Poder Executivo"
+                            (Text::new("Poder Executivo"))
                         }
                     }
                     div class="font-label-md text-label-md font-semibold text-on-surface" {
-                        "Prefeitura Municipal - Paço Municipal"
+                        (Text::new("Prefeitura Municipal - Paço Municipal"))
                     }
                     p class="font-body-sm text-body-sm text-on-surface-variant" {
-                        "Praça dos Três Poderes, nº 100 - Centro"
+                        (Text::new("Praça dos Três Poderes, nº 100 - Centro"))
                         br;
-                        "CEP: 00000-000 • Atendimento: 08h às 17h"
+                        (Text::new("CEP: 00000-000 • Atendimento: 08h às 17h"))
                         br;
-                        "Telefone Central: (00) 3000-0000"
+                        (Text::new("Telefone Central: (00) 3000-0000"))
                         br;
-                        "E-mail: contato@municipio.gov.br"
+                        (Text::new("E-mail: contato@municipio.gov.br"))
                     }
                 }
                 div class="space-y-space-sm" {
                     div class="flex items-center gap-2 mb-space-sm" {
                         span class="material-symbols-outlined text-secondary text-[28px]" {
-                            "gavel"
+                            (Text::new("gavel"))
                         }
                         div class="font-title-sm text-title-sm text-secondary font-bold uppercase tracking-wider" {
-                            "Poder Legislativo"
+                            (Text::new("Poder Legislativo"))
                         }
                     }
                     div class="font-label-md text-label-md font-semibold text-on-surface" {
-                        "Câmara Municipal de Vereadores"
+                        (Text::new("Câmara Municipal de Vereadores"))
                     }
                     p class="font-body-sm text-body-sm text-on-surface-variant" {
-                        "Palácio Legislativo Municipal, nº 250 - Centro"
+                        (Text::new("Palácio Legislativo Municipal, nº 250 - Centro"))
                         br;
-                        "CEP: 00000-000 • Sessões Ordinárias: Terças 18h"
+                        (Text::new("CEP: 00000-000 • Sessões Ordinárias: Terças 18h"))
                         br;
-                        "Telefone: (00) 3000-1111"
+                        (Text::new("Telefone: (00) 3000-1111"))
                         br;
-                        "E-mail: legislativo@camara.gov.br"
+                        (Text::new("E-mail: legislativo@camara.gov.br"))
                     }
                 }
                 div class="space-y-space-sm" {
                     div class="font-title-sm text-title-sm text-primary font-bold mb-space-sm uppercase tracking-wider" {
-                        "Transparência & Controle"
+                        (Text::new("Transparência & Controle"))
                     }
                     ul class="space-y-space-xs font-body-sm text-body-sm text-on-surface-variant" {
                         li {
                             a class="hover:text-primary hover:underline transition-colors" data_path="portal-da-transparencia" href=(hash()) {
-                                "Execução Orçamentária e Balancetes"
+                                (Text::new("Execução Orçamentária e Balancetes"))
                             }
                         }
                         li {
                             a class="hover:text-primary hover:underline transition-colors" data_path="portal-da-transparencia" href=(hash()) {
-                                "Folha de Pagamento & Remunerações"
+                                (Text::new("Folha de Pagamento & Remunerações"))
                             }
                         }
                         li {
                             a class="hover:text-primary hover:underline transition-colors" data_path="portal-da-transparencia" href=(hash()) {
-                                "Licitações, Contratos e Editais"
+                                (Text::new("Licitações, Contratos e Editais"))
                             }
                         }
                         li {
                             a class="hover:text-primary hover:underline transition-colors" data_path="ouvidoria-e-sic" href=(hash()) {
-                                "e-SIC (Acesso à Informação LAI)"
+                                (Text::new("e-SIC (Acesso à Informação LAI)"))
                             }
                         }
                         li {
                             a class="hover:text-primary hover:underline transition-colors" data_path="portal-da-transparencia" href=(hash()) {
-                                "Portal de Dados Abertos Municipais"
+                                (Text::new("Portal de Dados Abertos Municipais"))
                             }
                         }
                     }
                 }
                 div class="space-y-space-sm" {
                     div class="font-title-sm text-title-sm text-primary font-bold mb-space-sm uppercase tracking-wider" {
-                        "Conformidade Cívica"
+                        (Text::new("Conformidade Cívica"))
                     }
                     div class="p-space-md bg-surface-container-lowest rounded border border-outline-variant/40 space-y-space-xs" {
                         div class="flex items-center gap-2 text-secondary" {
                             span class="material-symbols-outlined text-[20px]" {
-                                "verified_user"
+                                (Text::new("verified_user"))
                             }
                             span class="font-label-sm text-label-sm font-bold" {
-                                "Conformidade LAI nº 12.527/2011"
+                                (Text::new("Conformidade LAI nº 12.527/2011"))
                             }
                         }
                         p class="font-caption text-caption text-on-surface-variant" {
-                            "Portal estruturado em conformidade com as diretrizes e-MAG, LRF nº 101/2000 e LGPD nº 13.709/2018."
+                            (Text::new("Portal estruturado em conformidade com as diretrizes e-MAG, LRF nº 101/2000 e LGPD nº 13.709/2018."))
                         }
                     }
                     div class="text-on-surface-variant font-caption text-caption pt-space-xs flex flex-wrap gap-x-space-md gap-y-space-xs" {
                         span {
-                            "Selo Ouro Transparência Pública"
+                            (Text::new("Selo Ouro Transparência Pública"))
                         }
                         span {
-                            "Atende e-MAG 3.1 AAA"
+                            (Text::new("Atende e-MAG 3.1 AAA"))
                         }
                     }
                 }
             }
             div class="mt-12 pt-space-md border-t border-outline-variant/30 flex flex-col md:flex-row items-center justify-between gap-space-md font-caption text-caption text-on-surface-variant" {
                 div {
-                    "© 2025 Governo Municipal Integrado. Todos os direitos reservados. Informação pública e irrestrita."
+                    (Text::new("© 2025 Governo Municipal Integrado. Todos os direitos reservados. Informação pública e irrestrita."))
                 }
                 div class="flex items-center gap-space-lg" {
                     a class="hover:underline" data_path="ouvidoria-e-sic" href=(hash()) {
-                        "Política de Privacidade e LGPD"
+                        (Text::new("Política de Privacidade e LGPD"))
                     }
                     a class="hover:underline" data_path="legislacao-atos" href=(hash()) {
-                        "Termos de Uso"
+                        (Text::new("Termos de Uso"))
                     }
                     a class="hover:underline" data_path="ouvidoria-e-sic" href=(hash()) {
-                        "Mapa do Site"
+                        (Text::new("Mapa do Site"))
                     }
                 }
             }

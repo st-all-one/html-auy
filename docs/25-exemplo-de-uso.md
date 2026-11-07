@@ -298,7 +298,7 @@ Escrever o uso final obrigou a decidir três pontos que estavam **inconsistentes
 
 | Ponto | Antes | Agora (normativo em [`21`](21-implementacao.md) F2) |
 |---|---|---|
-| valor de atributo | `div(class: …)` em `docs/02`, `href = expr` em F2, `.list` em `docs/01` | `nome=(expr)` para cálculo; `nome="literal"` para enum da spec e para `class`/texto; `href`/`src`/`alt` continuam tipados. Os parênteses **delimitam** a expressão no `TokenStream` (`href=x rel=y` é ambíguo) |
+| valor de atributo | `div(class: …)` em `docs/02`, `href = expr` em F2, `.list` em `docs/01` | `nome=(expr)` para cálculo; `nome="literal"` para enum da spec e para `class`; `href`/`src`/`alt` continuam tipados e texto visível literal não é aceito. Os parênteses **delimitam** a expressão no `TokenStream` (`href=x rel=y` é ambíguo) |
 | elemento vazio | sem terminador definido | `img src=(…) alt=(…);` — o `;` fecha o `void` |
 | `class` | `Class::of(&[Tone])` + atalho `.token` | `Class::of(&[Token::…])` com `trait ClassToken` ou `class="a b"` estático; ambos ordenam e deduplicam |
 
