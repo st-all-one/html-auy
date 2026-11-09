@@ -1,4 +1,4 @@
-[← Arquitetura](15-arquitetura.md) · [Índice](README.md) · [Próximo →](99-referencia-rapida.md)
+[← Arquitetura](15-arquitetura.md) · [Índice](README.md) · [Próximo →](17-guia-de-implementacao.md)
 
 # 16 — Projeto mínimo com Axum
 
@@ -306,4 +306,4 @@ fn paginas_publicas_passam() {
 
 ---
 
-[← Arquitetura](15-arquitetura.md) · [Índice](README.md) · [Próximo →](99-referencia-rapida.md)
+[← Arquitetura](15-arquitetura.md) · [Índice](README.md) · [Próximo →](17-guia-de-implementacao.md)

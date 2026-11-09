@@ -186,7 +186,7 @@ python3 tools/check_links.py
 
 ## Docs
 
-- [Usage wiki](https://github.com/st-all-one/html-auy/blob/main/docs/usage/README.md): install, first page, macro, values, forms, media, shell, security, accessibility, HTTP, minimal Axum project, recipes, quick reference.
+- [Usage wiki](https://github.com/st-all-one/html-auy/blob/main/docs/usage/README.md): install, first page, macro, values, forms, media, shell, security, accessibility, HTTP, minimal Axum project, implementation guide, recipes, quick reference.
 - [Architecture](https://github.com/st-all-one/html-auy/blob/main/docs/01-arquitetura.md)
 - [Types and escaping](https://github.com/st-all-one/html-auy/blob/main/docs/02-tipos-e-contextos.md)
 - [Element vocabulary](https://github.com/st-all-one/html-auy/blob/main/docs/03-vocabulario-de-elementos.md)

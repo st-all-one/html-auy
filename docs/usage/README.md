@@ -88,6 +88,7 @@ a saída exata e a fronteira HTTP, está em [Primeira página](02-primeira-pagin
 | [11 — Acessibilidade](11-acessibilidade.md) | O que vem por construção e o que ainda precisa de gate? |
 | [12 — HTTP e integrações](12-http-e-integracoes.md) | Como responder, cachear, fazer `303`/`422` e resposta parcial? |
 | [16 — Projeto mínimo com Axum](16-projeto-minimo-axum.md) | Como juntar Cargo, adapter, views, assets, erros e formulários? |
+| [17 — Guia de implementação](17-guia-de-implementacao.md) | Em que ordem implementar uma aplicação em fatias verticais? |
 
 ### Qualidade e referência
 
@@ -106,6 +107,7 @@ a saída exata e a fronteira HTTP, está em [Primeira página](02-primeira-pagin
 - **Revisão de segurança:** 04 → 08 → 10 → 11.
 - **Integração HTTP:** 02 → 08 → 12 → 16 → 13.
 - **Primeiro projeto Axum:** 01 → 02 → 16 → 06 → 12.
+- **Implementação end-to-end:** 00 → 01 → 02 → 17 → 16 → 06 → 12 → 13.
 - **Entender a implementação:** 15 → 04 → 10 → 13.
 
 ## Convenções desta wiki
