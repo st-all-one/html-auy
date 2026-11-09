@@ -1,4 +1,4 @@
-//! `<form>`: método, token e `_method` (docs/08).
+//! `<form>`: método, token e `_method` (docs/design/08).
 
 use html_auy::{Action, CsrfToken, Form, LUrl, Markup, SubmitKey, Text};
 

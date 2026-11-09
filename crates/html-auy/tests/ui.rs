@@ -1,4 +1,4 @@
-//! Casos de erro do `html!`: cada arquivo em `ui/` fixa uma mensagem de contrato (docs/10 §2).
+//! Casos de erro do `html!`: cada arquivo em `ui/` fixa uma mensagem de contrato (docs/design/10 §2).
 
 #[test]
 fn ui() {

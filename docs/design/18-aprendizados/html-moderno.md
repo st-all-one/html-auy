@@ -94,7 +94,7 @@ O corpus também erra (um erro grave em `05_SECURITY.md:215`): ele é evidência
 - Citação: `04_ACCESSIBILITY.md:110-111` — "<!-- IMPLÍCITA -->" / "`<label>Nome completo: <input type="text" name="nome" /></label>`".
 - Semântica: a associação implícita é válida; a explícita é a preferida pela própria doc (`04:107`).
 - Consequência: `spec/elements.toml:537-545` exige `for` e, com A7, o rótulo envolvente é duplamente impossível. Força o padrão bom, mas o corpus não pode ser citado como contraprova sem a nota.
-- Veredito: **confirma por decisão**; registrar em `docs/03 §3` ("rótulo implícito não existe").
+- Veredito: **confirma por decisão**; registrar em `docs/design/03 §3` ("rótulo implícito não existe").
 #### A10. `video` exige `src`, mas o corpus usa `<source>` filhos
 - Citação: `modern_html_example.md:513-521` — "`<video controls width="800" preload="metadata" poster="…" playsinline>`" com dois "`<source src="…webm" type="video/webm" />`" e dois `<track>`.
 - Semântica: `src` e `<source>` são alternativas mutuamente exclusivas; `01:108` dá o modelo como "`<source>` + `<track>` + transparent".
@@ -113,7 +113,7 @@ O corpus também erra (um erro grave em `05_SECURITY.md:215`): ele é evidência
 #### A13. `img` sem `usemap`; `map`/`area` fora do vocabulário
 - Citação: `14_IMAGE_MAPS.md:11-13` — "`<img src="mapa.png" alt="" usemap="#meu-mapa" />`" / "`<map name="meu-mapa">`"; `14:8-9` — "Prefira links de texto (estilizados com CSS) a image maps".
 - Semântica: `usemap` só é válido com `<map name>` correspondente; `area` exige `alt` e `shape`/`coords`.
-- Consequência: `spec/elements.toml:416-424` não tem `usemap` e `map`/`area` não existem. O caso real (mapa de escola no portal) fica sem representação; como o corpus recomenda não usar, a resposta correta é **proibir explicitamente** em `docs/03 §5`.
+- Consequência: `spec/elements.toml:416-424` não tem `usemap` e `map`/`area` não existem. O caso real (mapa de escola no portal) fica sem representação; como o corpus recomenda não usar, a resposta correta é **proibir explicitamente** em `docs/design/03 §5`.
 - Veredito: **confirma a ausência**; **refina** — registrar a proibição.
 #### A14. `img` sem `crossorigin`/`referrerpolicy`/`elementtiming`
 - Citação: `16_SPECIFIC_ATTRIBUTES.md:131` — "`<img src="hero.jpg" alt="Hero" elementtiming="Imagem principal" />`"; `05_SECURITY.md:73-79` lista `crossorigin` em "`<audio>`, `<img>`, `<link>`, `<script>`, `<video>`".
@@ -128,7 +128,7 @@ O corpus também erra (um erro grave em `05_SECURITY.md:215`): ele é evidência
 #### A16. `svg` declara `viewbox` em minúsculas
 - Citação: `modern_html_example.md:532` — "`<svg viewBox="0 0 400 200" width="400" height="200"`".
 - Semântica: atributos SVG são case-sensitive; `viewbox` é ignorado pelo parser e o gráfico perde a escala, **sem erro de validação**.
-- Consequência: `spec/elements.toml:478-484` lista `"viewbox"`; como `allowed` também define a ordem de emissão (D14), corrigir o nome é pré-requisito do primitivo `Icon` (`docs/05 §3`).
+- Consequência: `spec/elements.toml:478-484` lista `"viewbox"`; como `allowed` também define a ordem de emissão (D14), corrigir o nome é pré-requisito do primitivo `Icon` (`docs/design/05 §3`).
 - Veredito: **refuta** — renomear (§5.8).
 #### A17. O conteúdo interno de `<svg>` não existe no vocabulário
 - Citação: `modern_html_example.md:533-540` — "`<rect x="40" y="100" width="80" height="80" fill="…" rx="4" />` … `<text x="80" y="196" …>2022</text>`".
@@ -143,12 +143,12 @@ O corpus também erra (um erro grave em `05_SECURITY.md:215`): ele é evidência
 #### A19. `no_http_equiv` está certo; o corpus erra ao propor CSP por `meta`
 - Citação: `05_SECURITY.md:213-215` — "`<meta http-equiv="Content-Security-Policy"` / `content="frame-ancestors 'none'" />`"; `modern_html_example.md:719` — "`[x] frame-ancestors 'none' (proteção clickjacking)`".
 - Semântica: `frame-ancestors`, `sandbox` e `report-uri` são **ignorados** quando entregues por `<meta>`; só o header os aplica, então o exemplo do corpus não protege contra clickjacking.
-- Consequência: `spec/elements.toml:100` proíbe `http-equiv` (`no_http_equiv`) e `docs/08 §6` define CSP como header — a crate está certa e é mais estrita que o corpus.
+- Consequência: `spec/elements.toml:100` proíbe `http-equiv` (`no_http_equiv`) e `docs/design/08 §6` define CSP como header — a crate está certa e é mais estrita que o corpus.
 - Veredito: **confirma** D3; **refuta** `05_SECURITY.md:215` e `modern:719`.
 #### A20. `script` com `src` obrigatório não emite JSON-LD
 - Citação: `spec/elements.toml:111-118` — "`required = ["src"]` … `children = ["json"]  # SOMENTE JsonLd`"; `19_META_SCRIPT_TYPES.md:125` — "`src`, `async`, `defer` … NÃO são permitidos" (para `importmap`).
 - Semântica: dos tipos de script, só o executável tem `src`; JSON-LD e `importmap` são inline por definição.
-- Consequência: `docs/07 §6` mostra `html! { head { JsonLd::graph(&g) } }` como cidadão de primeira classe — e ele não compila; `children = ["json"]` sem `src` opcional é contradição no mesmo bloco.
+- Consequência: `docs/design/07 §6` mostra `html! { head { JsonLd::graph(&g) } }` como cidadão de primeira classe — e ele não compila; `children = ["json"]` sem `src` opcional é contradição no mesmo bloco.
 - Veredito: **refuta** — duas formas: `script(src, …)` e `script(JsonLd)` (§5.9).
 #### A21. `link` sem `title` torna `alternate stylesheet` inemitível
 - Citação: `17_LINK_RELATIONS_EXTRA.md:40-41` — "`<link href="fancy.css" rel="alternate stylesheet" title="Fancy" />`"; `17:47-50` diz que `title` **presente** é o que define *preferred* e *alternate*.
@@ -163,7 +163,7 @@ O corpus também erra (um erro grave em `05_SECURITY.md:215`): ele é evidência
 #### A23. `option` com `value` obrigatório impede o placeholder de `select`
 - Citação: `09_BOILERPLATE.md:191` — "`<option value="">Selecione...</option>`" (idem `modern:338`).
 - Semântica: o item vazio é o mecanismo nativo de "nada selecionado" com `required` no `select`.
-- Consequência: `spec/elements.toml:582-588` exige `value` e `docs/02 §4` afirma que "`""` é sempre um bug de intenção"; duas regras boas colidindo — o placeholder é o único caso legítimo de valor vazio.
+- Consequência: `spec/elements.toml:582-588` exige `value` e `docs/design/02 §4` afirma que "`""` é sempre um bug de intenção"; duas regras boas colidindo — o placeholder é o único caso legítimo de valor vazio.
 - Veredito: **refina** — `OptionValue::Placeholder` explícito (§5.4).
 #### A24. `progress`/`meter` não aceitam `id`, mas exigem nome acessível
 - Citação: `modern_html_example.md:470-471` — "`<label for="vagas">Vagas preenchidas:</label>`" / "`<progress id="vagas" value="3400" max="5000">68%</progress>`".
@@ -218,12 +218,12 @@ O corpus também erra (um erro grave em `05_SECURITY.md:215`): ele é evidência
 #### A34. `time` com perfil único RFC 3339 não cobre o corpus
 - Citação: `10_DATE_TIME_FORMATS.md:55-67` — "Date | `YYYY-MM-DD`…", "Time | `HH:MM` ou `HH:MM:SS`…", "Week | `YYYY-Www`", "Month | `YYYY-MM`", "datetime-local | `YYYY-MM-DDTHH:MM`", "Global datetime | …`Z`".
 - Semântica: `datetime` aceita sete perfis; o corpus usa dois fora do RFC 3339 estrito: `modern:270` "`<time datetime="09:00">`" e `modern:207` "`<time datetime="2025-09-15">`".
-- Consequência: `spec/elements.toml:333-339` exige `datetime` + `datetime_profile`; se `Timestamp` (docs/02 §2) só emite RFC 3339 em UTC, **nem o exemplo do corpus compila**.
+- Consequência: `spec/elements.toml:333-339` exige `datetime` + `datetime_profile`; se `Timestamp` (docs/design/02 §2) só emite RFC 3339 em UTC, **nem o exemplo do corpus compila**.
 - Veredito: **refuta** `Timestamp` como tipo único; enum `DateTimeValue` de 6 formas (§5.10).
 #### A35. `Timestamp` em UTC impede `datetime` com offset
 - Citação: `10_DATE_TIME_FORMATS.md:49-53` — "`YYYY-MM-DDTHH:MM:SS±HH:MM` — offset explícito" / "`1789-08-22T12:30:00.1-04:00` — EDT".
 - Semântica: evento com hora local explícita (`-03:00` para Brasília) não depende do fuso do servidor.
-- Consequência: `modern:229` usa "`<time datetime="2025-09-15T10:00-03:00">`"; `docs/02 §7` fixa "RFC 3339 em UTC". UTC puro perde o fuso do evento e faz o `ETag` variar com o TZ do processo — viola D14.
+- Consequência: `modern:229` usa "`<time datetime="2025-09-15T10:00-03:00">`"; `docs/design/02 §7` fixa "RFC 3339 em UTC". UTC puro perde o fuso do evento e faz o `ETag` variar com o TZ do processo — viola D14.
 - Veredito: **refuta** — offset obrigatório (§5.10).
 #### A36. `del`/`ins` têm `datetime` sem tipo, ao contrário de `time`
 - Citação: `10_DATE_TIME_FORMATS.md:3` — "…e os atributos `datetime` de `<ins>` e `<del>`."
@@ -238,7 +238,7 @@ O corpus também erra (um erro grave em `05_SECURITY.md:215`): ele é evidência
 #### A38. `popover` é global no padrão e não existia na crate
 - Citação: `03_MODERN_PATTERNS.md:88` — "## 3. Popover API (Atributo Global `popover`)"; `03:95-97` — "`popover="auto"` … `"hint"` … `"manual"`".
 - Semântica: atributo global, aplicável a qualquer elemento; o alvo tem `popover`, o gatilho tem `popovertarget`.
-- Consequência: `[globals]` (`spec` l. 45-62) não tinha `popover`, mas `button.popovertarget` estava permitido (l. 592): o gatilho existia e o alvo não podia ser declarado. O `Tooltip` de `docs/05 §3` (mapeado em `popover="hint"`, `modern:384-387`) perdia o veículo.
+- Consequência: `[globals]` (`spec` l. 45-62) não tinha `popover`, mas `button.popovertarget` estava permitido (l. 592): o gatilho existia e o alvo não podia ser declarado. O `Tooltip` de `docs/design/05 §3` (mapeado em `popover="hint"`, `modern:384-387`) perdia o veículo.
 - Veredito: **corrigido** — `popover` em `[globals]`, incluindo `hint` (§5.11).
 #### A39. Globais: lacunas pontuais e duplicação de fonte
 - Citação: `18_GLOBAL_ATTRIBUTES.md:154` — "`until-found` | Oculta até ser encontrado por find-in-page"; `18:48-61` (`autocapitalize`); `04_ACCESSIBILITY.md:183` — "`<div aria-live="polite" aria-atomic="true">`".
@@ -248,7 +248,7 @@ O corpus também erra (um erro grave em `05_SECURITY.md:215`): ele é evidência
 #### A40. `abbr` obriga `title`, que não é acessível em toque
 - Citação: `15_DEFINE_TERMS.md:47` — "O atributo `title` em `<abbr>` não substitui uma definição inline. O conteúdo de `title` só aparece em hover (mouse), sendo inacessível para touch e screen readers."
 - Semântica: `title` é expansão suplementar; a expansão legível precisa estar no fluxo.
-- Consequência: `spec/elements.toml:278-284` faz `required = ["title"]`, o que garante a expansão para mouse e **sugere** que a acessível está resolvida — contra `docs/05 §4` ("`title` como único nome acessível" é anti-padrão).
+- Consequência: `spec/elements.toml:278-284` faz `required = ["title"]`, o que garante a expansão para mouse e **sugere** que a acessível está resolvida — contra `docs/design/05 §4` ("`title` como único nome acessível" é anti-padrão).
 - Veredito: **refina** — manter `title` + advisory "`abbr` repetido sem expansão textual" (§5.3).
 
 ## 2.13 Status de cada achado na revisão `33c5007`
@@ -291,7 +291,7 @@ O corpus também erra (um erro grave em `05_SECURITY.md:215`): ele é evidência
 | A32 readonly+required | aberto | sem `readonly_excludes_required` |
 | A33 step/min | aberto | sem `step_requires_min` |
 | A34 `time` perfil | aberto | `datetime_profile` existe; `DateTimeValue` não |
-| A35 offset | aberto | `docs/02 §7` ainda fixa "RFC 3339 em UTC" |
+| A35 offset | aberto | `docs/design/02 §7` ainda fixa "RFC 3339 em UTC" |
 | A36 del/ins | aberto | `datetime` sem `datetime_profile` |
 | A37 `ol type` | corrigido | `allowed = ["class","data-*","start","reversed"]` |
 | A38 `popover` global | corrigido | `popover` em `[globals]`, inclusive `hint` |
@@ -399,43 +399,43 @@ O corpus também erra (um erro grave em `05_SECURITY.md:215`): ele é evidência
 ## 3. Confirmações do desenho
 
 1. **Escape por contexto** — `05_SECURITY.md:180-190` ("Output encoding: `<` → `&lt;`…") e `05:196-198` ("`textContent`… nunca `innerHTML` com dados não sanitizados") descrevem a lacuna que `Text`/`AttrVal`/`Href`/`JsonLd` fecham. Confirma D1.
-2. **Sem inline** — o corpus usa `on*` em três padrões centrais: `06:144-146` (`onload="this.rel='stylesheet'"`), `03:203` (`oninvalid=…`), `09:97`. A crate recusa por D3 e substitui por `preload`/`Link:`. Confirma D3 e `docs/09 §2`.
+2. **Sem inline** — o corpus usa `on*` em três padrões centrais: `06:144-146` (`onload="this.rel='stylesheet'"`), `03:203` (`oninvalid=…`), `09:97`. A crate recusa por D3 e substitui por `preload`/`Link:`. Confirma D3 e `docs/design/09 §2`.
 3. **Um `<h1>`, um `<main>`, landmarks nomeados** — `04:20`, `02:133` ("`<main>` … 1 por página"), `02:141-144`. Confirma D8 e `single_h1`/`main_unique`/`landmark_names_distinct`.
 4. **`alt` por tipo** — `04:96` ("**Toda `<img>` precisa de `alt`** — mesmo que vazio para decorativas") e `04:90`. Confirma `Alt::decorative()`.
 5. **`<caption>` + `th scope`** — `04:218-226`. Confirma `table.required_children` e `th.required = ["scope"]`.
 6. **`lang` obrigatório e válido** — `04:246` + `02:8`. Confirma `html.required = ["lang"]` com BCP-47.
 7. **`pattern` sem flags** — `11:21` ("flags global/ignoreCase/multiline desligadas"). Confirma `pattern_flags_forbidden`.
-8. **Comentário HTML proibido** — `13:26-27` (não pode conter `-->`, `--!>`, nem terminar com `<!-`) e `13:55` ("visíveis no source"). Confirma a ausência de `Comment` em `docs/02 §3`.
+8. **Comentário HTML proibido** — `13:26-27` (não pode conter `-->`, `--!>`, nem terminar com `<!-`) e `13:55` ("visíveis no source"). Confirma a ausência de `Comment` em `docs/design/02 §3`.
 9. **`<search>` substitui `role="search"`** — `03:139-141`. Confirma `search.accessible_name = required`; `09:125` ainda usa `role="search"` (erro do corpus).
-10. **`template`/`slot`/`canvas`/`object` fora** — `01:98-101`, `01:200`, `03:35-45`: todos exigem conteúdo ativo ou JS de componente. Confirma as exclusões de `docs/03 §8`.
+10. **`template`/`slot`/`canvas`/`object` fora** — `01:98-101`, `01:200`, `03:35-45`: todos exigem conteúdo ativo ou JS de componente. Confirma as exclusões de `docs/design/03 §8`.
 
 ## 4. Conflitos e correções
 
 | O que a crate diz hoje | O que o corpus diz | Correção (frase exata, onde) |
 |---|---|---|
-| nenhum `DOCTYPE` é mencionado | `12:15` doctype é o único gatilho de no-quirks | `docs/06 §8`, item 9: "`<html>` é precedido por `<!DOCTYPE html>`; o shell não emite comentários." + regra N4 (`docs/04 §6`) |
-| `meta.required = ["content"]` | `01:20` `charset` obrigatório, sem `content` | `spec`: `required = []` + `invariants = ["meta_form_exclusive"]`; `docs/03 §3`: "`meta` tem três formas exclusivas: `charset`, `http-equiv`+`content`, `name`/`property`+`content`." |
+| nenhum `DOCTYPE` é mencionado | `12:15` doctype é o único gatilho de no-quirks | `docs/design/06 §8`, item 9: "`<html>` é precedido por `<!DOCTYPE html>`; o shell não emite comentários." + regra N4 (`docs/design/04 §6`) |
+| `meta.required = ["content"]` | `01:20` `charset` obrigatório, sem `content` | `spec`: `required = []` + `invariants = ["meta_form_exclusive"]`; `docs/design/03 §3`: "`meta` tem três formas exclusivas: `charset`, `http-equiv`+`content`, `name`/`property`+`content`." |
 | `script.required = ["src"]` com `children = ["json"]` | `07 §6` JSON-LD sem `src`; `19:125` importmap sem `src` | `spec`: `required = []` + `invariants = ["script_form_exclusive"]`; comentário: "# `src` OU `json`, nunca os dois." |
-| `video.required = ["src"]` com `<source>` filhos | `modern:513-521` `<video>` só com `<source>` | `spec`: `required = ["controls"]` + `media_source_xor_src`; `docs/03 §3`: "`video`/`audio` usam `src` (uma fonte) **ou** `<source>` filhos, nunca ambos." |
+| `video.required = ["src"]` com `<source>` filhos | `modern:513-521` `<video>` só com `<source>` | `spec`: `required = ["controls"]` + `media_source_xor_src`; `docs/design/03 §3`: "`video`/`audio` usam `src` (uma fonte) **ou** `<source>` filhos, nunca ambos." |
 | `source.required = ["srcset"]`, comentário admite `src` | `modern:516` `<source src type>` | `spec`: criar `[element.media_source]` (`required = ["src","type"]`); `source` fica só em `picture` |
-| `ol.allowed` inclui `type` | `08:62` obsoleto | remover `"type"`; `docs/03 §3`: "`type` em lista é obsoleto; numeração por `list-style-type`." |
+| `ol.allowed` inclui `type` | `08:62` obsoleto | remover `"type"`; `docs/design/03 §3`: "`type` em lista é obsoleto; numeração por `list-style-type`." |
 | `summary.children = ["phrasing"]` | `modern:268` `<summary><h3>` | `children = ["phrasing","heading"]` + `summary_single_heading` |
 | `noscript.children = ["flow","phrasing"]` | `01:132` metadata no head | `children = ["metadata","flow","phrasing"]` + `noscript_context` |
 | `label/input/select/textarea/fieldset.category = ["form"]` | controles são phrasing (`01:172`, `02:145`) | `category = ["form","interactive","phrasing"]` (e `label` `["form","phrasing"]`) |
 | `svg.allowed` tem `"viewbox"` | `modern:532` `viewBox` | `"viewBox"` + comentário "# atributo SVG é case-sensitive" |
 | `progress`/`meter` sem `id`, nome obrigatório | `modern:470-471` `<label for>` + `id` | adicionar `"id"` em `allowed` |
-| `input.allowed` inclui `list` | `spec:599` `datalist` `deprecated` | remover `"list"`; `docs/03 §3`: "`datalist` sai do v1; busca incremental é `Field`." |
+| `input.allowed` inclui `list` | `spec:599` `datalist` `deprecated` | remover `"list"`; `docs/design/03 §3`: "`datalist` sai do v1; busca incremental é `Field`." |
 | `link.allowed` sem `title` | `17:40-50` alternate exige `title` | remover `alternate stylesheet` de `link_rel_enum` |
 | `table.children` inclui `"tr"` | `req` `tbody_explicit` no mesmo bloco | remover `"tr"` de `children` |
 | `[globals]` sem `popover` (na revisão) | `03:88-97` popover é global | `popover = ["", "auto", "hint", "manual"]` — aplicado |
-| `docs/03 §1` fala "63 elementos" | `spec` tem 91 blocos (89 HTML + `svg_title`/`desc`) | `docs/03 §1`: "91 blocos em `spec_version = "2.0.0"`, contra 63 no escopo medido." |
+| `docs/design/03 §1` fala "63 elementos" | `spec` tem 91 blocos (89 HTML + `svg_title`/`desc`) | `docs/design/03 §1`: "91 blocos em `spec_version = "2.0.0"`, contra 63 no escopo medido." |
 
 ## 5. Adições prontas para colar
 
 `spec/elements.toml`, schema 2. Blocos completos para elementos ausentes; linhas de substituição (dentro do bloco existente, marcado em comentário) para os demais. A ordem dos atributos continua sendo a ordem de emissão (D14).
 
 ```toml
-# 5.1 docs/06 §8, item novo (não é TOML):
+# 5.1 docs/design/06 §8, item novo (não é TOML):
 #   9. `<html>` é precedido por `<!DOCTYPE html>`; o shell não emite comentários.
 
 # 5.2 [element.head] — substitui `first_child = "title"` e `invariants`
@@ -568,7 +568,7 @@ required = []
 allowed = ["src", "type", "defer", "async", "integrity", "crossorigin"]
 invariants = ["script_form_exclusive", "script_is_jsonld_only"]   # `src` OU `json`
 
-# 5.10 docs/02 §7 — linha da tabela de tipos
+# 5.10 docs/design/02 §7 — linha da tabela de tipos
 #  | `datetime` | `DateTimeValue` | enum: `Date` (2025-09-15) · `Month` (2019-01) · `Week`
 #    (2001-W37) · `Time` (13:44) · `Local` (1986-01-28T11:38) · `Global` (RFC 3339 **com offset
 #    obrigatório**) — nunca string livre, nunca UTC implícito (10_DATE_TIME_FORMATS.md:55-67) |
@@ -598,13 +598,13 @@ aria = ["aria-atomic", "aria-busy", "aria-controls", "aria-current", "aria-descr
 ## 6. Armadilhas de complexidade
 
 1. **SVG completo** — ~60 elementos próprios e `d` é uma linguagem; todo ícone em markup vira fonte editável contra um `<img src>` de asset com hash (D13). Fica só o recorte de §5.8.
-2. **`http-equiv`** — cada valor é uma gramática (`content="3;url=…"`); `refresh` redireciona sem interação (`19:92`) e `set-cookie`/`x-ua-compatible` são deprimidos (`19:77-78`). CSP é header (`docs/08 §6`).
+2. **`http-equiv`** — cada valor é uma gramática (`content="3;url=…"`); `refresh` redireciona sem interação (`19:92`) e `set-cookie`/`x-ua-compatible` são deprimidos (`19:77-78`). CSP é header (`docs/design/08 §6`).
 3. **Invoker Commands** — resolve modal sem JS, mas é experimental (`03:80`) e move estado de UI para o HTML: entra como atributo, nunca como requisito.
 4. **`popover="manual"` com estado no servidor** — sem light-dismiss, abrir/fechar exige script e o estado não é representável no `Markup`: entra o atributo, não o estado.
-5. **`contenteditable`** (+`plaintext-only`, `virtualkeyboardpolicy`, `writingsuggestions`) — editor no browser: sem JS não salva, com JS devolve HTML de usuário. Substituído por `Asset::Editor` (`docs/07 §2`).
+5. **`contenteditable`** (+`plaintext-only`, `virtualkeyboardpolicy`, `writingsuggestions`) — editor no browser: sem JS não salva, com JS devolve HTML de usuário. Substituído por `Asset::Editor` (`docs/design/07 §2`).
 6. **`template`/`slot`/`shadowrootmode`/`is`/`exportparts`** — exigem script de componente e criam conteúdo inerte que o lint não alcança; já proibidos (spec l. 33-36).
 7. **`canvas`/`object`/`embed`/`math`** — conteúdo ativo ou vocabulário paralelo (`object` pediria `param`).
-8. **Microdata (`itemscope`/`itemprop`)** — `03:294-320` espalha Schema.org por 10 elementos; `JsonLd` tipado (`docs/07 §6`) dá um grafo, um bloco, determinístico.
+8. **Microdata (`itemscope`/`itemprop`)** — `03:294-320` espalha Schema.org por 10 elementos; `JsonLd` tipado (`docs/design/07 §6`) dá um grafo, um bloco, determinístico.
 9. **`speculationrules`/`importmap` inline** — exigem `<script>` sem `src` com JSON livre, reabrindo a porta que `script_is_jsonld_only` fecha; `rel=modulepreload` cobre.
 10. **`accesskey`/`autocorrect`/`anchor`/`draggable`** — atalhos invisíveis e hints sem cobertura de teste (`18:30-43`, `18:66-70`). Só `autocapitalize` entra.
 

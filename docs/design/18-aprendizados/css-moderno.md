@@ -425,4 +425,4 @@ Regra transversal: nome de token obedece `--tenant-[a-z][a-z0-9-]*`; o valor nã
 7. **`scrollbar-gutter`, `text-box-trim`, anchor positioning** ausentes — a crate não deve emitir nenhum dos três.
 8. **Validação de `@font-face`** (nº de famílias/pesos, `unicode-range`) não é normatizada; vem de `web-performance`, não daqui.
 9. **Interação `contain` × `position: sticky/fixed`** não é alertada (A35), e é a origem mais provável de bug visual no shell.
-10. **Nenhum gate de CSS** é descrito: o corpus diz o que emitir, não como testar (fica com `sniffCSS`, já previsto em `docs/05-acessibilidade.md:10`).
+10. **Nenhum gate de CSS** é descrito: o corpus diz o que emitir, não como testar (fica com `sniffCSS`, já previsto em `docs/design/05-acessibilidade.md:10`).

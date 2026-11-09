@@ -7,7 +7,7 @@ OpSec e três anexos operacionais (robots.txt, autocomplete, Local Network Acces
 **fonte de vocabulário e de valores literais de cabeçalho** — não como fonte de teoria de injeção de
 markup, que ela não cobre (ver §7).
 
-Método: leitura integral dos 21 arquivos; auditoria de `docs/08-seguranca.md` (109 linhas) e de
+Método: leitura integral dos 21 arquivos; auditoria de `docs/design/08-seguranca.md` (109 linhas) e de
 `spec/elements.toml` (estado observado: esquema 2, `spec_version = "2.0.0"`, 720 linhas — o arquivo foi
 reescrito por revisão paralela durante esta leitura; todas as citações da spec referem-se a esse estado).
 Cada achado traz citação verbatim, semântica, consequência e veredito. `[INFERENCE]` marca conclusão
@@ -62,19 +62,19 @@ que o corpus não afirma.
 ### A4. Threat model é documento versionado e revalidado, não evento único
 - Citação: `06-threat-modeling-framework.md:140` (lições PWA) e a metodologia descrita no mesmo arquivo [sem linha] — "processo iterativo, living document, começa cedo, revisitado frequentemente".
 - Semântica: 4 perguntas (sistema → ameaças → resposta ERTA → validação), STRIDE para segurança e LINDDUN para privacidade, com notação fixa (C/A/F/E/S/T/R).
-- Consequência: falta na crate um artefato de threat model; proponho `docs/08-seguranca.md` §9 com a tabela STRIDE do **gerador** (macro, parser, codegen, spec) — não da aplicação do consumidor.
+- Consequência: falta na crate um artefato de threat model; proponho `docs/design/08-seguranca.md` §9 com a tabela STRIDE do **gerador** (macro, parser, codegen, spec) — não da aplicação do consumidor.
 - Veredito: adição (não coberta hoje).
 
 ### A5. Strict CSP recomendado é nonce-based — e a crate decide o contrário com razão
 - Citação: `07-practical-implementation.md:63` — "### Strict CSP (Nonce-based) — RECOMENDADO"; valor em `07:66-69`.
 - Semântica: o corpus recomenda nonce+`strict-dynamic` como padrão-ouro, porque assume aplicação dinâmica com inline legítimo.
-- Consequência: a crate não tem inline e quer página cacheável (`docs/08-seguranca.md:82`); o nonce violaria P6/`ETag`. A escolha de `script-src 'self'` **é** o equivalente estrito para vocabulário fechado — mas `08-seguranca.md` §6 precisa dizer isso explicitamente, senão parece descuido.
+- Consequência: a crate não tem inline e quer página cacheável (`docs/design/08-seguranca.md:82`); o nonce violaria P6/`ETag`. A escolha de `script-src 'self'` **é** o equivalente estrito para vocabulário fechado — mas `08-seguranca.md` §6 precisa dizer isso explicitamente, senão parece descuido.
 - Veredito: refina (divergência justificada, com frase a inserir — §4).
 
 ### A6. O corpus se contradiz sobre `'unsafe-inline'` em `script-src`
 - Citação: `SKILL.md:109` — "Content-Security-Policy: default-src 'none'; script-src 'nonce-{random}' 'strict-dynamic' 'unsafe-inline' https:; …" contra `SKILL.md:126` — "- ❌ NEVER `'unsafe-inline'` in `script-src`".
 - Semântica: a forma longa (`nonce` + `strict-dynamic` + `'unsafe-inline'` + `https:`) é fallback histórico para navegadores antigos; o `'unsafe-inline'` só é inofensivo porque `strict-dynamic` o neutraliza.
-- Consequência: **não copiar**. Em `docs/08-seguranca.md` o valor publicado deve ser o mínimo que se sustenta sem depender de neutralização por outra diretiva; qualquer `'unsafe-inline'` na tabela de §5.1 é regressão.
+- Consequência: **não copiar**. Em `docs/design/08-seguranca.md` o valor publicado deve ser o mínimo que se sustenta sem depender de neutralização por outra diretiva; qualquer `'unsafe-inline'` na tabela de §5.1 é regressão.
 - Veredito: refuta a quick-reference do corpus; confirma D3.
 
 ### A7. `'strict-dynamic'` pressupõe loader dinâmico — a crate não tem nenhum
@@ -86,7 +86,7 @@ que o corpus não afirma.
 ### A8. Allowlist de hosts em `script-src` é anti-padrão declarado
 - Citação: `08-modern-web-security-model.md:115` — "| CSP | Host-based allowlists no script-src | Muito amplo, difícil de manter |"; idem `SKILL.md:127`.
 - Semântica: origem permitida em `script-src` transforma qualquer comprometimento do host em XSS.
-- Consequência: valida o gate de assets (`docs/07-js-e-assets.md:127-128`: lint reprova `src`/`href` externo fora da allowlist) e proíbe `script-src https:` — inclusive como "fallback".
+- Consequência: valida o gate de assets (`docs/design/07-js-e-assets.md:127-128`: lint reprova `src`/`href` externo fora da allowlist) e proíbe `script-src https:` — inclusive como "fallback".
 - Veredito: confirma D13 + o gate existente.
 
 ### A9. `object-src 'none'` e `base-uri 'none'` são obrigatórios e a crate já os garante por construção
@@ -98,7 +98,7 @@ que o corpus não afirma.
 ### A10. `frame-ancestors 'none'` + `X-Frame-Options` legado
 - Citação: `07-practical-implementation.md:83` — "Content-Security-Policy: frame-ancestors 'none';" e `07:88` — "X-Frame-Options: DENY (ou SAMEORIGIN)".
 - Semântica: `frame-ancestors` é o controle moderno; `X-Frame-Options` só existe para navegador antigo, e o corpus o mantém por compatibilidade.
-- Consequência: manter os dois na tabela (o segundo marcado como legado), e não deixar a crate prometer clickjacking resolvido — ela não emite cabeçalho (`docs/08-seguranca.md:90`).
+- Consequência: manter os dois na tabela (o segundo marcado como legado), e não deixar a crate prometer clickjacking resolvido — ela não emite cabeçalho (`docs/design/08-seguranca.md:90`).
 - Veredito: confirma a fronteira `08-seguranca.md` §7.
 
 ### A11. CSP em modo report-only com endpoint de relatório é etapa obrigatória do deploy
@@ -122,7 +122,7 @@ que o corpus não afirma.
 ### A14. Trusted Types é a defesa declarada para DOM-XSS, não para XSS de servidor
 - Citação: `05-attack-defense-matrix.md:33` — "| **Trusted Types API** | DOM-based XSS | CSP: `require-trusted-types-for 'script'` |"; `08-modern-web-security-model.md:32` — "- `require-trusted-types-for` previne DOM-based XSS".
 - Semântica: TT protege *sinks* do DOM (atribuição a `innerHTML`, `script.src`), e só onde há JS.
-- Consequência: a afirmação de `docs/08-seguranca.md:85-86` ("não há `innerHTML` no markup gerado") é verdadeira mas insuficiente: os bundles do consumidor (`Editor`, `HomeEditor`) manipulam DOM. A §6 deve dizer que a diretiva é **do consumidor** e recomendada nos bundles que tocam HTML — e que a crate não fornece política.
+- Consequência: a afirmação de `docs/design/08-seguranca.md:85-86` ("não há `innerHTML` no markup gerado") é verdadeira mas insuficiente: os bundles do consumidor (`Editor`, `HomeEditor`) manipulam DOM. A §6 deve dizer que a diretiva é **do consumidor** e recomendada nos bundles que tocam HTML — e que a crate não fornece política.
 - Veredito: refina `08-seguranca.md:85-86`.
 
 ### A15. A política `default` de Trusted Types do exemplo-referência é um anti-padrão
@@ -145,14 +145,14 @@ que o corpus não afirma.
 
 ### A18. SRI em `<script>` está correto na spec; falta o invariante de obrigatoriedade
 - Citação: `01-core-defenses.md:92` — "        integrity=\"sha384-ABC123...\""; `07-practical-implementation.md:141` (mesmo padrão, hash real); spec: `spec/elements.toml:114` — "allowed = [\"type\", \"defer\", \"async\", \"integrity\", \"crossorigin\"]".
-- Semântica: SRI + `crossorigin` é o par mínimo; o consumidor já exige (`docs/07-js-e-assets.md:119`: "`integrity` (SRI) obrigatório para asset **enviado pelo usuário**").
+- Semântica: SRI + `crossorigin` é o par mínimo; o consumidor já exige (`docs/design/07-js-e-assets.md:119`: "`integrity` (SRI) obrigatório para asset **enviado pelo usuário**").
 - Consequência: `script` aceita `crossorigin` mas não tem invariante que force o par `integrity`+`crossorigin` quando o `src` é externo; como a crate não tem CDN, o caso é raro — vale como invariante de lint (N4) e não como erro de macro.
 - Veredito: refina; adiciona invariante `integrity_requires_crossorigin` a `script` e `link`.
 
 ### A19. CORS: refletir `Origin` com credenciais é o anti-padrão mais citado do conjunto
 - Citação: `07-practical-implementation.md:131` — "NUNCA refletir `Origin` header com `Access-Control-Allow-Credentials: true`."; `08:116` — "| CORS | Refletir `Origin` header | Cria trust escalável |".
 - Semântica: refletir origem qualquer com credenciais anula o SOP na prática.
-- Consequência: fora do escopo da crate, mas entra na tabela de cabeçalhos como linha "CORS: allowlist estática, nunca eco" e no checklist do consumidor; a crate pode ajudar emitindo `form-action 'self'` (já presente em `docs/08-seguranca.md:78`).
+- Consequência: fora do escopo da crate, mas entra na tabela de cabeçalhos como linha "CORS: allowlist estática, nunca eco" e no checklist do consumidor; a crate pode ajudar emitindo `form-action 'self'` (já presente em `docs/design/08-seguranca.md:78`).
 - Veredito: confirma a fronteira §7 de `08-seguranca.md`.
 
 ### A20. CORP e COOP são cabeçalhos obrigatórios por resposta, inclusive para assets
@@ -212,7 +212,7 @@ que o corpus não afirma.
 ### A29. `nosniff` é o cabeçalho que sustenta "upload nunca vira HTML"
 - Citação: `07-practical-implementation.md:111` — "X-Content-Type-Options: nosniff"; `07:167` (checklist).
 - Semântica: sem `nosniff`, um arquivo servido com `Content-Type` errado pode ser interpretado como HTML/JS.
-- Consequência: sem ele, a allowlist de extensão de upload (`13-input-validation.md:70`) é só cosmética; a regra de mídia da crate (`Src::media(ObjKey)`, `docs/08-seguranca.md:39`) precisa vir acompanhada do requisito de resposta `nosniff` + `Content-Type` derivado do sniff de conteúdo, não do nome.
+- Consequência: sem ele, a allowlist de extensão de upload (`13-input-validation.md:70`) é só cosmética; a regra de mídia da crate (`Src::media(ObjKey)`, `docs/design/08-seguranca.md:39`) precisa vir acompanhada do requisito de resposta `nosniff` + `Content-Type` derivado do sniff de conteúdo, não do nome.
 - Veredito: confirma a lacuna de upload (§4) e adiciona linha à tabela.
 
 ### A30. Referrer: header + `meta` + atributo — e a spec deixa os dois últimos sem tipo
@@ -224,7 +224,7 @@ que o corpus não afirma.
 ### A31. Bounce tracking e link decoration atingem analytics próprio, não só terceiros
 - Citação: `04-privacy-anti-tracking.md:19` — "2. Periodicamente verifica: usuário **não interagiu** com o site nos últimos **45 dias**?"; `04:20` — "3. Se sim + third-party cookies bloqueados → **estado deletado** (cookies, localStorage, IndexedDB, Cache API)"; `04:32` — "- **Stateless mode (moderno):** TODO bounce é tratado como stateful (rede e outros estados implícitos podem ser manipulados)".
 - Semântica: a heurística apaga estado de site que "só redireciona" — inclusive o do município, se o fluxo de login passar por redirect externo (SSO, portal de serviços, gov.br) e voltar sem interação registrada.
-- Consequência: dois efeitos concretos para o consumidor: (a) `Asset::Analytics` opt-in (`docs/07-js-e-assets.md:126`) pode perder o first-party storage e passar a contar sessão duplicada; (b) nenhum link do portal deve sair com parâmetro de campanha (`?utm_*`) — link decoration é tráfego de tracking e é removido por Firefox/Safari. A crate não implementa nada disso, mas o `Href` interno pode recusar query string fora do contrato de rota.
+- Consequência: dois efeitos concretos para o consumidor: (a) `Asset::Analytics` opt-in (`docs/design/07-js-e-assets.md:126`) pode perder o first-party storage e passar a contar sessão duplicada; (b) nenhum link do portal deve sair com parâmetro de campanha (`?utm_*`) — link decoration é tráfego de tracking e é removido por Firefox/Safari. A crate não implementa nada disso, mas o `Href` interno pode recusar query string fora do contrato de rota.
 - Veredito: adição (privacidade do consumidor; `Href`/`LUrl` é o único ponto de controle que a crate tem).
 
 ### A32. Permissions-Policy inclui `local-network`/`loopback-network`; a spec já tirou `allow` do `iframe`
@@ -237,7 +237,7 @@ que o corpus não afirma.
 - Citação: `01-core-defenses.md:33` — "- **Upgradable** (auto-HTTP→HTTPS): imagens, áudio, vídeo (`<img src>`, `<video src>`, etc.)"; `01:34` — "- **Blockable** (bloqueado totalmente): scripts, stylesheets, iframes, fetch/XHR, web fonts"; `01:36` — "**Exceção loopback:** `http://127.0.0.1`, `http://localhost`, `file://` são tratados como seguros."
 - Semântica: imagem `http:` é upgrade silencioso; script `http:` é bloqueio — o que produz falha visível e difícil de diagnosticar.
 - Consequência: mais um argumento para `Src`/`Href` só `https`, e um item de doc: nunca emitir `poster`/`srcset` com origem `http`; `17-https-by-default.md:25-29` repete o mesmo com "site deve quebrar" sem HTTPS como teste.
-- Veredito: confirma `docs/08-seguranca.md:35-36` (recusa de esquema).
+- Veredito: confirma `docs/design/08-seguranca.md:35-36` (recusa de esquema).
 
 ### A34. robots.txt é público: o anti-padrão é listar `/admin`
 - Citação: `11-robots-txt.md:14` — "`robots.txt` é **público** — qualquer pessoa pode lê-lo. Listar paths como `/admin` ou `/secret` revela sua localização para attackers."; `11:16` — "Além disso, crawlers maliciosos (malware, email harvesters) ignoram `robots.txt`."
@@ -249,12 +249,12 @@ que o corpus não afirma.
 - Citação: `13-input-validation.md:65` — "| XSS via download | Não servir HTML/JS de user uploads |"; `13:64` — "| Overwrite de arquivos do site | Armazenar fora do webroot |"; `13:69` — "- Gerar nome próprio para o arquivo (não confiar no filename do usuário)"; `13:70` — "- Allowlist de extensões".
 - Semântica: o vetor não é "arquivo ruim", é **arquivo servido do mesmo origem com tipo interpretável**.
 - Consequência: `Src::media(ObjKey)` só aceita chave opaca (bom), mas nada impede o consumidor de servir `application/octet-stream` com `Content-Type` adivinhado. Regras para o doc: rota de mídia com `nosniff` + `Content-Disposition: attachment` no que não é imagem/vídeo, domínio separado para upload, extensão derivada do sniff e não do nome.
-- Veredito: confirma `docs/08-seguranca.md` §7 (fronteira) e adiciona requisito explícito.
+- Veredito: confirma `docs/design/08-seguranca.md` §7 (fronteira) e adiciona requisito explícito.
 
 ### A36. SBOM e lockfile são item de supply chain, não de infraestrutura opcional
 - Citação: `09-operational-security.md:62` — "| CycloneDX | OWASP | Supply chain security, leve |"; `09:47` — "- **Usar** `npm ci` em vez de `npm install` em CI"; `09:48` — "- **Comitar** lockfile no source control".
 - Semântica: inventário de componentes + build reprodutível a partir do lockfile.
-- Consequência: `docs/08-seguranca.md:54-61` cobre `cargo deny` mas não SBOM nem `cargo vet`; para uma crate vendorizada (D0) o SBOM é o artefato que o consumidor audita. Mapear `npm ci` → `--locked`/`--frozen` e CycloneDX → `cargo cyclonedx`.
+- Consequência: `docs/design/08-seguranca.md:54-61` cobre `cargo deny` mas não SBOM nem `cargo vet`; para uma crate vendorizada (D0) o SBOM é o artefato que o consumidor audita. Mapear `npm ci` → `--locked`/`--frozen` e CycloneDX → `cargo cyclonedx`.
 - Veredito: refina `08-seguranca.md` §5 (faltam duas linhas).
 
 ### A37. Assinatura de commit, PR review obrigatório e `SECURITY.md` com SLA
@@ -280,10 +280,10 @@ que o corpus não afirma.
 - **Escape por tipo é a única defesa de markup que o corpus valida implicitamente** (`05:9` define XSS por falta de encoding; `05:54` exige encoding entre as seis camadas) → P2/D1.
 - **Ausência de porta de escape** é o que permite dizer "nenhuma das seis camadas depende de disciplina" (`08-seguranca.md:5-6`): com `Raw`, a camada 1 do `05:56` voltaria a depender de revisão → P3/D2.
 - **Vocabulário fechado** é o que torna `frame-ancestors`, `object-src`, `base-uri` "cinto e suspensório": não há `<object>`/`<base>` na allowlist (`spec:31-33`) → D4.
-- **Estilo como token** satisfaz o anti-padrão de `unsafe-inline` (`08:114`) sem precisar de nonce (`07:63` vs `docs/08-seguranca.md:82`) → D3/D12/P6.
-- **JS como asset declarado** satisfaz "never host-based allowlists" (`08:115`) porque não há origem externa em `script src` (`docs/07-js-e-assets.md:127-128`) → D13.
+- **Estilo como token** satisfaz o anti-padrão de `unsafe-inline` (`08:114`) sem precisar de nonce (`07:63` vs `docs/design/08-seguranca.md:82`) → D3/D12/P6.
+- **JS como asset declarado** satisfaz "never host-based allowlists" (`08:115`) porque não há origem externa em `script src` (`docs/design/07-js-e-assets.md:127-128`) → D13.
 - **Sem CDN** é estratégia de segurança citável (`06:139`) e elimina o caso de SRI cross-origin que a spec hoje não consegue cumprir (A17).
-- **Bytes determinísticos** sustentam `ETag`/304 e, por consequência, permitem página cacheável sem nonce (`docs/09-desempenho-e-cache.md:22-30`) → P6/D14.
+- **Bytes determinísticos** sustentam `ETag`/304 e, por consequência, permitem página cacheável sem nonce (`docs/design/09-desempenho-e-cache.md:22-30`) → P6/D14.
 - **`JsonLd` como tipo** atende o caso que o ecossistema deixa aberto (`00-principios.md:34-42`); escape de `<` cobre `</SCRIPT`, `<!--` e `-->` de uma vez.
 - **Zero `unsafe` + sem `syn`** é redução de superfície em posição privilegiada, exatamente o argumento de `06:139-140` e `09:20` ("Todo third-party tool … pode ser vetor de ataque") → D9.
 - **`iframe` sem `allow`/`srcdoc` e com `sandbox` + `cross_origin_requires_sandbox`** (`spec:473,476`) confirma A32 e fecha o vetor de delegação de permissão por markup.
@@ -292,16 +292,16 @@ que o corpus não afirma.
 
 | O que a crate diz hoje | O que o corpus diz | Correção (frase exata a inserir) |
 |---|---|---|
-| `spec/elements.toml:106` permite `integrity` em `link` sem `crossorigin`, e `spec:109` exige `preload_requires_as_and_crossorigin` | SRI exige CORS (`01:96`) | acrescentar `"crossorigin"` à allowlist de `link` e invariante `integrity_requires_crossorigin`; em `docs/08-seguranca.md` §5: "SRI sem `crossorigin` não é verificado pelo browser; o par é indivisível." |
-| `spec:96` `required = ["content"]` em `meta` impede `<meta charset="utf-8">` | nenhum arquivo do corpus trata charset; `[INFERENCE]` a ausência de `charset` deixa o browser adivinhar a codificação | em `spec/elements.toml:96`, trocar por `required = ["content"]   # regra: content XOR charset`; em `docs/03` §3: "`meta` exige `content` **ou** `charset`, nunca ambos." |
+| `spec/elements.toml:106` permite `integrity` em `link` sem `crossorigin`, e `spec:109` exige `preload_requires_as_and_crossorigin` | SRI exige CORS (`01:96`) | acrescentar `"crossorigin"` à allowlist de `link` e invariante `integrity_requires_crossorigin`; em `docs/design/08-seguranca.md` §5: "SRI sem `crossorigin` não é verificado pelo browser; o par é indivisível." |
+| `spec:96` `required = ["content"]` em `meta` impede `<meta charset="utf-8">` | nenhum arquivo do corpus trata charset; `[INFERENCE]` a ausência de `charset` deixa o browser adivinhar a codificação | em `spec/elements.toml:96`, trocar por `required = ["content"]   # regra: content XOR charset`; em `docs/design/03` §3: "`meta` exige `content` **ou** `charset`, nunca ambos." |
 | `spec:408` `rel`/`referrerpolicy` livres em `a` | `rel="noreferrer"` (`04:60`); `referrerpolicy` fraco vaza path | substituir por `rel = ["external","prev","next","noreferrer","noopener"]` e `referrerpolicy = ["strict-origin-when-cross-origin","no-referrer"]`; invariante `blank_target_implies_noopener` passa a emitir `rel="noopener noreferrer"` sozinho. |
-| `spec:55` `id = "id"` global, "gerado por primitivo ou explícito" | clobbering por `id`/`name` não é coberto (`grep clobber` = 0) | em `spec/elements.toml`: `id = "id"   # Id: padrão ^[a-z][a-z0-9-]{0,63}$, derivado do call site; nunca de dado`; e em `docs/03` §6: "`id`/`name` nunca vêm de texto do usuário — DOM clobbering transforma nome em propriedade de `window`." |
-| `docs/08-seguranca.md:90` lista cabeçalhos como "do consumidor", sem valores | `07:157-206` traz a lista completa com valores | substituir a linha por: "Cabeçalhos: ver tabela normativa em `18-aprendizados/web-security-review.md` §5.1; a crate assume `script-src 'self'` e `script-src-attr 'none'`." |
-| `docs/08-seguranca.md:69-80` CSP sem `frame-src`, `script-src-attr`, `style-src-attr`, `manifest-src` | `07:66-69` só cobre parte; `script-src-attr`/`style-src-attr` ausentes do corpus (A13) | acrescentar após `frame-ancestors 'none';`: `frame-src 'none';` `script-src-attr 'none';` `style-src-attr 'none';` `worker-src 'self';` `manifest-src 'self';` |
-| `docs/08-seguranca.md:54-61` supply chain sem SBOM/vet/assinatura | `09:47-79`, `09:109`, `09:92` | acrescentar duas linhas à tabela §5: "SBOM CycloneDX por release (`cargo cyclonedx`)" e "commits assinados + PR review + `SECURITY.md` com SLA" |
-| `docs/03-vocabulario-de-elementos.md:107-113` lista 5 proibições, mas `spec:32-33` cita `docs/03 §5` para `formaction, ping, slot, shadowrootmode, part, exportparts, is, xlink:href` | vetores fora do escopo do corpus (§7), decisão própria | acrescentar as 8 linhas à tabela de `docs/03` §5 com o motivo de cada uma (tabela em §5.3) |
-| `docs/08-seguranca.md:8-14` tabela de 5 vetores | corpus não enumera vetores de markup (§7) | substituir por §5.2 (12 vetores, com defesa e residual) |
-| `docs/08-seguranca.md:99-109` testes de regressão sem header/upload/srcset | `07:157-206` (checklist) + `12:69-71` da crate | acrescentar 4 linhas: snapshot do header CSP, `nosniff` na rota de mídia, `srcset` com descritor hostil, clobbering de `id` |
+| `spec:55` `id = "id"` global, "gerado por primitivo ou explícito" | clobbering por `id`/`name` não é coberto (`grep clobber` = 0) | em `spec/elements.toml`: `id = "id"   # Id: padrão ^[a-z][a-z0-9-]{0,63}$, derivado do call site; nunca de dado`; e em `docs/design/03` §6: "`id`/`name` nunca vêm de texto do usuário — DOM clobbering transforma nome em propriedade de `window`." |
+| `docs/design/08-seguranca.md:90` lista cabeçalhos como "do consumidor", sem valores | `07:157-206` traz a lista completa com valores | substituir a linha por: "Cabeçalhos: ver tabela normativa em `18-aprendizados/web-security-review.md` §5.1; a crate assume `script-src 'self'` e `script-src-attr 'none'`." |
+| `docs/design/08-seguranca.md:69-80` CSP sem `frame-src`, `script-src-attr`, `style-src-attr`, `manifest-src` | `07:66-69` só cobre parte; `script-src-attr`/`style-src-attr` ausentes do corpus (A13) | acrescentar após `frame-ancestors 'none';`: `frame-src 'none';` `script-src-attr 'none';` `style-src-attr 'none';` `worker-src 'self';` `manifest-src 'self';` |
+| `docs/design/08-seguranca.md:54-61` supply chain sem SBOM/vet/assinatura | `09:47-79`, `09:109`, `09:92` | acrescentar duas linhas à tabela §5: "SBOM CycloneDX por release (`cargo cyclonedx`)" e "commits assinados + PR review + `SECURITY.md` com SLA" |
+| `docs/design/03-vocabulario-de-elementos.md:107-113` lista 5 proibições, mas `spec:32-33` cita `docs/design/03 §5` para `formaction, ping, slot, shadowrootmode, part, exportparts, is, xlink:href` | vetores fora do escopo do corpus (§7), decisão própria | acrescentar as 8 linhas à tabela de `docs/design/03` §5 com o motivo de cada uma (tabela em §5.3) |
+| `docs/design/08-seguranca.md:8-14` tabela de 5 vetores | corpus não enumera vetores de markup (§7) | substituir por §5.2 (12 vetores, com defesa e residual) |
+| `docs/design/08-seguranca.md:99-109` testes de regressão sem header/upload/srcset | `07:157-206` (checklist) + `12:69-71` da crate | acrescentar 4 linhas: snapshot do header CSP, `nosniff` na rota de mídia, `srcset` com descritor hostil, clobbering de `id` |
 
 ## 5. Adições prontas para colar
 
@@ -330,7 +330,7 @@ que o corpus não afirma.
 |---|---|---|---|
 | texto/atributo | `<script>`, `" onmouseover=` | `Text`/`AttrVal` + nome de atributo estático (`08:10-11`) | nenhum |
 | URL/esquema | `javascript:`, `data:`, `vbscript:`, `file:`, `java\tscript:` | `Href`/`Src` tipados, esquema normalizado e **recusado**, não sanitizado (`08:35-36`) | nunca percent-decodificar antes de validar; rejeitar `\t\n\r` e espaço |
-| `srcset` diferencial | parser de browser aceita descritor e URL dentro de token | `SrcSet::from_variants` gera descritor (`docs/08:39`) | descritor **gerado**, nunca vindo do chamador |
+| `srcset` diferencial | parser de browser aceita descritor e URL dentro de token | `SrcSet::from_variants` gera descritor (`docs/design/08:39`) | descritor **gerado**, nunca vindo do chamador |
 | JSON-LD | `</SCRIPT>`, `<!--`, `-->` encerram o bloco | `JsonLd` escapa `<` `>` `&` `'` (`08:13`) | fixtures com `<!--` e `\u2028` |
 | SVG inline | namespace SVG tem `<script>`, `<use href>`, `<animate>`, `<foreignObject>` | `<svg>` com filhos fechados (`spec:478-482`); sem `xlink:href` (`spec:33`) | `use`/`foreignObject` nunca entram; `phrasing` dentro de `<svg>` gera elemento SVG desconhecido — restringir a `svg_title`/`desc` |
 | `meta http-equiv` | `refresh` (redirect/phishing), CSP por markup (downgrade) | `no_http_equiv` (`spec:100`) | manter; `name` com enum |
@@ -338,7 +338,7 @@ que o corpus não afirma.
 | DOM clobbering | `id`/`name` viram `window.X`/`form.X` | `id` "gerado por primitivo" (`spec:55`) | tipo `Id` com padrão; `name` de controle = identificador de modelo |
 | `target="_blank"` | reverse tabnabbing; nome de janela reutilizado | `blank_target_implies_noopener` (`spec:412`) | `target` como enum `only _blank`, e emitir `rel="noopener noreferrer"` |
 | `formaction`/`ping` | sobrescreve destino do form; beacon cross-site | ausentes (impossível emitir) | manter proibidos (A39, §5.3) |
-| `srcdoc` | HTML como string aninhada | ausente (`docs/03-vocabulario-de-elementos.md:111`) | manter |
+| `srcdoc` | HTML como string aninhada | ausente (`docs/design/03-vocabulario-de-elementos.md:111`) | manter |
 | upload servido como HTML | mesma origem + tipo interpretável | `Src::media(ObjKey)` opaco | `nosniff` + `Content-Disposition` + host separado (A35) |
 
 ### 5.3 TOML pronto para `spec/elements.toml`
@@ -371,7 +371,7 @@ name = ["description", "robots", "referrer", "theme-color", "color-scheme"]
 # robots: ["noindex", "nofollow", "noarchive"]; referrer: só políticas estritas
 ```
 
-Proibições a acrescentar em `docs/03-vocabulario-de-elementos.md` §5 (com o motivo):
+Proibições a acrescentar em `docs/design/03-vocabulario-de-elementos.md` §5 (com o motivo):
 
 | Atributo | Motivo |
 |---|---|
@@ -401,7 +401,7 @@ Proibições a acrescentar em `docs/03-vocabulario-de-elementos.md` §5 (com o m
 6. **Endpoint de CSP report na crate.** Recebe payload arbitrário do browser por request: precisa de quota, rotação, storage e proteção de path — infraestrutura, não markup.
 7. **Parser/avaliador de CSP no lint.** A crate não emite header; validar política é trabalho do `csp-evaluator`/proxy, e um parser de CSP é superfície nova para um ganho zero.
 8. **Allowlist de origem externa configurável em runtime.** Configuração que aceita string de origem é `attrs()` com outro nome; a allowlist é dado versionado (D5).
-9. **SRI calculado em build para asset local.** Asset já tem hash no nome (`docs/07-js-e-assets.md:110-117`); somar `integrity` local é byte extra e mais um lugar para divergir. SRI só para asset de terceiro.
+9. **SRI calculado em build para asset local.** Asset já tem hash no nome (`docs/design/07-js-e-assets.md:110-117`); somar `integrity` local é byte extra e mais um lugar para divergir. SRI só para asset de terceiro.
 10. **`target` livre e `rel` livre.** Duas strings que parecem inofensivas e reabrem tabnabbing e vazamento de referrer (A30).
 11. **`id` como `&str`.** DOM clobbering entra pela porta do slug de conteúdo e não aparece em nenhum teste de escape.
 12. **`hidden="until-found"` como controle de acesso.** Conteúdo permanece no DOM, legível e buscável; autorização é servidor.

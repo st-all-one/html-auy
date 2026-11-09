@@ -68,7 +68,7 @@ jobs:
           toolchain: "1.99"
       - uses: taiki-e/install-action@v2
         with:
-          # `typos` fica de fora: dicionário só em inglês, corpus todo em pt-BR (docs/21 §7).
+          # `typos` fica de fora: dicionário só em inglês, corpus todo em pt-BR (docs/design/21 §7).
           tool: cargo-deny,cargo-machete,cargo-audit
       - run: cargo deny check
       - run: cargo audit

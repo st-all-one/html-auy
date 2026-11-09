@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Validador de referência de spec/elements.toml (esquema 2).
 
-Este é o protótipo do comando `cq spec` descrito em docs/01-arquitetura.md.
+Este é o protótipo do comando `cq spec` descrito em docs/design/01-arquitetura.md.
 Ele é a barreira executável contra a spec apodrecer.
 
 Uso:  python3 tools/validate_spec.py [caminho]
@@ -59,7 +59,7 @@ FORBIDDEN_ATTRS = {
     "style", "srcdoc", "formaction", "ping", "slot", "part", "exportparts",
     "shadowrootmode", "is", "xlink:href", "accesskey", "draggable",
 }
-# elementos que o vocabulário nunca deve conter (docs/03 §5, docs/08 §2)
+# elementos que o vocabulário nunca deve conter (docs/design/03 §5, docs/design/08 §2)
 FORBIDDEN_ELEMENTS = {
     "style", "template", "slot", "iframe-srcdoc", "object", "embed", "map",
     "area", "fencedframe", "canvas", "base",
@@ -80,24 +80,24 @@ def warn(msg: str) -> None:
 def check_doc_counts(data: dict) -> None:
     """Números declarados nos docs têm que bater com o spec (o drift clássico: "63 elementos")."""
     root = Path(__file__).resolve().parent.parent
-    t3 = (root / "docs" / "03-vocabulario-de-elementos.md").read_text(encoding="utf-8")
+    t3 = (root / "docs" / "design" / "03-vocabulario-de-elementos.md").read_text(encoding="utf-8")
     m = re.search(r"declara \*\*(\d+)\*\*", t3)
     if not m:
-        err("docs/03: contagem declarada de elementos não encontrada")
+        err("docs/design/03: contagem declarada de elementos não encontrada")
     elif int(m.group(1)) != len(data["element"]):
-        err(f"docs/03: declara **{m.group(1)}** elementos; o spec tem {len(data['element'])}")
-    t4 = (root / "docs" / "04-validacao.md").read_text(encoding="utf-8")
+        err(f"docs/design/03: declara **{m.group(1)}** elementos; o spec tem {len(data['element'])}")
+    t4 = (root / "docs" / "design" / "04-validacao.md").read_text(encoding="utf-8")
     rows = {line.split("|")[1].strip().strip("`"): line
             for line in t4.splitlines() if line.startswith("| `") and "**" in line}
     for scope in ("block", "type", "output"):
         row = rows.get(scope, "")
         nums = re.findall(r"\*\*(\d+)\*\*", row)
         if not nums:
-            err(f"docs/04 §4.0: linha do escopo `{scope}` sem contagem")
+            err(f"docs/design/04 §4.0: linha do escopo `{scope}` sem contagem")
             continue
         real = sum(1 for v in data["invariants"].values() if v == scope)
         if int(nums[-1]) != real:
-            err(f"docs/04 §4.0: declara {nums[-1]} `{scope}`; o spec tem {real}")
+            err(f"docs/design/04 §4.0: declara {nums[-1]} `{scope}`; o spec tem {real}")
     if not any(v in ("block", "type", "output") for v in data["invariants"].values()):
         err("[invariants] vazio: nenhum escopo declarado")
 
@@ -170,7 +170,7 @@ def main(path: str) -> int:
     # nome de elemento: sem hífen (custom element), minúsculo, sem espaço
     for name in names:
         if "-" in name:
-            err(f"element `{name}`: nome com hífen (custom element é proibido, docs/14 §lit)")
+            err(f"element `{name}`: nome com hífen (custom element é proibido, docs/design/14 §lit)")
         if name != name.lower() or " " in name:
             err(f"element `{name}`: nome inválido")
         if name in FORBIDDEN_ELEMENTS:
@@ -214,7 +214,7 @@ def main(path: str) -> int:
         # 2. allowlist não repete required (implicitamente permitido) e não aceita lixo
         for attr in list(required) + list(allowed):
             if attr in ("data-*", "aria-*") or attr.startswith(("data-", "aria-")) :
-                continue          # chave declarada pelo consumidor (docs/03 §6)
+                continue          # chave declarada pelo consumidor (docs/design/03 §6)
             if attr in GLOBALS or attr in KNOWN_ATTRS:
                 continue
             if "-" in attr or attr != attr.lower():
@@ -282,27 +282,27 @@ def main(path: str) -> int:
         if not void and "none" in children:
             err(f"element `{name}`: children=['none'] em elemento não-void")
 
-        # 6. invariantes declaradas precisam existir em docs/04 (checagem leve: nome kebab/snake)
+        # 6. invariantes declaradas precisam existir em docs/design/04 (checagem leve: nome kebab/snake)
         for inv in spec.get("invariants", []):
             if not inv.replace("_", "").isalnum():
                 err(f"element `{name}`: invariante `{inv}` fora do padrão snake_case")
 
-    # 7. rastreabilidade: toda invariante compilada está documentada em docs/04
+    # 7. rastreabilidade: toda invariante compilada está documentada em docs/design/04
     spec_inv: dict[str, list[str]] = {}
     for name, spec in els.items():
         for inv in spec.get("invariants", []):
             spec_inv.setdefault(inv, []).append(name)
 
-    doc = Path(__file__).resolve().parent.parent / "docs" / "04-validacao.md"
+    doc = Path(__file__).resolve().parent.parent / "docs" / "design" / "04-validacao.md"
     if not doc.exists():
-        err("docs/04-validacao.md ausente: invariantes sem registro normativo")
+        err("docs/design/04-validacao.md ausente: invariantes sem registro normativo")
     else:
         text = doc.read_text(encoding="utf-8")
         documented = set(re.findall(r"`([a-z][a-z0-9]*(?:_[a-z0-9]+)+)`", text)) - names
         for inv, owners in sorted(spec_inv.items()):
             if inv not in documented:
                 err(f"invariante `{inv}` (usada em {', '.join(owners)}) não está documentada "
-                    f"em docs/04-validacao.md §4.1")
+                    f"em docs/design/04-validacao.md §4.1")
         for inv in sorted(documented - set(spec_inv)):
             if inv.count("_") >= 1 and inv.split("_")[0] in {
                 "alt", "href", "label", "no", "main", "single", "banner", "shell", "li", "type",
@@ -311,7 +311,7 @@ def main(path: str) -> int:
                 "document", "datetime", "preserve", "svg", "section", "landmark", "for", "pattern",
                 "attribute", "autocomplete", "srcset",
             }:
-                warn(f"docs/04 documenta `{inv}`, mas nenhum elemento a declara em invariants")
+                warn(f"docs/design/04 documenta `{inv}`, mas nenhum elemento a declara em invariants")
 
     # `only`: elemento que não se escreve à mão (documento → Page; formulário → Form::open)
     for name, e in els.items():

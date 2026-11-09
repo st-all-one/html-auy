@@ -67,7 +67,7 @@ usar em um alvo sem `std`, mantenha um allocator disponível e compile com a fea
 
 `0.1.x` é a primeira série pública. A política é semver para a API pública de `html-auy`; em `0.x`,
 uma quebra de código válido sobe o **minor**. A política completa, incluindo MSRV e congelamento da
-spec, está em [`docs/11`](../11-estabilidade.md).
+spec, está em [`docs/design/11`](../design/11-estabilidade.md).
 
 ## Configuração mínima de uma aplicação
 

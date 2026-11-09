@@ -53,7 +53,7 @@ exatamente onde mora o risco de escape hatch.
 #### A4. Newtype também serve a *type safety*, não só a coerência
 - Citação: `04-structs-enums.md:239` — "5. **Newtype pattern** (`struct Email(String)`) para segurança de tipo"
 - Semântica: dois `String` de mesmo layout não são intercambiáveis; a troca é erro de compilação.
-- Consequência: justifica os ~15 tipos de contexto de `docs/02` e impede que `Src` e `Href` sejam o mesmo tipo (um `Src::media` nunca vira link).
+- Consequência: justifica os ~15 tipos de contexto de `docs/design/02` e impede que `Src` e `Href` sejam o mesmo tipo (um `Src::media` nunca vira link).
 - Veredito: confirma D1.
 #### A5. `From` é infalível, e `?` o invoca implicitamente
 - Citação: `06-error-handling.md:57` — "Err(e) => return Err(e.into()),  // conversão automática via From"
@@ -167,28 +167,28 @@ exatamente onde mora o risco de escape hatch.
 #### A26. `Cargo.lock` versionado é para aplicação, não para biblioteca
 - Citação: `15-cargo-deep.md:393` — "1. **Commit `Cargo.lock`** para aplicações (não para bibliotecas)"
 - Semântica: quem entrega binário fixa a árvore; quem é dependência não impõe versões.
-- Consequência: o html-auy é vendorizado por consumidor único e `docs/11` §3 exige `cargo build --locked` → commitar o lock, mesmo sendo lib. O critério real é "consumidor único", não "tem `main.rs`".
+- Consequência: o html-auy é vendorizado por consumidor único e `docs/design/11` §3 exige `cargo build --locked` → commitar o lock, mesmo sendo lib. O critério real é "consumidor único", não "tem `main.rs`".
 - Veredito: refina a regra para o nosso caso.
 #### A27. `resolver = "2"`; o resolver 3 é nightly
 - Citação: `15-cargo-deep.md:114` — "| 3 (nightly) | MSRV-aware |"
 - Semântica: resolver 3 (MSRV-aware) só em nightly; em stable o resolver é 2.
 - Consequência: `resolver = "2"` no workspace; proteção de MSRV tem de ser **CI** (matriz), não resolução de features.
-- Veredito: confirma `docs/11` §3.
+- Veredito: confirma `docs/design/11` §3.
 #### A28. Features: `dep:` e `default` mínimo — e aqui, zero features
 - Citação: `09-modules-crates.md:210` — "serde = ["dep:serde"]      # dep: prefix evita feature implícita" (e `15-cargo-deep.md:398`: "**Features `default` mínimas** — não force dependências extras").
 - Semântica: feature que só liga dependência opcional deve usar `dep:`; default deve ser o mínimo.
-- Consequência: a crate não tem funcionalidade opcional — nem `trybuild` (dev-dependency), nem `serde`. Zero features; qualquer `cfg(feature)` futura é decisão nova em `docs/13`.
+- Consequência: a crate não tem funcionalidade opcional — nem `trybuild` (dev-dependency), nem `serde`. Zero features; qualquer `cfg(feature)` futura é decisão nova em `docs/design/13`.
 - Veredito: confirma a adição "zero features".
 #### A29. `rust-version` no manifesto é a MSRV declarada
 - Citação: `15-cargo-deep.md:394` — "2. **`rust-version`** no Cargo.toml para MSRV claro" (valor do guia: `00-introduction.md:40` — "`rust-version = "1.85"` no `Cargo.toml`").
 - Semântica: o campo é a única declaração machine-readable de MSRV; Cargo recusa dependência com MSRV maior.
-- Consequência: **conflito aberto** — o conjunto é 1.99.1, sugere 1.85, e `docs/11-estabilidade.md:77` diz "Rust ≥ MSRV, edição 2021+" sem número. Ver nota em §4.
+- Consequência: **conflito aberto** — o conjunto é 1.99.1, sugere 1.85, e `docs/design/11-estabilidade.md:77` diz "Rust ≥ MSRV, edição 2021+" sem número. Ver nota em §4.
 - Veredito: refina; exige decisão explícita.
 #### A30. Edition 2024 é o default a partir do rustc 1.85
 - Citação: `00-introduction.md:34` — "edition = "2024"  # default a partir de rustc 1.85+"
 - Semântica: edição e MSRV são independentes; 2024 não obriga APIs novas.
-- Consequência: adotar 2024 é seguro na MSRV; muda `unsafe extern`, captura de RPIT e `gen` — nada que a crate use. O que não pode acontecer é `docs/11` §7 prometer "edição 2021+" enquanto o manifesto diz 2024.
-- Veredito: corrige `docs/11` §7.
+- Consequência: adotar 2024 é seguro na MSRV; muda `unsafe extern`, captura de RPIT e `gen` — nada que a crate use. O que não pode acontecer é `docs/design/11` §7 prometer "edição 2021+" enquanto o manifesto diz 2024.
+- Veredito: corrige `docs/design/11` §7.
 #### A31. `[profile.dev.build-override]` acelera proc-macro e build script
 - Citação: `15-cargo-deep.md:158` — "[profile.dev.build-override]" com "opt-level = 3" na linha 159.
 - Semântica: crates compiladas para o host (proc-macro, `build.rs`) rodam no compilador; otimizá-las acelera a expansão.
@@ -198,8 +198,8 @@ exatamente onde mora o risco de escape hatch.
 #### A32. `proc-macro = true` e os três tipos de macro
 - Citação: `14-unsafe-macros-ffi.md:227` — "proc-macro = true" (sob `[lib]`, linha 226); tipos nas linhas 230/234/241.
 - Semântica: crate proc-macro é especial: só exporta `#[proc_macro*]` e não pode ser dependência normal.
-- Consequência: `html-macro` é crate separado (já é, por `docs/01` §7) e não pode ser dependência de `html-core`; a fronteira é imposta pelo Cargo.
-- Veredito: confirma `docs/01`.
+- Consequência: `html-macro` é crate separado (já é, por `docs/design/01` §7) e não pode ser dependência de `html-core`; a fronteira é imposta pelo Cargo.
+- Veredito: confirma `docs/design/01`.
 #### A33. `parse_macro_input!` + `quote!` — sem uma palavra sobre spans
 - Citação: `14-unsafe-macros-ffi.md:251` — "let ast = parse_macro_input!(input as DeriveInput);" e `14-unsafe-macros-ffi.md:253` — "let gen = quote! {"
 - Semântica: o exemplo converte tokens em AST e reemite com `quote!`; spans não são mencionados em nenhuma das 399 linhas.
@@ -208,7 +208,7 @@ exatamente onde mora o risco de escape hatch.
 #### A34. `compile_error!` não aparece
 - Citação: `14-unsafe-macros-ffi.md` [sem linha] — nenhuma ocorrência de `compile_error!` no arquivo, nem no conjunto.
 - Semântica: o guia mostra macros que *geram* código, não macros que *recusam* código.
-- Consequência: a única forma estável de erro de macro (`docs/04` §2) precisa ser decidida e testada aqui: um `compile_error!` por erro (não concatenar), span do token, mensagem em três partes (`docs/10` §2).
+- Consequência: a única forma estável de erro de macro (`docs/design/04` §2) precisa ser decidida e testada aqui: um `compile_error!` por erro (não concatenar), span do token, mensagem em três partes (`docs/design/10` §2).
 - Veredito: lacuna.
 #### A35. `cargo-expand` é a ferramenta de depuração de macro
 - Citação: `01-toolchain.md:136` — "| `cargo-expand` | `cargo install cargo-expand` | Expandir macros |"
@@ -224,22 +224,22 @@ exatamente onde mora o risco de escape hatch.
 #### A37. `criterion` com `harness = false`
 - Citação: `13-testing.md:151` — "use criterion::{black_box, criterion_group, criterion_main, Criterion};" (e `15-cargo-deep.md:57`: "harness = false  # desativa harness padrão").
 - Semântica: benchmark estável exige harness próprio; o nativo é nightly.
-- Consequência: `benches/render.rs` com `harness = false` cobre o que `docs/09` §7 pede (escaper, `SrcSet` de 6 variantes, tabela de 100 linhas, shell). Bench não é gate de CI; o gate é o orçamento de bytes.
-- Veredito: confirma `docs/09` §7.
+- Consequência: `benches/render.rs` com `harness = false` cobre o que `docs/design/09` §7 pede (escaper, `SrcSet` de 6 variantes, tabela de 100 linhas, shell). Bench não é gate de CI; o gate é o orçamento de bytes.
+- Veredito: confirma `docs/design/09` §7.
 #### A38. `proptest` e `nextest` existem; só o nome
 - Citação: `13-testing.md:265` — "9. **Property-based testing com `proptest`** — testa casos aleatórios"; `13-testing.md:262` — "7. **`cargo nextest`** é mais rápido que `cargo test` para CI".
 - Semântica: uma linha cada, sem exemplo de estratégia nem de `proptest!`.
-- Consequência: a tabela de propriedades de `docs/12` §3 é nossa, não importada; `nextest` no CI é escolha operacional (e não roda doc tests — o guia omite [INFERENCE]).
+- Consequência: a tabela de propriedades de `docs/design/12` §3 é nossa, não importada; `nextest` no CI é escolha operacional (e não roda doc tests — o guia omite [INFERENCE]).
 - Veredito: irrelevante além do nome.
 #### A39. Doc tests são testes de verdade (compilam contra a API pública)
 - Citação: `13-testing.md:104` — "/// ```rust,should_panic" (variantes `ignore` e `no_run` no mesmo bloco).
 - Semântica: o bloco do comentário é compilado como crate externo que importa a lib.
 - Consequência: doc test de `html-core` usando `html!` exige dev-dependency em `html-macro`, que depende de `html-spec`, que depende de `html-core` — ciclo de dev que o Cargo aceita mas confunde MSRV. Doc test sem macro; exemplo com macro em `examples/`.
-- Veredito: refina `docs/12`.
-#### A40. `trybuild` e `insta` não existem no corpus — e são os dois pilares de `docs/12`
+- Veredito: refina `docs/design/12`.
+#### A40. `trybuild` e `insta` não existem no corpus — e são os dois pilares de `docs/design/12`
 - Citação: `13-testing.md` [sem linha] — 271 linhas sobre testes, zero ocorrências de `trybuild` ou `insta` em todo o conjunto.
 - Semântica: o guia cobre o harness nativo; teste de mensagem de compilação e snapshot não são do interesse dele.
-- Consequência: `docs/12` §2/§5 dependem inteiramente de ferramentas que o corpus não descreve — formato `tests/ui/*.stderr`, variação da mensagem entre versões do rustc, `INSTA_FORCE_UPDATE` proibido no CI.
+- Consequência: `docs/design/12` §2/§5 dependem inteiramente de ferramentas que o corpus não descreve — formato `tests/ui/*.stderr`, variação da mensagem entre versões do rustc, `INSTA_FORCE_UPDATE` proibido no CI.
 - Veredito: lacuna — a maior do conjunto, porque P7 é um dos pilares.
 ### 2.8 Determinismo: as três armadilhas que o guia recomenda
 #### A41. `algebraic_*` é explicitamente não-determinístico
@@ -260,8 +260,8 @@ exatamente onde mora o risco de escape hatch.
 #### A44. `HashMap` não tem ordem — `BTreeMap` tem
 - Citação: `05-collections.md:139` — "let mut scores = HashMap::new();" (iteração sem ordem garantida; `BTreeMap` só na tabela de coleções).
 - Semântica: hash map itera em ordem arbitrária, dependente da semente.
-- Consequência: nada de `HashMap` em caminho de emissão (`docs/09` §2 já exige `BTreeMap`/`BTreeSet`); idem para deduplicação de assets e de `Class`.
-- Veredito: confirma D14 e `docs/09` §2.
+- Consequência: nada de `HashMap` em caminho de emissão (`docs/design/09` §2 já exige `BTreeMap`/`BTreeSet`); idem para deduplicação de assets e de `Class`.
+- Veredito: confirma D14 e `docs/design/09` §2.
 
 ## 3. Confirmações do desenho
 1. **`Markup` sem construtor público** — A1 (campo privado + construtor), A5 (`From` é total, logo é a porta).
@@ -280,20 +280,20 @@ exatamente onde mora o risco de escape hatch.
 ## 4. Conflitos e correções
 | O que a crate diz hoje | O que o corpus diz | Correção (frase exata a inserir) |
 |---|---|---|
-| `docs/11-estabilidade.md:77`: "Rust ≥ MSRV, edição 2021+." | `00-introduction.md:34` — "edition = "2024"  # default a partir de rustc 1.85+" | Em `docs/11-estabilidade.md` §7, substituir por: "Rust ≥ 1.92 (`rust-version = "1.92"`), edição 2024." |
-| `docs/11` não fixa número de MSRV | `00-introduction.md:40` — "`rust-version = "1.85"` no `Cargo.toml`"; `18-aprendizados.md` decidiu 1.92 | Em `docs/11-estabilidade.md` §3, inserir: "MSRV = 1.92 (edição 2024). `algebraic_*`, `format_into`/`NumBuffer`, `VaList`, `Box::into_non_null`, `Vec::into_parts`, `String::from_utf8_lossy_owned` são proibidos, e um job de CI com 1.92 prova isso." |
-| `docs/02` §8 lista o que não existe, mas não cita construtores derivados | `04-structs-enums.md:240` recomenda `Default` derive | Em `docs/02-tipos-e-contextos.md` §1: "Nenhum tipo de contexto deriva `Default`, `FromStr` ou `Deserialize`: os três são construtores infalíveis e reabrem o bypass." |
-| `docs/02` não fala de `TryFrom` | `06-error-handling.md` [sem linha]: só `From` (linha 133) | Em `docs/02` §2, coluna "Construção": "conversão falível é `TryFrom`/`new -> Result`; `From` para dentro de valor de contexto é proibido (é total)." |
-| `docs/01` §6 e `docs/10` não fixam o tipo dos parâmetros de elemento | `07-generics-traits.md:312` recomenda APIT | Em `docs/02` §1: "Parâmetro de elemento e de primitivo é **tipo concreto**; `impl Trait`/`impl Into<T>` em assinatura pública de `html-spec` é proibido." |
-| `docs/04` §4 não fixa profundidade de aninhamento | `14-unsafe-macros-ffi.md` [sem linha]: nada sobre recursão ou limite de tokens | Em `docs/04` §4, novo item: "Profundidade de aninhamento limitada a N níveis (erro de macro acima disso); parser iterativo ou com orçamento de pilha explícito." |
-| `docs/09` §2 exige ordem canônica sem citar a coleção | `05-collections.md:194` recomenda `sort_unstable` | Em `docs/09` §2: "`sort_unstable` e `HashMap` são proibidos em caminho de emissão; ordem vem de `BTreeMap`/`BTreeSet` e de chave total única." |
-| `docs/12` §7 exige determinismo sem citar float | `02-fundamentals.md:86` admite resultado não-determinístico | Em `docs/09` §2: "Nenhum `f64` em caminho de emissão; `algebraic_*` é proibido (resultado varia entre builds)." |
-| `docs/11` §3 exige matriz de CI, sem job escrito | `16-project-practical.md:358` lista Check/Test/Coverage/Security/Build e nenhum é MSRV | Em `docs/11` §3: "Job `msrv` roda `cargo build --locked` e `cargo test --locked` com 1.92; jobs `stable` e `beta` idem; nenhum job usa nightly." |
-| `docs/02` §2 não diz o que é público em `Markup` | `07-generics-traits.md:304` — "impl Display for MyStruct {}" é legal | Em `docs/02` §1: "`Markup` expõe `as_bytes`/`into_string` nomeados; não implementa `Deref<Target = str>`, `Display`, `From<Markup> for String` nem `Into<String>`." |
+| `docs/design/11-estabilidade.md:77`: "Rust ≥ MSRV, edição 2021+." | `00-introduction.md:34` — "edition = "2024"  # default a partir de rustc 1.85+" | Em `docs/design/11-estabilidade.md` §7, substituir por: "Rust ≥ 1.92 (`rust-version = "1.92"`), edição 2024." |
+| `docs/design/11` não fixa número de MSRV | `00-introduction.md:40` — "`rust-version = "1.85"` no `Cargo.toml`"; `18-aprendizados.md` decidiu 1.92 | Em `docs/design/11-estabilidade.md` §3, inserir: "MSRV = 1.92 (edição 2024). `algebraic_*`, `format_into`/`NumBuffer`, `VaList`, `Box::into_non_null`, `Vec::into_parts`, `String::from_utf8_lossy_owned` são proibidos, e um job de CI com 1.92 prova isso." |
+| `docs/design/02` §8 lista o que não existe, mas não cita construtores derivados | `04-structs-enums.md:240` recomenda `Default` derive | Em `docs/design/02-tipos-e-contextos.md` §1: "Nenhum tipo de contexto deriva `Default`, `FromStr` ou `Deserialize`: os três são construtores infalíveis e reabrem o bypass." |
+| `docs/design/02` não fala de `TryFrom` | `06-error-handling.md` [sem linha]: só `From` (linha 133) | Em `docs/design/02` §2, coluna "Construção": "conversão falível é `TryFrom`/`new -> Result`; `From` para dentro de valor de contexto é proibido (é total)." |
+| `docs/design/01` §6 e `docs/design/10` não fixam o tipo dos parâmetros de elemento | `07-generics-traits.md:312` recomenda APIT | Em `docs/design/02` §1: "Parâmetro de elemento e de primitivo é **tipo concreto**; `impl Trait`/`impl Into<T>` em assinatura pública de `html-spec` é proibido." |
+| `docs/design/04` §4 não fixa profundidade de aninhamento | `14-unsafe-macros-ffi.md` [sem linha]: nada sobre recursão ou limite de tokens | Em `docs/design/04` §4, novo item: "Profundidade de aninhamento limitada a N níveis (erro de macro acima disso); parser iterativo ou com orçamento de pilha explícito." |
+| `docs/design/09` §2 exige ordem canônica sem citar a coleção | `05-collections.md:194` recomenda `sort_unstable` | Em `docs/design/09` §2: "`sort_unstable` e `HashMap` são proibidos em caminho de emissão; ordem vem de `BTreeMap`/`BTreeSet` e de chave total única." |
+| `docs/design/12` §7 exige determinismo sem citar float | `02-fundamentals.md:86` admite resultado não-determinístico | Em `docs/design/09` §2: "Nenhum `f64` em caminho de emissão; `algebraic_*` é proibido (resultado varia entre builds)." |
+| `docs/design/11` §3 exige matriz de CI, sem job escrito | `16-project-practical.md:358` lista Check/Test/Coverage/Security/Build e nenhum é MSRV | Em `docs/design/11` §3: "Job `msrv` roda `cargo build --locked` e `cargo test --locked` com 1.92; jobs `stable` e `beta` idem; nenhum job usa nightly." |
+| `docs/design/02` §2 não diz o que é público em `Markup` | `07-generics-traits.md:304` — "impl Display for MyStruct {}" é legal | Em `docs/design/02` §1: "`Markup` expõe `as_bytes`/`into_string` nomeados; não implementa `Deref<Target = str>`, `Display`, `From<Markup> for String` nem `Into<String>`." |
 
 > **Nota explícita sobre o conflito de MSRV.** Três números convivem: o conjunto é **1.99.1**
 > (`VERSION`, `SKILL.md`), o guia manda declarar **`rust-version = "1.85"`**
-> (`00-introduction.md:40`), e `docs/11-estabilidade.md:77` promete "Rust ≥ MSRV, edição 2021+"
+> (`00-introduction.md:40`), e `docs/design/11-estabilidade.md:77` promete "Rust ≥ MSRV, edição 2021+"
 > **sem número**, enquanto `18-aprendizados.md` já registrou **1.92 / edição 2024**. Não são
 > equivalentes: 1.85 aceita edition 2024 mas **não** tem `format_into` (1.98), `algebraic_*` (1.98)
 > nem `VaList` (1.99); 1.92 também não. A crate cabe em 1.85 se renunciar explicitamente a essas
@@ -349,7 +349,7 @@ publish = false
 workspace = true
 ```
 
-### 5.3 Regras de API (para `docs/02-tipos-e-contextos.md` §1)
+### 5.3 Regras de API (para `docs/design/02-tipos-e-contextos.md` §1)
 | Regra | Proibido | Obrigatório |
 |---|---|---|
 | Construção | `From`, `Default`, `FromStr`, `Deserialize`, campo `pub` | `new(...) -> Result<Self, E>`, `TryFrom`, `decorative()` explícito |
@@ -360,7 +360,7 @@ workspace = true
 | Fase | `bool` de estado, campo `validated: bool` | `PhantomData` com no máximo duas fases |
 | Layout | `repr(transparent)` como contrato | opaco por privacidade |
 
-### 5.4 Harness de mensagem e snapshot (para `docs/12`)
+### 5.4 Harness de mensagem e snapshot (para `docs/design/12`)
 ```toml
 [dev-dependencies]
 trybuild = "1"
@@ -370,13 +370,13 @@ proptest = "1"
 ```
 crates/html-macro/tests/
 ├── insta/     # um .snap por elemento da spec
-├── ui_fail/   # trybuild: um .rs + .stderr por mensagem de docs/10 §2
+├── ui_fail/   # trybuild: um .rs + .stderr por mensagem de docs/design/10 §2
 └── ui_pass/   # trybuild: caso que DEVE compilar (mensagem é contrato nos dois sentidos)
 ```
 - `trybuild` roda na MSRV **e** na stable: a mensagem do rustc muda entre versões — `.stderr` é
   comparado por versão, ou o teste é `#[ignore]` fora da MSRV.
 - `insta`: `INSTA_FORCE_UPDATE` proibido no CI; snapshot alterado exige leitura no PR.
-- `proptest` só nas propriedades de `docs/12` §3; o parser vai para `cargo-fuzz`, não para `proptest`.
+- `proptest` só nas propriedades de `docs/design/12` §3; o parser vai para `cargo-fuzz`, não para `proptest`.
 
 ### 5.5 Regra de span para `html-macro` (nova)
 ```rust
@@ -386,7 +386,7 @@ quote_spanned! { span => compile_error!(#msg) }
 ```
 - Um `compile_error!` por erro, nunca concatenado.
 - `Span::call_site()` só para código gerado sem origem (helpers), jamais para diagnóstico.
-- Mensagem em três partes (`docs/10` §2), com `regra:` e `ajuda:` no mesmo `compile_error!`.
+- Mensagem em três partes (`docs/design/10` §2), com `regra:` e `ajuda:` no mesmo `compile_error!`.
 
 ## 6. Armadilhas de complexidade
 | Armadilha | Por que não entra | Custo se entrar |
@@ -414,7 +414,7 @@ quote_spanned! { span => compile_error!(#msg) }
    span; P7 depende inteiramente disso.
 4. **`#[non_exhaustive]`** — só a nota de `repr(transparent)` (A20/A21); nenhuma política de uso.
 5. **`Cow`** — prometido no mapa (`SKILL.md:81`) e inexistente no texto.
-6. **`trybuild`/`insta`** — ausentes; `docs/12` §2/§5 são 100% decisão própria, inclusive o problema
+6. **`trybuild`/`insta`** — ausentes; `docs/design/12` §2/§5 são 100% decisão própria, inclusive o problema
    de a mensagem de erro variar por versão do rustc.
 7. **Política de MSRV** — o conjunto é 1.99.1 e sugere 1.85; nada sobre matriz de CI,
    `cargo build --locked` ou como proibir API acima da MSRV.
@@ -423,9 +423,9 @@ quote_spanned! { span => compile_error!(#msg) }
    Para crate interna a decisão provável é "não instalar nada" — mas é decisão.
 9. **Recursão do parser** — nada sobre profundidade de aninhamento, orçamento de pilha ou
    `TokenStream` recursivo; o fuzz acha o caso, não fixa o limite.
-10. **`no_std`/`alloc`** — `docs/01` §1 pede `core`/`alloc` em `html-core`; o guia só cita
+10. **`no_std`/`alloc`** — `docs/design/01` §1 pede `core`/`alloc` em `html-core`; o guia só cita
     `extern crate alloc` numa linha de `cfg`.
-11. **Custo de expansão** — nenhum número sobre tempo de `cargo check` por `html!`; `docs/04` §8
+11. **Custo de expansão** — nenhum número sobre tempo de `cargo check` por `html!`; `docs/design/04` §8
     assume "imperceptível" sem medição no corpus.
 12. **Determinismo de hash** — `BTreeMap` resolve ordem, mas o guia não discute `BuildHasher`
     determinístico, `IndexMap`, nem custo de ordenar por chave textual.

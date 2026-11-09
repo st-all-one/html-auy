@@ -6,10 +6,10 @@
 # Não existe `build.rs`: esquecer de rodar o gerador deixa o CI vermelho (teste de paridade),
 # nunca o produto errado.
 #
-# ── Esquema 2 (revisão após auditoria; ver docs/13-decisoes.md D16) ──
+# ── Esquema 2 (revisão após auditoria; ver docs/design/13-decisoes.md D16) ──
 #
 #   schema              versão do FORMATO deste arquivo
-#   meta.spec_version   versão do VOCABULÁRIO; congelada por minor (docs/11-estabilidade.md)
+#   meta.spec_version   versão do VOCABULÁRIO; congelada por minor (docs/design/11-estabilidade.md)
 #
 schema = 2
 
@@ -26,7 +26,7 @@ boolean_attributes = [
   "muted", "open", "playsinline", "readonly", "required", "reversed", "selected",
 ]
 # escopo medido que originou a tabela: 63 elementos distintos, 6.765 tags
-# (docs/15-migracao-blade.md). Elementos entram por PR com decisão registrada (D5).
+# (docs/design/15-migracao-blade.md). Elementos entram por PR com decisão registrada (D5).
 
 # ─────────────────────────── globais ───────────────────────────
 
@@ -128,12 +128,12 @@ type_enum = "block"
 #     required_children filho(s) obrigatório(s) — regra estrutural, verificada no bloco.
 #     first_child       filho que precisa vir primeiro.
 #     forbidden_children  exceções sobre `children`.
-#     invariants        nomes de regra implementados pelo validador (docs/04-validacao.md §4).
+#     invariants        nomes de regra implementados pelo validador (docs/design/04-validacao.md §4).
 #     deprecated        motivo; advisory e mantém compilação por uma minor.
 #
 # Atributos NUNCA permitidos em nenhum elemento (não aparecem em `allowed`):
 #   on*, srcdoc, formaction, ping, @*, hx-on*, x-on:*, slot=, shadowrootmode, part=,
-#   exportparts, is=, xlink:href  (docs/03 §5, docs/08 §2)
+#   exportparts, is=, xlink:href  (docs/design/03 §5, docs/design/08 §2)
 #
 # A ordem dos atributos neste arquivo é a ordem de emissão na saída (determinismo de bytes, D14).
 
@@ -192,7 +192,7 @@ category = "metadata"
 allowed = []
 accessible_name = "none"
 children = ["metadata"]
-first_child = "meta"                      # `charset` nas primeiras 1024 posições (docs/06 §1)
+first_child = "meta"                      # `charset` nas primeiras 1024 posições (docs/design/06 §1)
 required_children = ["title"]
 invariants = ["shell_only_elements", "head_charset_first"]
 
@@ -549,7 +549,7 @@ category = ["phrasing", "media"]
 void = true
 required = ["src", "alt", "width", "height"]
 allowed = ["referrerpolicy", "loading", "decoding", "fetchpriority", "sizes", "srcset", "class", "data-*"]
-# Ordem de emissão do exemplo normativo (docs/25 §7). Vale só para `img`: nos demais elementos a
+# Ordem de emissão do exemplo normativo (docs/design/25 §7). Vale só para `img`: nos demais elementos a
 # ordem é `required ++ allowed ++ globals ++ aria-*`.
 order = ["src", "srcset", "sizes", "alt", "width", "height"]
 accessible_name = "alt"
@@ -917,7 +917,7 @@ children = ["flow"]
 roles = ["alertdialog"]                  # só para ação destrutiva; o padrão é o papel nativo
 invariants = ["dialog_modal_semantics", "closedby_enum", "no_aria_modal"]
 # `open` = não-modal: sem trap de foco e sem Escape. O primitivo `Dialog` só emite `open`
-# quando o consumidor declara estado estático; abrir/fechar é asset declarado (docs/07 §7).
+# quando o consumidor declara estado estático; abrir/fechar é asset declarado (docs/design/07 §7).
 
 # ─────────────────────────── valores de atributo ───────────────────────────
 #

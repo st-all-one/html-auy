@@ -187,19 +187,20 @@ python3 tools/check_links.py
 ## Docs
 
 - [Usage wiki](https://github.com/st-all-one/html-auy/blob/main/docs/usage/README.md): install, first page, macro, values, forms, media, shell, security, accessibility, HTTP, minimal Axum project, implementation guide, recipes, quick reference.
-- [Architecture](https://github.com/st-all-one/html-auy/blob/main/docs/01-arquitetura.md)
-- [Types and escaping](https://github.com/st-all-one/html-auy/blob/main/docs/02-tipos-e-contextos.md)
-- [Element vocabulary](https://github.com/st-all-one/html-auy/blob/main/docs/03-vocabulario-de-elementos.md)
-- [Validation](https://github.com/st-all-one/html-auy/blob/main/docs/04-validacao.md)
-- [Accessibility](https://github.com/st-all-one/html-auy/blob/main/docs/05-acessibilidade.md)
-- [Accessibility architecture (Portuguese)](https://github.com/st-all-one/html-auy/blob/main/docs/acessibility.md)
+- [Architecture](https://github.com/st-all-one/html-auy/blob/main/docs/design/01-arquitetura.md)
+- [Types and escaping](https://github.com/st-all-one/html-auy/blob/main/docs/design/02-tipos-e-contextos.md)
+- [Element vocabulary](https://github.com/st-all-one/html-auy/blob/main/docs/design/03-vocabulario-de-elementos.md)
+- [Validation](https://github.com/st-all-one/html-auy/blob/main/docs/design/04-validacao.md)
+- [Accessibility](https://github.com/st-all-one/html-auy/blob/main/docs/design/05-acessibilidade.md)
+- [Accessibility architecture (Portuguese)](https://github.com/st-all-one/html-auy/blob/main/docs/design/acessibility.md)
 - [LLM usage skill](https://github.com/st-all-one/html-auy/blob/main/SKILL.md)
-- [Shell and theme](https://github.com/st-all-one/html-auy/blob/main/docs/06-shell-e-tema.md)
-- [Security](https://github.com/st-all-one/html-auy/blob/main/docs/08-seguranca.md)
-- [Testing](https://github.com/st-all-one/html-auy/blob/main/docs/12-testes.md)
-- [Decisions](https://github.com/st-all-one/html-auy/blob/main/docs/13-decisoes.md)
-- [Implementation map](https://github.com/st-all-one/html-auy/blob/main/docs/21-implementacao.md)
-- [Accessibility and CSS boundary](https://github.com/st-all-one/html-auy/blob/main/docs/23-acessibilidade-e-css.md)
+- [Shell and theme](https://github.com/st-all-one/html-auy/blob/main/docs/design/06-shell-e-tema.md)
+- [Security](https://github.com/st-all-one/html-auy/blob/main/docs/design/08-seguranca.md)
+- [Testing](https://github.com/st-all-one/html-auy/blob/main/docs/design/12-testes.md)
+- [Decisions](https://github.com/st-all-one/html-auy/blob/main/docs/design/13-decisoes.md)
+- [ADRs](https://github.com/st-all-one/html-auy/blob/main/docs/adr/README.md)
+- [Implementation map](https://github.com/st-all-one/html-auy/blob/main/docs/design/21-implementacao.md)
+- [Accessibility and CSS boundary](https://github.com/st-all-one/html-auy/blob/main/docs/design/23-acessibilidade-e-css.md)
 - [Full LLM context](https://github.com/st-all-one/html-auy/blob/main/llms-full.txt)
 
 ## LLM rules
@@ -210,4 +211,4 @@ python3 tools/check_links.py
 - Do not emit `on*`, `<style>`, `srcdoc`, or arbitrary attribute names.
 - Use `Page` for full documents, `View` for `<main>` content, and `ShellData` for document metadata.
 - Use `audit::check` only with `feature = "audit"`, and treat it as a test over final HTML, not as a runtime sanitizer.
-- When behavior is unclear, consult `spec/elements.toml`, `docs/04-validacao.md`, and the matching `docs/usage/` page.
+- When behavior is unclear, consult `spec/elements.toml`, `docs/design/04-validacao.md`, and the matching `docs/usage/` page.

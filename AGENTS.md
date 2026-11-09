@@ -66,10 +66,10 @@ Não transforme o crate em framework, template engine de runtime, VDOM, sanitiza
 - `spec/data.toml`: tabela de `data-*` do consumidor usada por `tools/data_check.py`.
 - `tools/gen_spec.py`: gera as duas cópias Rust da tabela.
 - `tools/validate_spec.py`: valida spec, escopos, contagens e rastreabilidade com a documentação.
-- `docs/`: decisões, arquitetura e limites. `docs/usage/`: wiki operacional.
+- `docs/design/`: princípios, arquitetura, limites e ledger histórico; `docs/usage/`: wiki operacional; `docs/adr/`: decisões novas em ADRs.
 - `llms.txt` e `llms-full.txt`: contexto para LLM, em inglês.
 - `SKILL.md`: instruções de uso correto para agentes, em inglês.
-- `docs/acessibility.md`: arquitetura de acessibilidade, em português.
+- `docs/design/acessibility.md`: arquitetura de acessibilidade, em português.
 
 Nunca edite `crates/html-auy/src/spec/table.rs` ou `crates/html-auy-macros-core/src/table.rs` à mão. Edite `spec/elements.toml`, rode `python3 tools/gen_spec.py` e valide.
 
@@ -102,7 +102,7 @@ A ordem de garantia é: tipo/ausência de API → primitivo → macro → `audit
 - `audit` cobre 13 regras de documento; não o trate como sanitizador nem como prova de contraste, alvo, foco ou layout.
 - Contraste, foco visível, oclusão, reflow, animação e ordem de tabulação continuam gates de `axe`/`sniffCSS`/e2e do consumidor.
 
-Leia `docs/05-acessibilidade.md`, `docs/acessibility.md` e `docs/23-acessibilidade-e-css.md` antes de mexer em primitivos de acessibilidade.
+Leia `docs/design/05-acessibilidade.md`, `docs/design/acessibility.md` e `docs/design/23-acessibilidade-e-css.md` antes de mexer em primitivos de acessibilidade.
 
 ## Evolução: vocabulário e invariantes
 
@@ -112,17 +112,17 @@ Para adicionar ou mudar elemento, atributo, valor ou invariante:
 2. Se criar invariante, declare o escopo em `[invariants]` e vincule-a ao(s) elemento(s); `block`, `type` e `output` têm donos diferentes.
 3. Regenerate: `python3 tools/gen_spec.py`.
 4. Adicione/ajuste testes de macro, golden, `trybuild` ou `audit` conforme o escopo.
-5. Atualize `docs/04-validacao.md` e outras docs afetadas, incluindo contagens se mudarem.
+5. Atualize `docs/design/04-validacao.md` e outras docs afetadas, incluindo contagens se mudarem.
 6. Rode `python3 tools/validate_spec.py` e `python3 tools/gen_spec.py --check`.
 
-Contagens atuais: **111 elementos**, **71 invariantes** (59 `block`, 4 `type`, 8 `output`) e **13 regras de `audit`**. Se mudarem, atualize `docs/04`, `docs/12`, `docs/21`, `docs/23`, README e `llms*.txt` quando aplicável.
+Contagens atuais: **111 elementos**, **71 invariantes** (59 `block`, 4 `type`, 8 `output`) e **13 regras de `audit`**. Se mudarem, atualize `docs/design/04`, `docs/design/12`, `docs/design/21`, `docs/design/23`, README e `llms*.txt` quando aplicável.
 
 Novas regras que dependem do documento inteiro pertencem a `output`/`audit`; não tente fazê-las no macro. O macro só vê um bloco.
 
 ## API pública e compatibilidade
 
 - A API pública é a de `html-auy`; `html-auy-macros` e `html-auy-macros-core` existem para a macro e não devem virar dependências de aplicação.
-- Mudança que quebra código previamente válido é breaking; em `0.x`, sobe o minor. Siga `docs/11-estabilidade.md`.
+- Mudança que quebra código previamente válido é breaking; em `0.x`, sobe o minor. Siga `docs/design/11-estabilidade.md`.
 - MSRV é **1.92**, edition 2024. O toolchain de desenvolvimento é fixado em 1.99; não confunda os dois.
 - Mantenha a licença dual **MIT OR Apache-2.0** e os arquivos `LICENSE-MIT`/`LICENSE-APACHE` na raiz e nos três crates.
 - O projeto não publica binário. Releases publicam os três crates em ordem de dependência.
@@ -165,11 +165,11 @@ O CI também roda Miri e fuzz do parser; preserve os alvos existentes.
 
 ## Documentação e idioma
 
-- `README.md`, `docs/`, `docs/usage/` e `docs/acessibility.md`: português.
+- `README.md`, `docs/`, `docs/usage/` e `docs/design/acessibility.md`: português.
 - `SKILL.md`, `llms.txt` e `llms-full.txt`: inglês.
 - Os blocos gerados de `knudge`/`akribie` neste arquivo não devem ser editados manualmente.
 - Mudança de API pública deve atualizar a wiki de uso, o quick reference, `llms.txt`/`llms-full.txt` e, quando for instrução de uso, `SKILL.md`.
-- Mudança de acessibilidade deve atualizar `docs/05-acessibilidade.md` e `docs/acessibility.md` quando a fronteira ou os mecanismos mudarem.
+- Mudança de acessibilidade deve atualizar `docs/design/05-acessibilidade.md` e `docs/design/acessibility.md` quando a fronteira ou os mecanismos mudarem.
 - Verifique links relativos com `python3 tools/check_links.py`.
 
 ## Checklist de aceitação

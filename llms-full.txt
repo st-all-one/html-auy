@@ -740,7 +740,7 @@ Workspace members are only the three public crates. `fuzz/` and `sniff-css/` are
 Primary references:
 
 - [README](https://github.com/st-all-one/html-auy/blob/main/README.md)
-- [Accessibility architecture (Portuguese)](https://github.com/st-all-one/html-auy/blob/main/docs/acessibility.md)
+- [Accessibility architecture (Portuguese)](https://github.com/st-all-one/html-auy/blob/main/docs/design/acessibility.md)
 - [LLM usage skill](https://github.com/st-all-one/html-auy/blob/main/SKILL.md)
 - [Usage wiki](https://github.com/st-all-one/html-auy/blob/main/docs/usage/README.md)
 - [Installation](https://github.com/st-all-one/html-auy/blob/main/docs/usage/01-instalacao.md)
@@ -764,32 +764,33 @@ Primary references:
 
 Design docs:
 
-- [Principles](https://github.com/st-all-one/html-auy/blob/main/docs/00-principios.md)
-- [Architecture](https://github.com/st-all-one/html-auy/blob/main/docs/01-arquitetura.md)
-- [Types and escaping](https://github.com/st-all-one/html-auy/blob/main/docs/02-tipos-e-contextos.md)
-- [Element vocabulary](https://github.com/st-all-one/html-auy/blob/main/docs/03-vocabulario-de-elementos.md)
-- [Validation](https://github.com/st-all-one/html-auy/blob/main/docs/04-validacao.md)
-- [Accessibility](https://github.com/st-all-one/html-auy/blob/main/docs/05-acessibilidade.md)
-- [Shell and theme](https://github.com/st-all-one/html-auy/blob/main/docs/06-shell-e-tema.md)
-- [JS and assets](https://github.com/st-all-one/html-auy/blob/main/docs/07-js-e-assets.md)
-- [Security](https://github.com/st-all-one/html-auy/blob/main/docs/08-seguranca.md)
-- [Performance and cache](https://github.com/st-all-one/html-auy/blob/main/docs/09-desempenho-e-cache.md)
-- [Ergonomics](https://github.com/st-all-one/html-auy/blob/main/docs/10-ergonomia.md)
-- [Stability](https://github.com/st-all-one/html-auy/blob/main/docs/11-estabilidade.md)
-- [Testing](https://github.com/st-all-one/html-auy/blob/main/docs/12-testes.md)
-- [Decisions](https://github.com/st-all-one/html-auy/blob/main/docs/13-decisoes.md)
-- [Alternatives](https://github.com/st-all-one/html-auy/blob/main/docs/14-alternativas.md)
-- [Blade migration](https://github.com/st-all-one/html-auy/blob/main/docs/15-migracao-blade.md)
-- [Roadmap](https://github.com/st-all-one/html-auy/blob/main/docs/16-roadmap.md)
-- [FAQ](https://github.com/st-all-one/html-auy/blob/main/docs/17-faq.md)
-- [Implementation map](https://github.com/st-all-one/html-auy/blob/main/docs/21-implementacao.md)
-- [Rigor and CI](https://github.com/st-all-one/html-auy/blob/main/docs/22-rigor.md)
-- [Accessibility and CSS boundary](https://github.com/st-all-one/html-auy/blob/main/docs/23-acessibilidade-e-css.md)
-- [Export notes](https://github.com/st-all-one/html-auy/blob/main/docs/24-exportacao.md)
-- [End-to-end example](https://github.com/st-all-one/html-auy/blob/main/docs/25-exemplo-de-uso.md)
-- [Consumer-owned theme](https://github.com/st-all-one/html-auy/blob/main/docs/26-d29-consumidor.md)
+- [Principles](https://github.com/st-all-one/html-auy/blob/main/docs/design/00-principios.md)
+- [Architecture](https://github.com/st-all-one/html-auy/blob/main/docs/design/01-arquitetura.md)
+- [Types and escaping](https://github.com/st-all-one/html-auy/blob/main/docs/design/02-tipos-e-contextos.md)
+- [Element vocabulary](https://github.com/st-all-one/html-auy/blob/main/docs/design/03-vocabulario-de-elementos.md)
+- [Validation](https://github.com/st-all-one/html-auy/blob/main/docs/design/04-validacao.md)
+- [Accessibility](https://github.com/st-all-one/html-auy/blob/main/docs/design/05-acessibilidade.md)
+- [Shell and theme](https://github.com/st-all-one/html-auy/blob/main/docs/design/06-shell-e-tema.md)
+- [JS and assets](https://github.com/st-all-one/html-auy/blob/main/docs/design/07-js-e-assets.md)
+- [Security](https://github.com/st-all-one/html-auy/blob/main/docs/design/08-seguranca.md)
+- [Performance and cache](https://github.com/st-all-one/html-auy/blob/main/docs/design/09-desempenho-e-cache.md)
+- [Ergonomics](https://github.com/st-all-one/html-auy/blob/main/docs/design/10-ergonomia.md)
+- [Stability](https://github.com/st-all-one/html-auy/blob/main/docs/design/11-estabilidade.md)
+- [Testing](https://github.com/st-all-one/html-auy/blob/main/docs/design/12-testes.md)
+- [Decisions](https://github.com/st-all-one/html-auy/blob/main/docs/design/13-decisoes.md)
+- [ADRs](https://github.com/st-all-one/html-auy/blob/main/docs/adr/README.md)
+- [Alternatives](https://github.com/st-all-one/html-auy/blob/main/docs/design/14-alternativas.md)
+- [Blade migration](https://github.com/st-all-one/html-auy/blob/main/docs/design/15-migracao-blade.md)
+- [Roadmap](https://github.com/st-all-one/html-auy/blob/main/docs/design/16-roadmap.md)
+- [FAQ](https://github.com/st-all-one/html-auy/blob/main/docs/design/17-faq.md)
+- [Implementation map](https://github.com/st-all-one/html-auy/blob/main/docs/design/21-implementacao.md)
+- [Rigor and CI](https://github.com/st-all-one/html-auy/blob/main/docs/design/22-rigor.md)
+- [Accessibility and CSS boundary](https://github.com/st-all-one/html-auy/blob/main/docs/design/23-acessibilidade-e-css.md)
+- [Export notes](https://github.com/st-all-one/html-auy/blob/main/docs/design/24-exportacao.md)
+- [End-to-end example](https://github.com/st-all-one/html-auy/blob/main/docs/design/25-exemplo-de-uso.md)
+- [Consumer-owned theme](https://github.com/st-all-one/html-auy/blob/main/docs/design/26-d29-consumidor.md)
 
-Historical/analysis documents may describe earlier internal names (`html`, `html-core`, `html-spec`, `html-macro`) or earlier counts. Treat `README.md`, `docs/04`, `docs/21`, `docs/23`, `spec/elements.toml`, and `docs/usage/` as current.
+Historical/analysis documents may describe earlier internal names (`html`, `html-core`, `html-spec`, `html-macro`) or earlier counts. Treat `README.md`, `docs/design/04`, `docs/design/21`, `docs/design/23`, `spec/elements.toml`, and `docs/usage/` as current.
 
 ## 17. Hard rules for code generation or review
 
@@ -809,4 +810,4 @@ When generating code or reviewing a change, follow these rules:
 12. `accesskey` is forbidden; do not implement `Alt+1` as a crate feature.
 13. `aria-current` is unique per nearest `<nav>`; explicit `false` is not a current item.
 14. `style=` is an audited escape hatch, not a styling strategy.
-15. If a rule is unclear, inspect `spec/elements.toml` and the corresponding invariant table in `docs/04`.
+15. If a rule is unclear, inspect `spec/elements.toml` and the corresponding invariant table in `docs/design/04`.

@@ -9,7 +9,7 @@
     reason = "tabela gerada; docs em spec/elements.toml"
 )]
 
-/// Escopo de uma invariante: quem cobra a regra (docs/04 §4.0).
+/// Escopo de uma invariante: quem cobra a regra (docs/design/04 §4.0).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Scope {
     /// Decidido dentro de um bloco `html!`: erro de compilação com span.
@@ -100,7 +100,7 @@ pub struct Element {
     pub accessible_name: &'static str,
     /// Papéis ARIA aceitos (`role=`); vazio = `role` não existe no elemento.
     pub roles: &'static [&'static str],
-    /// Invariantes que o elemento carrega (docs/04 §4.1).
+    /// Invariantes que o elemento carrega (docs/design/04 §4.1).
     pub invariants: &'static [&'static str],
 }
 

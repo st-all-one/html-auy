@@ -22,7 +22,7 @@
 | Pré-requisito | Como se verifica | Estado |
 |---|---|---|
 | `spec/elements.toml` (111 elementos, 71 invariantes) | `python3 tools/validate_spec.py` → `0 erro(s)` | ✅ pronto |
-| `docs/00`–`25` + `tools/` (validador de spec, checador de links) | `python3 tools/check_links.py` → `0 quebrado(s)` | ✅ pronto |
+| `docs/design/00`–`25` + `tools/` (validador de spec, checador de links) | `python3 tools/check_links.py` → `0 quebrado(s)` | ✅ pronto |
 | `sniff-css/` **fora** do workspace (workspace próprio, `resolver` próprio) | `ls sniff-css/Cargo.toml` | ✅ isolado |
 | `.gitignore` cobrindo `target/`, `*.snap.new`, `fuzz/artifacts/` | `cat .gitignore` | ✅ pronto (corpus do fuzz é versionado) |
 | **repositório git** | `git rev-parse` | ✅ inicializado |
@@ -175,9 +175,9 @@ trybuild = "1"
 
 - `spec/elements.toml`: **111 elementos**, **71 invariantes** (59 `block` / 4 `type` / 8 `output`),
   `only`: 9 `shell` (`html head body title meta link script noscript main`) + 1 `component` (`form`).
-- `docs/00`–`24`: contrato completo (o que é garantia, o que é gate, e por quê).
+- `docs/design/00`–`24`: contrato completo (o que é garantia, o que é gate, e por quê).
 - `tools/validate_spec.py`: **a especificação executável do validador** — categorias, conteúdo-modelo,
-  globais, escopos, `only`, rastreabilidade com `docs/04`, contagem nos docs. É a referência a portar;
+  globais, escopos, `only`, rastreabilidade com `docs/design/04`, contagem nos docs. É a referência a portar;
   quando o passe de validação existir em Rust, o script sai.
 
 ## 3. Fases
@@ -252,7 +252,7 @@ pub enum Only { Shell, Component }
 
 **Testes.** Os mesmos do `validate_spec.py`: 111 elementos; cada invariante usada tem escopo; `only`
 exige a invariante correspondente (`shell_only_elements` / `form_requires_csrf`); `children` alcançável
-a partir de `body`; `docs/04` cobre 100% das invariantes; contagem declarada em `docs/03`/`docs/04` bate.
+a partir de `body`; `docs/design/04` cobre 100% das invariantes; contagem declarada em `docs/design/03`/`docs/design/04` bate.
 **DoD.** `cargo test spec` cobre cada regra do script Python; o script passa a ser redundante (só é
 removido quando o macro começar a validar — F3).
 

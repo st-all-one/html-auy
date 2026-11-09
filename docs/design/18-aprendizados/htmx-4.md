@@ -2,7 +2,7 @@
 
 O conjunto é **um guia de aplicação**, não a especificação do htmx: ensina a construir um "Task Manager"
 em Rust/Axum + Askama + SQLite usando htmx 4, com layout de 3 colunas e respostas multi-target. Lido
-aqui porque é a única descrição de htmx 4 disponível no corpus — e porque o nosso `docs/07-js-e-assets.md`
+aqui porque é a única descrição de htmx 4 disponível no corpus — e porque o nosso `docs/design/07-js-e-assets.md`
 §7 já promete um contrato que ninguém escreveu. O documento abaixo **é** esse contrato: o que o corpus
 ensina, o que ele contradiz, e o que a crate precisa decidir para que htmx entre sem quebrar
 determinismo, `ETag`, CSP ou acessibilidade. Duas leituras transversais importantes antes de tudo:
@@ -33,7 +33,7 @@ projeto exige de a11y e de cache é, portanto, adição nossa — não confirma�
 - Citação: `01-introduction.md:5` — "htmx 4 é uma biblioteca JavaScript que estende HTML com atributos `hx-*` para fazer requisições AJAX, acionar eventos, e atualizar o DOM — tudo sem escrever JavaScript."
 - Semântica: htmx é descrito por comportamento observável (DOM muda, requisição sai), nunca por sintaxe de atributo. Não há uma única página de referência de atributo; a lista de headers em `02-setup.md:123-130` é a única tabela formal do conjunto.
 - Consequência: nada aqui vale como fonte de verdade para o **nome ou a gramática** de um atributo. Toda a nossa allowlist precisa vir de decisão própria, e o corpus serve só como evidência de uso.
-- Veredito: refina — obriga `docs/07` §7 a ser normativo, não descritivo.
+- Veredito: refina — obriga `docs/design/07` §7 a ser normativo, não descritivo.
 
 ### A2. `<hx-partial>` é um elemento novo, fora de qualquer vocabulário
 - Citação: `05-multi-target.md:12` — "O elemento `<hx-partial>` permite que a resposta do servidor especifique **vários destinos** em um único response."
@@ -57,19 +57,19 @@ projeto exige de a11y e de cache é, portanto, adição nossa — não confirma�
 - Citação: `05-multi-target.md:105` — "Alternativa para quando os elementos têm `id` fixo no DOM" (uso em `05:111` e `05:118`: `<div id="sprint-info" hx-swap-oob="innerHTML">`).
 - Semântica: OOB endereça por `id`; `hx-swap-oob="true"` substitui o elemento, `hx-swap-oob="innerHTML"` substitui o conteúdo.
 - Consequência: cada região OOB precisa de `id` que venha do shell/primitivo, determinístico e único — e `id` duplicado na página já é regra do N4. O `id` deixa de ser detalhe do dev e vira contrato de tipo (`RegionId`).
-- Veredito: confirma N4 e a necessidade de ids gerados; refina `docs/03`.
+- Veredito: confirma N4 e a necessidade de ids gerados; refina `docs/design/03`.
 
 ### A6. `hx-select-oob` extrai do próprio corpo já renderizado
 - Citação: `05-multi-target.md:136` — `hx-select-oob="#sprint-info, #task-detail">` seguido de `05:141`: "Isso extrai `#sprint-info` e `#task-detail` da resposta e faz swap OOB, mesmo que eles não tenham `hx-swap-oob` no HTML."
 - Semântica: o cliente pode fatiar uma resposta maior; o servidor responde **uma** coisa e o cliente pega pedaços.
 - Consequência: é o único mecanismo do corpus que permite **o mesmo corpo** para navegador e para htmx — logo o único que dispensa `Vary` e mantém `ETag` único. Deve ser o caminho preferido para multi-região.
-- Veredito: confirma e melhora `docs/07` §7 item 3 (é uma saída parcial do problema de `Vary`).
+- Veredito: confirma e melhora `docs/design/07` §7 item 3 (é uma saída parcial do problema de `Vary`).
 
 ### A7. Toda resposta troca, menos 204 e 304
 - Citação: `07-error-handling.md:5` — "No htmx 2, respostas `4xx` e `5xx` eram ignoradas (não trocavam o DOM). No **htmx 4, toda resposta é trocada** (exceto `204` e `304`)."
 - Semântica: o status deixa de significar "não mexa no DOM"; o corpo passa a comandar. `01-introduction.md:44` e `06-forms.md:65` repetem a mudança como a de maior impacto da versão.
 - Consequência: sem contrato, um `500` num poll de sidebar apaga a sidebar (`07:9`: "ele vai substituir o target"). O crate precisa de matriz explícita status→swap, e de um jeito de pedir "não troque" que não seja `noSwap` global.
-- Veredito: refina `docs/07` §7 — item novo obrigatório (ver §5, 7.8).
+- Veredito: refina `docs/design/07` §7 — item novo obrigatório (ver §5, 7.8).
 
 ### A8. `hx-status:NNN` é uma DSL de string livre com 6 campos
 - Citação: `07-error-handling.md:114-120` — "O formato `hx-status:XXX` aceita: - `swap:` — estilo de swap - `target:` — seletor CSS […] - `select:` […] - `push:` […] - `replace:` […] - `transition:` — usar View Transition".
@@ -99,7 +99,7 @@ projeto exige de a11y e de cache é, portanto, adição nossa — não confirma�
 - Citação: `09-rust-axum-patterns.md:116` — "Use o header `HX-Target` para comportamentos condicionais", com `09:127-131` decidindo o handler por `match target { "task-tree" => …, "task-detail" => … }`.
 - Semântica: a URL é a mesma e o corpo muda conforme o alvo declarado pelo cliente.
 - Consequência: qualquer cache intermediário (CDN, proxy, até o cache do navegador) serve o fragmento errado. Exige `Vary: HX-Target` **além** de `Vary: HX-Request`, ou — preferível — proibir o roteamento por `HX-Target` e usar uma URL por região.
-- Veredito: conflito — `docs/07` §7 fala só de `Vary: HX-Request`; a matriz completa está em §5 (7.4).
+- Veredito: conflito — `docs/design/07` §7 fala só de `Vary: HX-Request`; a matriz completa está em §5 (7.4).
 
 ### A13. `HX-Request` aparece como header de resposta — e `HX-Request-Type` desaparece
 - Citação: `09-rust-axum-patterns.md:46` — `(status, [("HX-Request", "true")], Html(body)).into_response()`.
@@ -122,13 +122,13 @@ projeto exige de a11y e de cache é, portanto, adição nossa — não confirma�
 ### A16. Configuração por `<meta name="htmx-config">` **ou** por `<script>` inline
 - Citação: `02-setup.md:52-54` — `<meta name="htmx-config" content=' {"defaultTimeout":30000,"defaultSwap":"innerHTML","history":true,"transitions":true} '>`; e `10-migration-from-v2.md:243-253`, que configura por `<script>` inline: `htmx.config.implicitInheritance = true;`.
 - Semântica: dois canais, um declarativo e um imperativo; o `<script>` precisa vir **antes** do script do htmx (`10:253`).
-- Consequência: o canal `<script>` é inline — impossível sob `script-src 'self'` sem `nonce` (que `docs/07` §5 proíbe). Só `<meta>` sobrevive, e ele precisa estar no `<head>` antes do `<script src>` → ordem de `<head>` passa a ser contrato do shell.
+- Consequência: o canal `<script>` é inline — impossível sob `script-src 'self'` sem `nonce` (que `docs/design/07` §5 proíbe). Só `<meta>` sobrevive, e ele precisa estar no `<head>` antes do `<script src>` → ordem de `<head>` passa a ser contrato do shell.
 - Veredito: confirma CSP e restringe: `<meta>` + JSON apenas. A forma multi-linha "key:value" de `02:41-46` não é JSON e não deve ser adotada.
 
 ### A17. `hx-trigger` com expressão de filtro exige avaliação dinâmica
 - Citação: `08-optimizations.md:182` — `hx-trigger="input delay:500ms, keyup[key=='Enter']"`, explicado em `08:188`: "`keyup[key=='Enter']` — também dispara ao pressionar Enter".
 - Semântica: `[expr]` é expressão avaliada pelo cliente sobre o evento.
-- Consequência: se for avaliada por `eval`/`new Function`, colide de frente com `docs/08` §6 ("Sem `unsafe-eval`: nenhum caminho no vocabulário exige avaliação dinâmica") e com Trusted Types. Sob a nossa política, é proibido; Enter resolve-se com `<form>` + submit nativo.
+- Consequência: se for avaliada por `eval`/`new Function`, colide de frente com `docs/design/08` §6 ("Sem `unsafe-eval`: nenhum caminho no vocabulário exige avaliação dinâmica") e com Trusted Types. Sob a nossa política, é proibido; Enter resolve-se com `<form>` + submit nativo.
 - Veredito: conflito direto — proibido. Ver §4.
 
 ### A18. Estado de carregamento é classe CSS + `hx-indicator` + desabilitar o gatilho
@@ -170,13 +170,13 @@ projeto exige de a11y e de cache é, portanto, adição nossa — não confirma�
 ### A24. Morph swaps: um segundo algoritmo de DOM, com dois atributos de escape
 - Citação: `08-optimizations.md:44` — "Para preservar estado de elementos durante swaps (como foco, scroll, vídeos), use morph swaps", com `hx-swap="innerMorph"`/`outerMorph` (`08:51`, `08:58`), `hx-preserve` (`08:69`) e `hx-morph-skip` (`08:79`).
 - Semântica: o cliente reconcilia nós em vez de substituir; `hx-preserve` congela subárvore, `hx-morph-skip` exclui subárvore do morph.
-- Consequência: é reativação por outra porta — o DOM deixa de ser projeção do último render, e o servidor perde a capacidade de garantir o que está na tela. Custa um algoritmo a mais no bundle (o argumento que `docs/07` §4 usa para tudo). Foco preservado é bom; mas isso se resolve com foco explícito pós-swap, não com reconcile.
+- Consequência: é reativação por outra porta — o DOM deixa de ser projeção do último render, e o servidor perde a capacidade de garantir o que está na tela. Custa um algoritmo a mais no bundle (o argumento que `docs/design/07` §4 usa para tudo). Foco preservado é bom; mas isso se resolve com foco explícito pós-swap, não com reconcile.
 - Veredito: recusar. `innerHTML`/`outerHTML` apenas.
 
 ### A25. Polling sem controle de pausa
 - Citação: `08-optimizations.md:89-93` — `<div id="task-tree" hx-get="…" hx-trigger="every 30s" hx-swap="innerMorph">`; e o padrão auto-substituinte em `08:98-108`.
 - Semântica: atualização periódica automática, sem interface de parada; "Para parar, retorne um div sem trigger" (`08:108`) — ou seja, a parada é decisão do servidor.
-- Consequência: WCAG 2.2.2 (Pausar, Parar, Ocultar) exige controle para conteúdo que se atualiza sozinho; `docs/05` já mapeia 2.2.2 a "**tipo**: `Carousel` exige controle de pausa". Polling entra na mesma família e precisa do mesmo controle — e `hx-sync` para não empilhar requisições.
+- Consequência: WCAG 2.2.2 (Pausar, Parar, Ocultar) exige controle para conteúdo que se atualiza sozinho; `docs/design/05` já mapeia 2.2.2 a "**tipo**: `Carousel` exige controle de pausa". Polling entra na mesma família e precisa do mesmo controle — e `hx-sync` para não empilhar requisições.
 - Veredito: lacuna de a11y do corpus; regra nova.
 
 ### A26. `hx-sync` é o antídoto para disparo duplo
@@ -194,14 +194,14 @@ projeto exige de a11y e de cache é, portanto, adição nossa — não confirma�
 ### A28. `hx-trigger="change"` provoca mudança de contexto por entrada (WCAG 3.2.2)
 - Citação: `06-forms.md:217` — "| `change` | Input, select, checkbox — dispara ao perder foco com valor alterado |", usado em `04:168-169` (`change` + `hx-swap="none"`) e `04:180-182` (`change` + troca de `#task-tree`).
 - Semântica: alterar um `select` envia POST e troca região, sem confirmação.
-- Consequência: `docs/05` afirma que 3.2.1/3.2.2 são garantidos **estruturalmente** ("não existe `on*`; mudança só por submit"). Aceitar `change` como gatilho de swap derruba essa garantia. O `hx-swap="none"` mitiga o caso de texto, mas não o de `select` que troca outra região.
+- Consequência: `docs/design/05` afirma que 3.2.1/3.2.2 são garantidos **estruturalmente** ("não existe `on*`; mudança só por submit"). Aceitar `change` como gatilho de swap derruba essa garantia. O `hx-swap="none"` mitiga o caso de texto, mas não o de `select` que troca outra região.
 - Veredito: conflito — gatilho de escrita permitido só em `submit`; `change` só com `swap: none` e feedback por região de status.
 
 ### A29. `hx-on:*` inline é usado em 8 lugares, contra a própria regra do conjunto
 - Citação: `SKILL.md:31` — "Avoid `hx-on` inline with strict CSP; use delegated listeners." — enquanto `04-task-crud.md:47` traz `hx-on:htmx:after:swap="document.getElementById('task-modal')?.close()"`.
 - Semântica: o conjunto prega uma regra e a viola em todo exemplo não trivial (também `03:71`, `04:14`, `04:170`, `04:210`, `04:281`, `06:73`, `06:194`, `06:207`).
 - Consequência: nenhum desses exemplos é utilizável por nós. Cada um tem substituto no servidor: abrir modal = `<dialog>` nativo, fechar = `<form method="dialog">`, "salvo" = região `role="status"` trocada por OOB, limpar detalhe = `<hx-partial>`→OOB vazio.
-- Veredito: refuta; reforça `docs/07` §7 item 6 e a lista de proibições (§5).
+- Veredito: refuta; reforça `docs/design/07` §7 item 6 e a lista de proibições (§5).
 
 ### A30. `hx-confirm`/`hx-prompt` são `window.confirm`/`window.prompt`
 - Citação: `04-task-crud.md:280` — `hx-confirm="Tem certeza que deseja arquivar esta tarefa?"`; e `01-introduction.md:48` — "| Atributos removidos | `hx-vars`, `hx-params`, `hx-prompt` | Usar alternativas |".
@@ -218,7 +218,7 @@ projeto exige de a11y e de cache é, portanto, adição nossa — não confirma�
 ### A32. `hx-validate` duplica validação que já é nossa
 - Citação: `06-forms.md:226` — "No htmx 4, o atributo `hx-validate` controla a validação nativa do browser", com `06:230`, `hx-validate="true"`.
 - Semântica: liga/desliga constraint validation por formulário.
-- Consequência: nossa validação de cliente já vem de `required`/`pattern`/`minlength` emitidos pelos primitivos, e `docs/18` (achado do `html-moderno`) **proíbe `novalidate`**. Um atributo que desliga validação é a porta de trás. Proibido.
+- Consequência: nossa validação de cliente já vem de `required`/`pattern`/`minlength` emitidos pelos primitivos, e `docs/design/18` (achado do `html-moderno`) **proíbe `novalidate`**. Um atributo que desliga validação é a porta de trás. Proibido.
 - Veredito: refuta.
 
 ### A33. `hx-delete` não envia o formulário; `hx-include="closest form"` é seletor em texto
@@ -230,7 +230,7 @@ projeto exige de a11y e de cache é, portanto, adição nossa — não confirma�
 ### A34. ETag manual + `304` sem swap + `Vary` ausente = região que nunca preenche
 - Citação: `08-optimizations.md:225-236` — `if headers.get("if-none-match")… == Some(&etag) { return StatusCode::NOT_MODIFIED.into_response(); }`, com `ETag` gerado de `get_mtime` (`08:223`).
 - Semântica: o servidor compara o `If-None-Match` à mão e devolve `304` sem corpo; e, por A7, `304` **não troca** o DOM.
-- Consequência: (a) o cliente só envia `If-None-Match` se tiver recebido o `ETag` antes — primeira carga com `304` deixa a região vazia para sempre; (b) `ETag` de `mtime` não é o `sha256` dos bytes (contraria `docs/09` §2) e muda sem que o HTML mude; (c) sem `Vary: HX-Request`, 304/200 de fragmento e de página se contaminam no cache.
+- Consequência: (a) o cliente só envia `If-None-Match` se tiver recebido o `ETag` antes — primeira carga com `304` deixa a região vazia para sempre; (b) `ETag` de `mtime` não é o `sha256` dos bytes (contraria `docs/design/09` §2) e muda sem que o HTML mude; (c) sem `Vary: HX-Request`, 304/200 de fragmento e de página se contaminam no cache.
 - Veredito: conflito — Adotar `ETag` = `sha256` canônico; `304` só como revalidação de um `200` anterior idêntico.
 
 ## 3. Confirmações do desenho
@@ -242,28 +242,28 @@ projeto exige de a11y e de cache é, portanto, adição nossa — não confirma�
 5. **Ordem main→OOB é determinística** (A4) — confirma P6/D14 e permite asserção de e2e sobre ordem.
 6. **`hx-select-oob`/`HX-Reselect` permitem corpo único** (A6, A10) — confirma `Render::Full` como caminho principal e reduz `Vary` a um caso específico.
 7. **`:inherited` explícito** (A20) valida P9: nenhum estado ambiente invisível no markup.
-8. **Classe `htmx-request` em vez de `style`** (A18) mantém `style-src 'self'` intacto — confirma `docs/07` §5.
-9. **O corpus nunca escreve `Vary`** — confirma que `docs/07` §7 item 3 é adição nossa e que ela é indispensável (A12, A34).
+8. **Classe `htmx-request` em vez de `style`** (A18) mantém `style-src 'self'` intacto — confirma `docs/design/07` §5.
+9. **O corpus nunca escreve `Vary`** — confirma que `docs/design/07` §7 item 3 é adição nossa e que ela é indispensável (A12, A34).
 10. **O corpus quase não trata a11y** (1 menção em 2.380 linhas) — confirma que foco/anúncio pós-swap não vêm de graça do htmx e precisam ser contrato (7.6).
 
 ## 4. Conflitos e correções
 
 | O que a crate diz hoje | O que o corpus diz | Correção (frase exata + arquivo) |
 |---|---|---|
-| `docs/07` §7: "O vocabulário **não** inclui htmx" e nada sobre como um `hx-*` é emitido | todo uso é `hx-*` em elemento comum (`03:13`, `04:44`) | inserir em `docs/03-vocabulario-de-elementos.md` §7: "Perfil `htmx` (opcional): `spec/htmx.toml` declara os atributos `hx-*` permitidos, com valor tipado; nenhum `hx-*` fora dessa tabela compila." |
-| `docs/03` §5 proíbe `hx-on*` sem dizer o que substitui | `hx-on:*` em 8 exemplos (A29) | acrescentar em `docs/07` §7.10: "`hx-on` não é substituído por nada: cada uso do corpus tem equivalente nativo (`<dialog>`, `<form method=\"dialog\">`, região `role=\"status\"` por OOB)." |
-| `docs/07` §7 item 3: "`Vary: HX-Request` **obrigatório**" | resposta varia por `HX-Target` (`09:116-131`) | trocar por: "`Vary: HX-Request` em toda resposta que difere entre parcial e completa; `Vary: HX-Request, HX-Target` quando o handler lê `HX-Target`; resposta única (`hx-select`/`hx-select-oob`) dispensa `Vary`." |
-| `docs/07` §7 item 4: "`aria-live=\"polite\"` e `aria-busy` durante a troca" | nenhuma menção; único `focus()` em `03:71` | manter e completar: "`aria-busy=\"true\"` na região durante a requisição (removido pelo swap) e foco movido para o título da região em `htmx:after:settle`; `aria-live=\"polite\"` só na região de status." |
-| `docs/05`: "3.2.1/3.2.2 — não existe `on*`; mudança só por submit" | `hx-trigger="change"` troca região (`04:180-182`) | adicionar a `docs/05` §2, linha 3.2.2: "gatilho htmx de escrita só em `submit`; `change`/`blur` apenas com `swap: none` e feedback em região `role=\"status\"`." |
-| `docs/08` §6: "Sem `unsafe-eval`: nenhum caminho no vocabulário exige avaliação dinâmica" | `hx-trigger="keyup[key=='Enter']"` (`08:182`) | acrescentar a `docs/08` §6: "filtros `[expr]` de `hx-trigger` e valores `js:` são proibidos: exigem avaliação dinâmica; Enter vem de `<form>` + submit." |
-| `docs/09` §2: `ETag` = `sha256` dos bytes finais | `ETag` de `mtime` e `304` manual (`08:223-229`) | acrescentar a `docs/09` §2: "`304` só após um `200` com o mesmo `ETag` canônico; fragmento nunca responde `304` na primeira carga." |
-| `docs/06` §1: `Page` é o único construtor de resposta HTML | fragmentos crus em `Html(format!(…))` (`05:79`, `09:87`) | acrescentar a `docs/06` §1: "resposta parcial é `Partial` (mesmo `Markup`, mesmo macro), nunca `String`; `Page` e `Partial` são os dois únicos `IntoResponse`." |
-| `docs/12` §9: "`axe` **depois** do swap" | nada equivalente | manter; detalhar em `docs/12` §9 com as asserções de §5 (checklist) — hoje é uma linha, precisa ser gate nomeado. |
-| `docs/07` §5: "`<script type=\"application/ld+json\">`" permitido | config só por `<script>` (`10:243-253`) | acrescentar a `docs/07` §7.12: "configuração exclusivamente por `<meta name=\"htmx-config\">` em JSON, no `<head>`, antes do `<script src>`; `htmx.config.*` por script inline é proibido." |
+| `docs/design/07` §7: "O vocabulário **não** inclui htmx" e nada sobre como um `hx-*` é emitido | todo uso é `hx-*` em elemento comum (`03:13`, `04:44`) | inserir em `docs/design/03-vocabulario-de-elementos.md` §7: "Perfil `htmx` (opcional): `spec/htmx.toml` declara os atributos `hx-*` permitidos, com valor tipado; nenhum `hx-*` fora dessa tabela compila." |
+| `docs/design/03` §5 proíbe `hx-on*` sem dizer o que substitui | `hx-on:*` em 8 exemplos (A29) | acrescentar em `docs/design/07` §7.10: "`hx-on` não é substituído por nada: cada uso do corpus tem equivalente nativo (`<dialog>`, `<form method=\"dialog\">`, região `role=\"status\"` por OOB)." |
+| `docs/design/07` §7 item 3: "`Vary: HX-Request` **obrigatório**" | resposta varia por `HX-Target` (`09:116-131`) | trocar por: "`Vary: HX-Request` em toda resposta que difere entre parcial e completa; `Vary: HX-Request, HX-Target` quando o handler lê `HX-Target`; resposta única (`hx-select`/`hx-select-oob`) dispensa `Vary`." |
+| `docs/design/07` §7 item 4: "`aria-live=\"polite\"` e `aria-busy` durante a troca" | nenhuma menção; único `focus()` em `03:71` | manter e completar: "`aria-busy=\"true\"` na região durante a requisição (removido pelo swap) e foco movido para o título da região em `htmx:after:settle`; `aria-live=\"polite\"` só na região de status." |
+| `docs/design/05`: "3.2.1/3.2.2 — não existe `on*`; mudança só por submit" | `hx-trigger="change"` troca região (`04:180-182`) | adicionar a `docs/design/05` §2, linha 3.2.2: "gatilho htmx de escrita só em `submit`; `change`/`blur` apenas com `swap: none` e feedback em região `role=\"status\"`." |
+| `docs/design/08` §6: "Sem `unsafe-eval`: nenhum caminho no vocabulário exige avaliação dinâmica" | `hx-trigger="keyup[key=='Enter']"` (`08:182`) | acrescentar a `docs/design/08` §6: "filtros `[expr]` de `hx-trigger` e valores `js:` são proibidos: exigem avaliação dinâmica; Enter vem de `<form>` + submit." |
+| `docs/design/09` §2: `ETag` = `sha256` dos bytes finais | `ETag` de `mtime` e `304` manual (`08:223-229`) | acrescentar a `docs/design/09` §2: "`304` só após um `200` com o mesmo `ETag` canônico; fragmento nunca responde `304` na primeira carga." |
+| `docs/design/06` §1: `Page` é o único construtor de resposta HTML | fragmentos crus em `Html(format!(…))` (`05:79`, `09:87`) | acrescentar a `docs/design/06` §1: "resposta parcial é `Partial` (mesmo `Markup`, mesmo macro), nunca `String`; `Page` e `Partial` são os dois únicos `IntoResponse`." |
+| `docs/design/12` §9: "`axe` **depois** do swap" | nada equivalente | manter; detalhar em `docs/design/12` §9 com as asserções de §5 (checklist) — hoje é uma linha, precisa ser gate nomeado. |
+| `docs/design/07` §5: "`<script type=\"application/ld+json\">`" permitido | config só por `<script>` (`10:243-253`) | acrescentar a `docs/design/07` §7.12: "configuração exclusivamente por `<meta name=\"htmx-config\">` em JSON, no `<head>`, antes do `<script src>`; `htmx.config.*` por script inline é proibido." |
 
 ## 5. Adições prontas para colar
 
-### 5.1 Bloco `7.1`–`7.12` para `docs/07-js-e-assets.md`
+### 5.1 Bloco `7.1`–`7.12` para `docs/design/07-js-e-assets.md`
 
 ```markdown
 ## 7. htmx (opcional, e como adotar)
@@ -404,4 +404,4 @@ responde completa quando não há `HX-Request`.
 7. **Sem limite de concorrência e de taxa**: `hx-sync` cobre o single-element, não o "N regiões em `load` ao mesmo tempo" (o corpus dispara 6 — `03:194-199`).
 8. **Sem contrato de erro de transporte**: `htmx:error`/`htmx:response:error` são citados (`07:212-221`) mas não há política de retry, backoff ou estado "offline". O crate precisa decidir que **não** há retry automático (retry silencioso em POST não é idempotente).
 9. **Sem acessibilidade de `aria-current`/URL** quando `hx-push-url` muda a URL: a navegação não anuncia mudança de contexto, e nada no corpus trata disso.
-10. **Sem política de tamanho**: nenhum limite de payload por fragmento, nenhuma relação entre fragmento e orçamento de bytes (`docs/09` §4) — a crate precisa declarar que o orçamento por página inclui os fragmentos.
+10. **Sem política de tamanho**: nenhum limite de payload por fragmento, nenhuma relação entre fragmento e orçamento de bytes (`docs/design/09` §4) — a crate precisa declarar que o orçamento por página inclui os fragmentos.

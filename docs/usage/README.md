@@ -2,7 +2,7 @@
 
 **Wiki operacional da série `0.1.x`.** Ela responde “como eu faço isto?” com código que segue a API
 atual. A filosofia operacional está em [00 — Filosofia](00-filosofia.md); o *porquê* histórico das
-decisões fica em [`docs/00`](../00-principios.md) a [`docs/27`](../27-licoes-do-eta.md). Aqui o foco
+decisões fica em [`docs/design/00`](../design/00-principios.md) a [`docs/design/27`](../design/27-licoes-do-eta.md). Aqui o foco
 é a interface que o consumidor vê.
 
 ## O modelo em uma frase

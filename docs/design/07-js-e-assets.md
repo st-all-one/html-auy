@@ -57,7 +57,7 @@ CDN é aceito por construtor próprio (`external_style`/`external_script`, `http
 e é **desencorajado** em produção: self-host dá CSP estrita, SRI e cache sob seu controle.
 
 Mídia de conteúdo (`<img>`, `<picture>`, `<video>`, `<audio>`) **não** é `Asset`: ela carrega dados do
-documento e usa `Src`/`SrcSet`/`Alt` em [`media`](../crates/html-auy/src/media.rs), sem hash de build.
+documento e usa `Src`/`SrcSet`/`Alt` em [`media`](../../crates/html-auy/src/media.rs), sem hash de build.
 
 ## 3. Onde o JS passa a ler o estado
 

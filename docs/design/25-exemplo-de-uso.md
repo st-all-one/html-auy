@@ -35,7 +35,7 @@ impl html_auy::Msg for Msg {
 ```
 
 ```rust
-// app/src/http.rs — 6 linhas, o crate não participa (docs/06 §1)
+// app/src/http.rs — 6 linhas, o crate não participa (docs/design/06 §1)
 impl axum::response::IntoResponse for Responder {
     fn into_response(self) -> axum::response::Response {
         let etag = format!("\"{}\"", hex(sha256(self.page.markup().as_str())));
@@ -125,7 +125,7 @@ fn shell(ctx: &Ctx, title: impl html_auy::Msg, heading: impl html_auy::Msg, sche
         Text::msg(heading),    // NÃO opcional → `<h1>` único por construção
         ctx.locale,            // tipo `Lang`, não string
     )
-    .schemas(schemas)          // JSON-LD entra no `<head>` na posição fixa (docs/06 §1)
+    .schemas(schemas)          // JSON-LD entra no `<head>` na posição fixa (docs/design/06 §1)
     .assets(ctx.assets())
     .skip(Text::msg(Msg::SkipToContent))   // skip link do shell (SC 2.4.1); sem texto, não emite
 }
@@ -248,7 +248,7 @@ Propriedades que o consumidor passa a ter **por construção**:
 |---|---|
 | `ETag` estável | a mesma entrada gera os mesmos bytes (ordem canônica de atributos, `srcset` ordenado, sem hash) |
 | CSP sem `inline` | não há `style=`, `on*` nem `<script>` inline no vocabulário |
-| prefixo do `<head>` ≤ 14 KB | ordem fixa de `docs/06` §1; `Link`/`preload` só do que está no caminho crítico |
+| prefixo do `<head>` ≤ 14 KB | ordem fixa de `docs/design/06` §1; `Link`/`preload` só do que está no caminho crítico |
 | HTML válido | o aninhamento é validado antes de gerar código |
 | sem `FOUC` | assets na ordem declarada; recomenda-se CSS antes de `script` |
 | funciona sem JS | nada no vocabulário depende de JS para render |
@@ -298,7 +298,7 @@ Escrever o uso final obrigou a decidir três pontos que estavam **inconsistentes
 
 | Ponto | Antes | Agora (normativo em [`21`](21-implementacao.md) F2) |
 |---|---|---|
-| valor de atributo | `div(class: …)` em `docs/02`, `href = expr` em F2, `.list` em `docs/01` | `nome=(expr)` para cálculo; `nome="literal"` para enum da spec e para `class`; `href`/`src`/`alt` continuam tipados e texto visível literal não é aceito. Os parênteses **delimitam** a expressão no `TokenStream` (`href=x rel=y` é ambíguo) |
+| valor de atributo | `div(class: …)` em `docs/design/02`, `href = expr` em F2, `.list` em `docs/design/01` | `nome=(expr)` para cálculo; `nome="literal"` para enum da spec e para `class`; `href`/`src`/`alt` continuam tipados e texto visível literal não é aceito. Os parênteses **delimitam** a expressão no `TokenStream` (`href=x rel=y` é ambíguo) |
 | elemento vazio | sem terminador definido | `img src=(…) alt=(…);` — o `;` fecha o `void` |
 | `class` | `Class::of(&[Tone])` + atalho `.token` | `Class::of(&[Token::…])` com `trait ClassToken` ou `class="a b"` estático; ambos ordenam e deduplicam |
 

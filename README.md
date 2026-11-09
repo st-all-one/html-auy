@@ -105,22 +105,23 @@ Acessibilidade é parte do vocabulário, não uma revisão final:
 - `audit` cobre 13 regras de documento, incluindo `aria_current_unique_per_nav`.
 - Contraste, alvo de toque, foco visível e layout continuam gates do consumidor (`axe`, `sniffCSS`, e2e).
 
-Detalhes: [`docs/acessibility.md`](docs/acessibility.md) e [`docs/05-acessibilidade.md`](docs/05-acessibilidade.md).
+Detalhes: [`docs/design/acessibility.md`](docs/design/acessibility.md) e [`docs/design/05-acessibilidade.md`](docs/design/05-acessibilidade.md).
 
 ## Documentação
 
 | Tema | Referência |
 |---|---|
 | Wiki de uso | [`docs/usage/README.md`](docs/usage/README.md) |
+| Índice da documentação | [`docs/README.md`](docs/README.md) |
 | Guia para agentes/LLM | [`SKILL.md`](SKILL.md) |
 | Índice para LLM | [`llms.txt`](llms.txt) |
 | Contexto completo para LLM | [`llms-full.txt`](llms-full.txt) |
-| Acessibilidade | [`docs/acessibility.md`](docs/acessibility.md) · [`docs/05`](docs/05-acessibilidade.md) |
-| Arquitetura | [`docs/01-arquitetura.md`](docs/01-arquitetura.md) |
-| Validação | [`docs/04-validacao.md`](docs/04-validacao.md) |
-| Segurança | [`docs/08-seguranca.md`](docs/08-seguranca.md) |
-| Testes | [`docs/12-testes.md`](docs/12-testes.md) |
-| Decisões | [`docs/13-decisoes.md`](docs/13-decisoes.md) |
+| Acessibilidade | [`docs/design/acessibility.md`](docs/design/acessibility.md) · [`docs/design/05`](docs/design/05-acessibilidade.md) |
+| Arquitetura | [`docs/design/01-arquitetura.md`](docs/design/01-arquitetura.md) |
+| Validação | [`docs/design/04-validacao.md`](docs/design/04-validacao.md) |
+| Segurança | [`docs/design/08-seguranca.md`](docs/design/08-seguranca.md) |
+| Testes | [`docs/design/12-testes.md`](docs/design/12-testes.md) |
+| Decisões | [`docs/adr/README.md`](docs/adr/README.md) · [`docs/design/13-decisoes.md`](docs/design/13-decisoes.md) |
 | Histórico de mudanças | [`CHANGELOG.md`](CHANGELOG.md) |
 | Contribuição | [`AGENTS.md`](AGENTS.md) |
 

@@ -1,4 +1,4 @@
-//! Porte de componentes de `docs/20` §5: `picture` e `select` em `html!`.
+//! Porte de componentes de `docs/design/20` §5: `picture` e `select` em `html!`.
 
 use html_auy::{
     Alt, FieldName, HeightPx, LUrl, MediaPath, Sizes, Src, SrcSet, Variant, WidthPx, html,

@@ -5,7 +5,7 @@
 #
 # `sniff-css/` e `fuzz/` NÃO são membros (workspace próprio / workspace-excluded).
 # O pin do compilador é `rust-toolchain.toml` (1.99); a MSRV é `rust-version` (1.92).
-# São dois números diferentes por decisão (docs/22 §2, D32).
+# São dois números diferentes por decisão (docs/design/22 §2, D32).
 [workspace]
 members = [
     "crates/html-auy",
@@ -75,7 +75,7 @@ nursery = { level = "warn", priority = -1 }
 cargo = { level = "warn", priority = -1 }
 
 # Parser e codegen são iteradores e índices por natureza: estes quatro nascem `allow` no
-# workspace (documentado em docs/22 §4) porque `#[expect]` por arquivo não é viável.
+# workspace (documentado em docs/design/22 §4) porque `#[expect]` por arquivo não é viável.
 module_name_repetitions = "allow"
 similar_names = "allow"
 many_single_char_names = "allow"

@@ -97,7 +97,7 @@ CSP, `ETag` ou funcionamento sem JS.
 - Citação: `03-components.md:75` — "Aplica `.into()` automaticamente no valor passado:"; `:94` — "    #[prop(marker)] _ty: PhantomData<T>,".
 - Semântica: `into` deixa a prop aceitar qualquer tipo conversível; `marker` esconde um parâmetro de tipo.
 - Consequência: `into` é a versão de props do `From<String>` infalível que destruiria `Markup` — com ele, o construtor seguro de `Text`/`Href` deixa de ser único. `marker` não tem função sem `#[component]`.
-- Veredito: refuta (into) · irrelevante (marker). Registrar em `docs/02` §8.
+- Veredito: refuta (into) · irrelevante (marker). Registrar em `docs/design/02` §8.
 
 ### A6. Props de closure e props genéricas `Fn() -> T`
 - Citação: `03-components.md:122` — "    progress: Option<Box<dyn Fn() -> i32 + Send + Sync>>,"; `:107` — "    progress: F,".
@@ -323,19 +323,19 @@ CSP, `ETag` ou funcionamento sem JS.
 
 | O que a crate diz hoje | O que o corpus diz | Correção (frase exata · arquivo) |
 |---|---|---|
-| `02` §8 lista o que não existe, sem mencionar closure como prop | prop pode ser `Fn() -> T` (`03:107`, `:122`), tornando a saída dependente de código no render | Em `docs/02-tipos-e-contextos.md` §8: `\| Closure/callback como prop \| a saída deixaria de depender só do dado (Leptos 0.8, 03-components.md:107) \|` |
-| `docs/04` não tem regra sobre correção do parser | navegador fecha `<p>` e insere `<tbody>` (`15:117`, `:125`) | Em `docs/04-validacao.md` §6: "A árvore parseada por `html5ever` deve ser **idêntica** à árvore emitida; correção do parser (ex.: `<tbody>` inserido, `<p>` fechado antes de `<div>`) é falha, não tolerância." |
-| `docs/09` §2 fixa `ETag` = `sha256` do corpo, mas não proíbe identificador de build | `data-component="Counter_12345"` (`18:126`) muda por build | Em `docs/09-desempenho-e-cache.md` §2: "Nenhum identificador de build, componente ou sessão entra no HTML; o único nome versionado é o do asset, derivado do **hash do conteúdo**." |
-| `docs/09` §4 proíbe atributo vazio, mas não trata estado embutido | props em `data-props='{"initial":0}'` (`18:126`, `:51`) | Em `docs/09` §2: "Estado nunca é serializado no documento: nenhum atributo carrega JSON de props, sessão ou cache." |
-| `docs/07` §3 lista `data-*` escalares sem proibir JSON | `data-props` exige escape de JSON em contexto de atributo | Em `docs/07-js-e-assets.md` §3: "`data-*` transporta escalar declarado (enum), nunca JSON de estado; o valor é validado pelo vocabulário do consumidor." |
-| `docs/03` §3 não fixa o estado inicial de campo | `value` = inicial (`06:27`); `<textarea>` por texto filho (`:88`); `select` por `selected` (`:110`) | Em `docs/03-vocabulario-de-elementos.md` §3, três linhas: `\| input \| value/checked são estado inicial; property não existe \|` · `\| textarea \| valor é filho de texto (`Text`), nunca atributo \|` · `\| select \| estado atual é `selected` no `option` correspondente \|` |
+| `02` §8 lista o que não existe, sem mencionar closure como prop | prop pode ser `Fn() -> T` (`03:107`, `:122`), tornando a saída dependente de código no render | Em `docs/design/02-tipos-e-contextos.md` §8: `\| Closure/callback como prop \| a saída deixaria de depender só do dado (Leptos 0.8, 03-components.md:107) \|` |
+| `docs/design/04` não tem regra sobre correção do parser | navegador fecha `<p>` e insere `<tbody>` (`15:117`, `:125`) | Em `docs/design/04-validacao.md` §6: "A árvore parseada por `html5ever` deve ser **idêntica** à árvore emitida; correção do parser (ex.: `<tbody>` inserido, `<p>` fechado antes de `<div>`) é falha, não tolerância." |
+| `docs/design/09` §2 fixa `ETag` = `sha256` do corpo, mas não proíbe identificador de build | `data-component="Counter_12345"` (`18:126`) muda por build | Em `docs/design/09-desempenho-e-cache.md` §2: "Nenhum identificador de build, componente ou sessão entra no HTML; o único nome versionado é o do asset, derivado do **hash do conteúdo**." |
+| `docs/design/09` §4 proíbe atributo vazio, mas não trata estado embutido | props em `data-props='{"initial":0}'` (`18:126`, `:51`) | Em `docs/design/09` §2: "Estado nunca é serializado no documento: nenhum atributo carrega JSON de props, sessão ou cache." |
+| `docs/design/07` §3 lista `data-*` escalares sem proibir JSON | `data-props` exige escape de JSON em contexto de atributo | Em `docs/design/07-js-e-assets.md` §3: "`data-*` transporta escalar declarado (enum), nunca JSON de estado; o valor é validado pelo vocabulário do consumidor." |
+| `docs/design/03` §3 não fixa o estado inicial de campo | `value` = inicial (`06:27`); `<textarea>` por texto filho (`:88`); `select` por `selected` (`:110`) | Em `docs/design/03-vocabulario-de-elementos.md` §3, três linhas: `\| input \| value/checked são estado inicial; property não existe \|` · `\| textarea \| valor é filho de texto (`Text`), nunca atributo \|` · `\| select \| estado atual é `selected` no `option` correspondente \|` |
 | `spec/elements.toml` não nomeia a invariante de `textarea` | mesmo conteúdo | Em `[element.textarea]`: `invariants = ["label_or_labelledby_in_block", "value_as_text_child"]` |
-| `docs/06` §1 não liga `form method=post` a redirect | sem JS o sucesso é redirect HTTP (`17:51-53`) | Em `docs/06-shell-e-tema.md` §1, nota em `Page`: "`form method=post` responde `303 See Other`; o resultado aparece no GET seguinte." |
-| `spec/elements.toml` deixa `input.name` como string livre | nomes indexados `a[b][c]` (`17:87`) | Em `docs/02` §7: `\| nome de campo \| FieldName \| segmentos declarados; `[`/`]` só por `FieldName::nested` \|` |
+| `docs/design/06` §1 não liga `form method=post` a redirect | sem JS o sucesso é redirect HTTP (`17:51-53`) | Em `docs/design/06-shell-e-tema.md` §1, nota em `Page`: "`form method=post` responde `303 See Other`; o resultado aparece no GET seguinte." |
+| `spec/elements.toml` deixa `input.name` como string livre | nomes indexados `a[b][c]` (`17:87`) | Em `docs/design/02` §7: `\| nome de campo \| FieldName \| segmentos declarados; `[`/`]` só por `FieldName::nested` \|` |
 
 ## 5. Adições prontas para colar
 
-**(a) Formulário: onde o estado inicial vive** (para `docs/03` §3)
+**(a) Formulário: onde o estado inicial vive** (para `docs/design/03` §3)
 
 | Controle | Estado inicial em SSR | Proibido |
 |---|---|---|
@@ -355,7 +355,7 @@ invariants = ["label_or_labelledby_in_block", "value_as_text_child"]
 invariants = ["caption_required", "tbody_explicit", "no_text_children", "parsed_tree_equals_emitted"]
 ```
 
-**(c) Checklist de determinismo (para `docs/09` §2)**
+**(c) Checklist de determinismo (para `docs/design/09` §2)**
 
 1. Dois renders do mesmo dado → bytes idênticos (`==`), incluindo ordem de atributos.
 2. Rebuild sem mudança de fonte → `ETag` idêntico.
@@ -363,7 +363,7 @@ invariants = ["caption_required", "tbody_explicit", "no_text_children", "parsed_
 4. Nenhum estado serializado (`data-props`, JSON em atributo, marcador de hidratação).
 5. Árvore parseada por `html5ever` == árvore emitida (nenhuma correção do navegador).
 
-**(d) Regra de `id` gerado em laço (para `docs/03` §4)**
+**(d) Regra de `id` gerado em laço (para `docs/design/03` §4)**
 
 > `id` de item de lista deriva da **chave do dado** (o mesmo valor que serviria de `key`), nunca do
 > índice: `label for` e `aria-describedby` precisam apontar para o mesmo alvo em qualquer ordem e em
@@ -376,7 +376,7 @@ invariants = ["caption_required", "tbody_explicit", "no_text_children", "parsed_
 # data-props, data-component, node_ref, prop:*, bind:*  (Leptos 0.8 — 18-islands.md:126)
 ```
 
-**(f) Tabela para `docs/14-alternativas.md` §"o que se perde"**
+**(f) Tabela para `docs/design/14-alternativas.md` §"o que se perde"**
 
 | Perda assumida ao não usar Leptos | Ganho medido |
 |---|---|
@@ -410,13 +410,13 @@ invariants = ["caption_required", "tbody_explicit", "no_text_children", "parsed_
 3. **i18n.** Nenhum capítulo trata tradução; texto é literal (`02:28`). Todo o modelo de `Msg`, locale
    e paridade de catálogo é invenção nossa (`02` §6).
 4. **Cache HTTP.** Nada sobre `Cache-Control`, `ETag`, `304`, `Vary`; `19` só fala de compressão de
-   WASM. Toda a §2 de `docs/09` é decisão nossa.
+   WASM. Toda a §2 de `docs/design/09` é decisão nossa.
 5. **Gramática de `name`.** `serde_qs` aparece como encoding (`16:50`, `17:75`) sem que o vocabulário de
    marcação defina gramática; precisamos de `FieldName` ou de proibir colchetes.
 6. **Ação que não é formulário.** Menu, popover, diálogo e gaveta dependem de JS tanto aqui quanto em
    nós; nada no corpus ajuda a fechar `inert`/popover sem asset.
 7. **Custo de render.** Nenhum número de µs/alocação; só tamanho de WASM (`18:55-57`). As metas de
-   `docs/09` §1 não são calibráveis por este conjunto.
+   `docs/design/09` §1 não são calibráveis por este conjunto.
 8. **Multi-tenant e tema.** Nada. `data-component`/`data-props` são o único uso de `data-*` e não servem
    de modelo para `data-a11y-*`/`data-section`.
 9. **CSRF e autenticação em form nativo.** O corpus delega (`16:80`) e assume cookie/`ResponseOptions`

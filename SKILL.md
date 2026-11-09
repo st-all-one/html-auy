@@ -342,9 +342,9 @@ cargo +1.92 test --workspace --lib --locked
 - `README.md`
 - `llms.txt`
 - `llms-full.txt`
-- `docs/acessibility.md`
-- `docs/04-validacao.md`
-- `docs/05-acessibilidade.md`
+- `docs/design/acessibility.md`
+- `docs/design/04-validacao.md`
+- `docs/design/05-acessibilidade.md`
 - `docs/usage/03-macro-html.md`
 - `docs/usage/06-formularios.md`
 - `docs/usage/07-midia.md`

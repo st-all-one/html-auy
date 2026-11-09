@@ -312,18 +312,18 @@ que **rejeitar** (porta de escape, escaping por extensão, whitespace configurá
 
 | O que a crate diz hoje | O que o corpus diz | Correção (frase exata + arquivo) |
 |---|---|---|
-| `02-tipos-e-contextos.md:57` — texto escapa `& < > " '` | `07:435` declara os mesmos 5, mas `07:450` escapa `/` → `&#x2f;` | Em `docs/02-tipos-e-contextos.md` §3, após a tabela: "Escapar `/` (como fazem Jinja e o askama) é desnecessário em HTML5 servido com `Content-Type: text/html; charset=utf-8`; a crate **não** escapa `/` e o golden correspondente fixa isso." |
-| `docs/07-js-e-assets.md:5` proíbe `<script>` inline e exige `JsonLd` | `08-filters.md:478` classifica `<script>var data = {{data \| json \| safe}};</script>` como **Bom** | Em `docs/07-js-e-assets.md` §6: "Nenhum caminho produz JSON dentro de `<script>` que não seja `JsonLd::graph`, que escapa `< > & '`. A construção `{{ data \| json \| safe }}` é rejeitada em revisão por definição: `safe` não existe no vocabulário." |
-| `docs/14-alternativas.md:46-47` — "aceite o `\|safe` com um grep-gate" | `07:461` + `08:579` + `08:602-608`: três portas, e `\|safe` é no-op em `ext = "txt"` (A5) | Substituir a frase por: "Aceitar `\|safe` com grep-gate é insuficiente: em template sem escaping o mesmo `\|safe` é inerte, e `HtmlSafe`/`Safe`/`MaybeSafe` não aparecem no template. Se o askama for adotado, o gate é E2E por página (axe + `html-lint`), não textual." |
-| `docs/02-tipos-e-contextos.md` não fala de whitespace | `06:43-45` + `06:82-87`: 3 modos, 6 operadores, 2 ordens de precedência | Em `docs/10-ergonomia.md` §3: "Não há supressão de whitespace configurável nem operador inline. `cq fmt` normaliza o fonte (4 espaços, um elemento por linha) e o codegen emite a partir do AST; a única forma de mudar whitespace é mudar o AST." |
-| `docs/04-validacao.md:83` — macro valida o local; lint valida a página | `07:562` (`x.y is defined` não funciona) e `11:140`/`05:80` (duas mensagens para a mesma causa) | Em `docs/04-validacao.md` §4, item 5: "Toda condição que a macro não consegue decidir é **erro**, nunca `false`: não existe `is defined` parcial. Uma causa, uma mensagem (`trybuild`)." |
-| `docs/11-estabilidade.md` não fixa MSRV numérica | `11:13` — Askama 0.16 exige Rust **1.88** | Em `docs/11-estabilidade.md` §1: "MSRV do html-auy: 1.88 (mesmo piso do askama 0.16, que é o motor em uso no consumidor); CI em 1.88, stable e beta." |
-| `docs/09-desempenho-e-cache.md:5` — uma alocação por bloco, sem mecanismo | `02:155` — `const SIZE_HINT: usize = 11usize;` no código gerado | Em `docs/09-desempenho-e-cache.md` §1: "Cada `Render` expõe `const SIZE_HINT: usize` somado em compilação; `render()` faz `String::with_capacity(SIZE_HINT)` e `render_to` não realoca quando a capacidade disponível é suficiente." |
-| `docs/14-alternativas.md:8` marca askama como "HTML final = artefato ✅" | `07:411` (conteúdo de topo ignorado) e `11:194` (render vazio sem erro) | Ajustar a linha para `⚠️` e nota de rodapé: "O artefato é determinístico, mas a **composição** pode descartar conteúdo sem erro (`07:411`); por isso a coluna 'erro de marcação em compilação' não cobre composição." |
+| `02-tipos-e-contextos.md:57` — texto escapa `& < > " '` | `07:435` declara os mesmos 5, mas `07:450` escapa `/` → `&#x2f;` | Em `docs/design/02-tipos-e-contextos.md` §3, após a tabela: "Escapar `/` (como fazem Jinja e o askama) é desnecessário em HTML5 servido com `Content-Type: text/html; charset=utf-8`; a crate **não** escapa `/` e o golden correspondente fixa isso." |
+| `docs/design/07-js-e-assets.md:5` proíbe `<script>` inline e exige `JsonLd` | `08-filters.md:478` classifica `<script>var data = {{data \| json \| safe}};</script>` como **Bom** | Em `docs/design/07-js-e-assets.md` §6: "Nenhum caminho produz JSON dentro de `<script>` que não seja `JsonLd::graph`, que escapa `< > & '`. A construção `{{ data \| json \| safe }}` é rejeitada em revisão por definição: `safe` não existe no vocabulário." |
+| `docs/design/14-alternativas.md:46-47` — "aceite o `\|safe` com um grep-gate" | `07:461` + `08:579` + `08:602-608`: três portas, e `\|safe` é no-op em `ext = "txt"` (A5) | Substituir a frase por: "Aceitar `\|safe` com grep-gate é insuficiente: em template sem escaping o mesmo `\|safe` é inerte, e `HtmlSafe`/`Safe`/`MaybeSafe` não aparecem no template. Se o askama for adotado, o gate é E2E por página (axe + `html-lint`), não textual." |
+| `docs/design/02-tipos-e-contextos.md` não fala de whitespace | `06:43-45` + `06:82-87`: 3 modos, 6 operadores, 2 ordens de precedência | Em `docs/design/10-ergonomia.md` §3: "Não há supressão de whitespace configurável nem operador inline. `cq fmt` normaliza o fonte (4 espaços, um elemento por linha) e o codegen emite a partir do AST; a única forma de mudar whitespace é mudar o AST." |
+| `docs/design/04-validacao.md:83` — macro valida o local; lint valida a página | `07:562` (`x.y is defined` não funciona) e `11:140`/`05:80` (duas mensagens para a mesma causa) | Em `docs/design/04-validacao.md` §4, item 5: "Toda condição que a macro não consegue decidir é **erro**, nunca `false`: não existe `is defined` parcial. Uma causa, uma mensagem (`trybuild`)." |
+| `docs/design/11-estabilidade.md` não fixa MSRV numérica | `11:13` — Askama 0.16 exige Rust **1.88** | Em `docs/design/11-estabilidade.md` §1: "MSRV do html-auy: 1.88 (mesmo piso do askama 0.16, que é o motor em uso no consumidor); CI em 1.88, stable e beta." |
+| `docs/design/09-desempenho-e-cache.md:5` — uma alocação por bloco, sem mecanismo | `02:155` — `const SIZE_HINT: usize = 11usize;` no código gerado | Em `docs/design/09-desempenho-e-cache.md` §1: "Cada `Render` expõe `const SIZE_HINT: usize` somado em compilação; `render()` faz `String::with_capacity(SIZE_HINT)` e `render_to` não realoca quando a capacidade disponível é suficiente." |
+| `docs/design/14-alternativas.md:8` marca askama como "HTML final = artefato ✅" | `07:411` (conteúdo de topo ignorado) e `11:194` (render vazio sem erro) | Ajustar a linha para `⚠️` e nota de rodapé: "O artefato é determinístico, mas a **composição** pode descartar conteúdo sem erro (`07:411`); por isso a coluna 'erro de marcação em compilação' não cobre composição." |
 
 ## 5. Adições prontas para colar
 
-**5.1 — Gate de vocabulário proibido (novo bloco em `docs/04-validacao.md`, §5, como N3)**
+**5.1 — Gate de vocabulário proibido (novo bloco em `docs/design/04-validacao.md`, §5, como N3)**
 
 ```toml
 # cq-vocabulario.toml — padrões proibidos no código de view (N3, severidade error)
@@ -345,7 +345,7 @@ padrao   = "\\b(style|srcdoc|onclick|hx-on)\\s*[:=]"
 motivo   = "CSP sem inline (D3)"
 ```
 
-**5.2 — Tabela de equivalência para a migração Blade/askama → html-auy (colar em `docs/15-migracao-blade.md`)**
+**5.2 — Tabela de equivalência para a migração Blade/askama → html-auy (colar em `docs/design/15-migracao-blade.md`)**
 
 | Construção no askama | Equivalente em html-auy | Observação |
 |---|---|---|
@@ -364,7 +364,7 @@ motivo   = "CSP sem inline (D3)"
 | `{% raw %}` | **não existe** | sem bypass |
 | `\| json \| safe` em `<script>` | `JsonLd::graph(&g)` | escape fixo `\u003c` etc. |
 
-**5.3 — Checklist de PR de view (acrescentar ao de `docs/10-ergonomia.md` §7)**
+**5.3 — Checklist de PR de view (acrescentar ao de `docs/design/10-ergonomia.md` §7)**
 
 - [ ] Nenhum `|safe`, `escape = "none"`, `impl HtmlSafe` no diff (5.1).
 - [ ] Todo `href`/`src` vem de `Href`/`Src`; nenhum literal de URL no markup.
@@ -372,7 +372,7 @@ motivo   = "CSP sem inline (D3)"
 - [ ] Nenhum texto solto fora de `Text`/`Msg` — nem "só whitespace" (`03-template-enums.md:173`).
 - [ ] Golden revisado: mudança de bytes é intencional e o `SIZE_HINT` mudou junto (A37).
 
-**5.4 — Regra de descarte (colar em `docs/04-validacao.md` §4, item 1)**
+**5.4 — Regra de descarte (colar em `docs/design/04-validacao.md` §4, item 1)**
 
 ```
 error: conteúdo descartado em `shell`
@@ -380,7 +380,7 @@ error: conteúdo descartado em `shell`
    = ajuda: mova o texto para dentro do bloco, ou remova-o; a macro nunca ignora entrada
 ```
 
-**5.5 — Nota de whitespace (colar em `docs/03-vocabulario-de-elementos.md` §7)**
+**5.5 — Nota de whitespace (colar em `docs/design/03-vocabulario-de-elementos.md` §7)**
 
 > Não há modo de whitespace. O espaçamento entre elementos é decidido por `cq fmt` (fonte) e pela
 > emissão canônica do codegen; dois renders do mesmo dado produzem os mesmos bytes, e o mesmo fonte

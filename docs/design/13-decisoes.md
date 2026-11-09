@@ -1,5 +1,9 @@
 # 13 — Decisões
 
+> **Registro histórico.** D0–D35 são o ledger anterior à pasta [`../adr/`](../adr/README.md). Decisões
+> novas viram um ADR em `docs/adr/`; este arquivo não é reescrito, exceto para marcar uma decisão como
+> superada.
+
 Formato: **contexto → decisão → consequência**. Uma decisão por seção; mudar exige nova entrada.
 
 ---
@@ -178,7 +182,7 @@ impossível, `<header>` proibia `<h1>`, e `role`/`aria-*` como curinga reabria o
 estrutura; `accessible_name` substitui o pseudo-atributo `label`; `category` aceita array; a categoria
 `text` nomeia os elementos que só aceitam texto; `role` livre é proibido (só enum por elemento).
 **Consequência.** O validador de referência (`tools/validate_spec.py`) roda limpo e é a barreira até
-`cq spec` existir. Toda mudança de esquema exige um ADR aqui + bump de `spec_version`.
+`cq spec` existir. Toda mudança de esquema exige um ADR em `docs/adr/` + bump de `spec_version`.
 
 ---
 
@@ -367,7 +371,7 @@ fora do binário de produção por padrão.
 
 ## D31 — `Msg` é trait do consumidor; o crate não conhece locale
 
-**Contexto.** Duas versões coexistiam: `docs/02` §6 com `enum Msg` gerado **no crate** e resolvendo
+**Contexto.** Duas versões coexistiam: `docs/design/02` §6 com `enum Msg` gerado **no crate** e resolvendo
 "pelo locale da request", e [`21`](21-implementacao.md) F0 com `trait Msg`. A primeira exige estado
 ambiente de locale dentro do crate — proibido pelo rigor ([`22`](22-rigor.md) §3: nada de `env`, nada
 de global).

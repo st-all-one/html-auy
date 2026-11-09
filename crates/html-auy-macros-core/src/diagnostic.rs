@@ -5,7 +5,7 @@ use quote::quote_spanned;
 
 /// Um erro de `html!`.
 ///
-/// O texto é o contrato (docs/10 §2): primeira linha curta, depois `= regra:` (a invariante que
+/// O texto é o contrato (docs/design/10 §2): primeira linha curta, depois `= regra:` (a invariante que
 /// fundamenta) e `= ajuda:` (o que fazer). Uma mensagem por arquivo em `tests/ui/`.
 #[derive(Debug)]
 pub(crate) struct Diag {
@@ -13,7 +13,7 @@ pub(crate) struct Diag {
     pub(crate) span: Span,
     /// Primeira linha.
     pub(crate) message: String,
-    /// Invariante de `spec/elements.toml` (docs/04 §4.1).
+    /// Invariante de `spec/elements.toml` (docs/design/04 §4.1).
     pub(crate) rule: Option<String>,
     /// Como corrigir.
     pub(crate) hint: Option<String>,

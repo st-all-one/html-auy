@@ -20,7 +20,7 @@ A ordem importa:
 
 Para implementar a própria biblioteca, e não uma aplicação com ela, leia
 [15 — Arquitetura](15-arquitetura.md) e o plano histórico em
-[`docs/21`](../21-implementacao.md).
+[`docs/design/21`](../design/21-implementacao.md).
 
 ## O contrato de uma fatia
 

@@ -1,4 +1,4 @@
-# spec/data.toml — tabela dos atributos `data-*` do consumidor (docs/07 §3).
+# spec/data.toml — tabela dos atributos `data-*` do consumidor (docs/design/07 §3).
 #
 # Não é vocabulário do crate: `data-*` é contrato entre markup e JS do **consumidor**. O gate
 # `tools/data_check.py` cobra três coisas e falha se qualquer uma quebrar:
@@ -39,5 +39,5 @@ values = ["rich", "home"]
 # Marcação de telemetria (o valor é o evento).
 [data.analytics]
 
-# Seção semântica vinda do template da aplicação (docs/06).
+# Seção semântica vinda do template da aplicação (docs/design/06).
 [data.section]

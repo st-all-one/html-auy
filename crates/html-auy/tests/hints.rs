@@ -1,4 +1,4 @@
-//! Resource hints: ordem fixa, atributos tipados e deduplicação (docs/06 §2).
+//! Resource hints: ordem fixa, atributos tipados e deduplicação (docs/design/06 §2).
 
 use html_auy::{
     Asset, CrossOrigin, ExternalUrl, FetchPriority, Hint, Integrity, Lang, Media, Page, Preload,

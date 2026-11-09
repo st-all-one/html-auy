@@ -1,4 +1,4 @@
-//! Campos: rótulo, `id`, `aria-describedby` e `aria-invalid` saem juntos (docs/05, docs/10).
+//! Campos: rótulo, `id`, `aria-describedby` e `aria-invalid` saem juntos (docs/design/05, docs/design/10).
 
 use html_auy::{AttrVal, Field, FieldName, FieldState, InputType, Msg, SelectOption, Text};
 

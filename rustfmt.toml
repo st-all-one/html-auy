@@ -1,5 +1,5 @@
 # Só opções ESTÁVEIS: opção unstable em toolchain estável é ignorada com aviso, e configurar
-# o que é ignorado dá a falsa impressão de padrão (docs/22 §5).
+# o que é ignorado dá a falsa impressão de padrão (docs/design/22 §5).
 edition = "2024"
 style_edition = "2024"
 max_width = 100

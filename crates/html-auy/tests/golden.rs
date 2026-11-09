@@ -1,4 +1,4 @@
-//! Bytes canônicos: ordem de atributo, presença, omissão e escape (docs/09, docs/25 §7).
+//! Bytes canônicos: ordem de atributo, presença, omissão e escape (docs/design/09, docs/design/25 §7).
 //!
 //! Cada snapshot é um contrato de saída: mudou a string, mudou o produto.
 

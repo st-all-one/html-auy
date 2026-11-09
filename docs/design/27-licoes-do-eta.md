@@ -45,7 +45,7 @@ O `spec` agora descreve o HTML real; o demo não precisa de string crua para o g
 - `h1` saiu de `only = "shell"`. O `Page` continua emitindo o heading por padrão, mas um shell
   próprio pode declarar o seu; `single_h1` passou para `output` e o `audit` cobra exatamente um.
   A promessa “é tipo, não teste” foi trocada por “o documento montado é testado” — o preço da
-  flexibilidade, explicitado em `docs/04` §4.0.
+  flexibilidade, explicitado em `docs/design/04` §4.0.
 
 ### 2.4 Dados + loop no demo, não quatro `Render`
 

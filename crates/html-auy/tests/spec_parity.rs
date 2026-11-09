@@ -36,7 +36,7 @@ const CATEGORIES: [&str; 14] = [
 /// transitividade aqui — o vocabulário não muda, só a leitura do conteúdo-modelo.
 const FLOW_ABSORBS: [&str; 4] = ["sectioning", "heading", "table", "form"];
 
-/// Atributos que nenhum elemento pode exigir (docs/03 §5, docs/08 §2).
+/// Atributos que nenhum elemento pode exigir (docs/design/03 §5, docs/design/08 §2).
 const FORBIDDEN_ATTRS: [&str; 13] = [
     "style",
     "srcdoc",
@@ -150,7 +150,7 @@ fn elements_match_toml_field_by_field() {
         assert_eq!(got.name, name);
         assert_eq!(got.tag, expected_tag(name), "tag de `{name}`");
         assert_eq!(got.categories, as_refs(&sorted(list(spec_el, "category"))));
-        // Ordem declarada é ordem de emissão (docs/09 §1): a paridade é sensível a ela.
+        // Ordem declarada é ordem de emissão (docs/design/09 §1): a paridade é sensível a ela.
         assert_eq!(got.required, as_refs(&list(spec_el, "required")));
         assert_eq!(got.allowed, as_refs(&list(spec_el, "allowed")));
         assert_eq!(
@@ -589,7 +589,7 @@ fn tags_only_differ_where_documented() {
 
 #[test]
 fn docs_declare_the_same_counts() {
-    let vocab: Vec<u32> = read("docs/03-vocabulario-de-elementos.md")
+    let vocab: Vec<u32> = read("docs/design/03-vocabulario-de-elementos.md")
         .lines()
         .filter(|line| line.contains("declara **"))
         .filter_map(declared_number)
@@ -597,7 +597,7 @@ fn docs_declare_the_same_counts() {
     assert_eq!(
         vocab.first().copied(),
         Some(111),
-        "docs/03 declara outro número de elementos"
+        "docs/design/03 declara outro número de elementos"
     );
 
     let scoped = docs_scope_counts();
@@ -610,13 +610,13 @@ fn docs_declare_the_same_counts() {
             .iter()
             .find(|(name, _)| *name == scope)
             .map_or(0, |(_, number)| *number);
-        assert_eq!(declared, real, "docs/04 §4.0: contagem de `{scope}`");
+        assert_eq!(declared, real, "docs/design/04 §4.0: contagem de `{scope}`");
     }
 }
 
-/// Contagens de docs/04 §4.0: o último número em negrito de cada linha de escopo.
+/// Contagens de docs/design/04 §4.0: o último número em negrito de cada linha de escopo.
 fn docs_scope_counts() -> Vec<(&'static str, u32)> {
-    let doc4 = read("docs/04-validacao.md");
+    let doc4 = read("docs/design/04-validacao.md");
     let mut scoped = Vec::new();
     for scope in ["block", "type", "output"] {
         let row = doc4
@@ -656,11 +656,11 @@ fn declared_number(line: &str) -> Option<u32> {
 
 #[test]
 fn every_used_invariant_is_documented() {
-    let doc4 = read("docs/04-validacao.md");
+    let doc4 = read("docs/design/04-validacao.md");
     for (name, _) in INVARIANT_SCOPES {
         assert!(
             doc4.contains(&format!("`{name}`")),
-            "invariante `{name}` não está documentada em docs/04 §4.1"
+            "invariante `{name}` não está documentada em docs/design/04 §4.1"
         );
     }
 }

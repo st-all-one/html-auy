@@ -12,7 +12,7 @@ use crate::table::{self, Only, ValueKind};
 use core::mem;
 use proc_macro2::Span;
 
-/// Atributos que nenhum elemento aceita (docs/03 §5, docs/08 §2).
+/// Atributos que nenhum elemento aceita (docs/design/03 §5, docs/design/08 §2).
 const FORBIDDEN_ATTRS: [&str; 12] = [
     "srcdoc",
     "formaction",

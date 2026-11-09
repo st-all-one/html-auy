@@ -1,4 +1,4 @@
-//! Shell: o documento tem uma ordem e ela não é negociável (docs/06, docs/09).
+//! Shell: o documento tem uma ordem e ela não é negociável (docs/design/06, docs/design/09).
 
 use html_auy::{
     Alternate, Asset, Class, DataAttr, Dir, ExternalUrl, HtmxConfig, JsonGraph, JsonLd, LUrl, Lang,

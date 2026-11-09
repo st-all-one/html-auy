@@ -45,7 +45,7 @@ pontos onde o Eta acerta e a crate ainda não tem resposta escrita.
 ### A2. CSP: compilação por `new Function` exige `'unsafe-eval'`
 - Citação: `10-deno-browser.md:78` — "- Cuidado com CSP: templates compilam para `new Function` — pode exigir"
 - Semântica: renderização no browser (e, em rigor, qualquer `renderString` em qualquer runtime) depende de avaliação dinâmica de string.
-- Consequência: `script-src 'self'` sem `unsafe-eval` fica incompatível; a crate promete exatamente o contrário (`docs/08-seguranca.md:83`).
+- Consequência: `script-src 'self'` sem `unsafe-eval` fica incompatível; a crate promete exatamente o contrário (`docs/design/08-seguranca.md:83`).
 - Veredito: **confirma** D3/D13 com custo medido; é o argumento mais curto e mais forte contra qualquer adoção futura.
 
 ### A3. Não há sandbox, e não está no roadmap
@@ -64,7 +64,7 @@ pontos onde o Eta acerta e a crate ainda não tem resposta escrita.
 - Citação: `02-sintaxe.md:20` — "O valor é automaticamente XML-escaped. `&`, `<`, `>`, `\"`, `'` viram entidades,"
 - Semântica: existe **uma** função de escape (substituível por `escapeFunction`, ver A27) aplicada a texto e a valor de atributo indistintamente.
 - Consequência: `\r`, `\n` e `\t` em valor de atributo não são tratados (a crate os converte em `&#13;`/`&#10;`/`&#9;`, [`02-tipos-e-contextos.md:58`](../02-tipos-e-contextos.md)); inserir HTML já escapado em texto escaparia de novo se fosse `String`.
-- Veredito: **refina** a tabela de `docs/02` §3: confirma que a separação `Text`/`AttrVal` é necessária, e não cosmética.
+- Veredito: **refina** a tabela de `docs/design/02` §3: confirma que a separação `Text`/`AttrVal` é necessária, e não cosmética.
 
 ### A6. `<%~ %>` é a porta de escape, obrigatória para partials
 - Citação: `00-index.md:85` — "`<%~ expr %>` → interpola **sem escape** (HTML cru, use para partials/blocks)"
@@ -322,7 +322,7 @@ pontos onde o Eta acerta e a crate ainda não tem resposta escrita.
 9. **"Calcular uma vez" é regra, não otimização.** `13-padroes-avancados.md:82` e `13:92` recomendam
    pré-computar; a crate pode simplesmente exigir o `let` antes do `html!`.
 10. **Golden `.snap` é o artefato.** Os testes recomendados (`13:202`) comparam strings no arquivo de
-    teste; `docs/12` promove o snapshot a artefato revisável e proíbe aceite em massa
+    teste; `docs/design/12` promove o snapshot a artefato revisável e proíbe aceite em massa
     ([`12-testes.md:22`](../12-testes.md)).
 11. **Nada de template por string em ponto de entrada nenhum.** `renderString`/`loadTemplate`
     (`08-api.md:26`, `08:28`) são precisamente o que D2 proíbe, com outro nome.
@@ -333,20 +333,20 @@ pontos onde o Eta acerta e a crate ainda não tem resposta escrita.
 
 | O que a crate diz hoje | O que o corpus diz | Correção (frase exata e arquivo) |
 |---|---|---|
-| `14-alternativas.md` trata a família Eta/EJS como "zero tipagem, erro em request" | `13-padroes-avancados.md:187` diz que interpolações são `unknown`, mas `13:173` sugere `satisfies` como se tipasse | Inserir em `docs/14-alternativas.md` §3 ("minijinja / tera / handlebars"): "**Tipagem é decorativa por construção:** `satisfies` valida o objeto passado, não o uso dentro do template — `it.titel` compila e renderiza vazio (`_RUST/eta-templates/13-padroes-avancados.md:187`)." |
-| Nenhum doc lista "template por string" como categoria de risco nomeada | `08-api.md:26` e `08:28` mostram quatro entradas que aceitam string de template | Acrescentar em `docs/13-decisoes.md`, dentro de D2, o parágrafo: "**Consequência operacional.** Nenhum ponto de entrada da crate aceita template por string (`renderString`, `loadTemplate`, `compile`): o análogo dessas APIs é `unsafe` em outro ecossistema — `_RUST/eta-templates/08-api.md:26`." |
-| `docs/09-desempenho-e-cache.md` §2 exige ordem canônica, sem listar o que a quebra | `07-configuracao.md:126`, `07:134`, `07:94`, `07:187` mostram seis knobs que mudam bytes | Inserir em `docs/09-desempenho-e-cache.md` §2, após a lista de ordem canônica: "Nenhuma opção de configuração altera a emissão: não existem equivalentes a `autoTrim`, `rmWhitespace`, `escapeFunction`, `filterFunction`, `plugins` ou `tags` (`_RUST/eta-templates/07-configuracao.md:52`)." |
-| `docs/06-shell-e-tema.md` §1 descreve `slots` como `Vec<Markup>` ordenado | `05-layouts-blocks.md:83` mostra fallback silencioso e `05:92` block que emite inline sem layout | Inserir em `docs/06-shell-e-tema.md` §1, na linha de `slots`: "Slot não preenchido é ausência **declarada** (`Option`), nunca fallback silencioso; não existe `it.body` — o miolo chega como `Markup` (`_RUST/eta-templates/05-layouts-blocks.md:83`)." |
-| `docs/04-validacao.md` §2 justifica N3/N4 pela limitação de `proc_macro::Diagnostic` | `08-api.md:146-147` mostra o custo real de erro em request | Acrescentar ao fim de §2 de `docs/04-validacao.md`: "O contraste é o motor de template em runtime: lá, tag não fechada é `EtaParseError` na request (`_RUST/eta-templates/08-api.md:146`); aqui, é `compile_error!` com span, coberto por `trybuild`." |
-| `docs/07-js-e-assets.md` §5 promete CSP sem `unsafe-eval` | `10-deno-browser.md:78` mostra o motor compilando com `new Function` | Acrescentar à tabela de `docs/07-js-e-assets.md` §5, na coluna "Proibido": "`new Function`/compilação de template em runtime — é o que força `'unsafe-eval'` em qualquer motor EJS-like (`_RUST/eta-templates/10-deno-browser.md:78`)." |
-| `docs/02-tipos-e-contextos.md` §3 afirma escape único por contexto | `02-sintaxe.md:20` escapa os mesmos 5 caracteres em texto e atributo | Nenhuma mudança de texto; reforçar com o comentário da tabela de §3: "texto e atributo têm escapes **distintos** justamente porque o motor JS não distingue (`_RUST/eta-templates/02-sintaxe.md:20`)." |
-| `docs/01-arquitetura.md` §4 proíbe `app()`/container na view | `09-seguranca.md:87` admite template como "código privilegiado" | Reforço opcional em `docs/01-arquitetura.md` §4, lista "O módulo **não pode**": "ler arquivo, compilar template ou resolver nome de template em tempo de execução — não existe caminho (`_RUST/eta-templates/09-seguranca.md:78`)." |
-| `docs/12-testes.md` §2 não menciona teste de "template não pode vir de dado" | `13-padroes-avancados.md:202` testa apenas escaping de string | Acrescentar a `docs/12-testes.md` §5 (`trybuild`): "e um caso que comprova a ausência de API de template por string (`renderString`/`loadTemplate` não existem) — paridade com `_RUST/eta-templates/08-api.md:28`." |
-| `docs/10-ergonomia.md` §3 fixa o formato do `cq fmt` sem justificar contra config | `02-sintaxe.md:145` mostra prefixos reservados e `-`/`_` proibidos nos modos | Acrescentar a `docs/10-ergonomia.md` §3: "Não há marcadores de whitespace (`-`/`_`) nem `autoTrim`: o formato é o formato, e é isso que torna `fmt` idempotente (`_RUST/eta-templates/02-sintaxe.md:111`)." |
+| `14-alternativas.md` trata a família Eta/EJS como "zero tipagem, erro em request" | `13-padroes-avancados.md:187` diz que interpolações são `unknown`, mas `13:173` sugere `satisfies` como se tipasse | Inserir em `docs/design/14-alternativas.md` §3 ("minijinja / tera / handlebars"): "**Tipagem é decorativa por construção:** `satisfies` valida o objeto passado, não o uso dentro do template — `it.titel` compila e renderiza vazio (`_RUST/eta-templates/13-padroes-avancados.md:187`)." |
+| Nenhum doc lista "template por string" como categoria de risco nomeada | `08-api.md:26` e `08:28` mostram quatro entradas que aceitam string de template | Acrescentar em `docs/design/13-decisoes.md`, dentro de D2, o parágrafo: "**Consequência operacional.** Nenhum ponto de entrada da crate aceita template por string (`renderString`, `loadTemplate`, `compile`): o análogo dessas APIs é `unsafe` em outro ecossistema — `_RUST/eta-templates/08-api.md:26`." |
+| `docs/design/09-desempenho-e-cache.md` §2 exige ordem canônica, sem listar o que a quebra | `07-configuracao.md:126`, `07:134`, `07:94`, `07:187` mostram seis knobs que mudam bytes | Inserir em `docs/design/09-desempenho-e-cache.md` §2, após a lista de ordem canônica: "Nenhuma opção de configuração altera a emissão: não existem equivalentes a `autoTrim`, `rmWhitespace`, `escapeFunction`, `filterFunction`, `plugins` ou `tags` (`_RUST/eta-templates/07-configuracao.md:52`)." |
+| `docs/design/06-shell-e-tema.md` §1 descreve `slots` como `Vec<Markup>` ordenado | `05-layouts-blocks.md:83` mostra fallback silencioso e `05:92` block que emite inline sem layout | Inserir em `docs/design/06-shell-e-tema.md` §1, na linha de `slots`: "Slot não preenchido é ausência **declarada** (`Option`), nunca fallback silencioso; não existe `it.body` — o miolo chega como `Markup` (`_RUST/eta-templates/05-layouts-blocks.md:83`)." |
+| `docs/design/04-validacao.md` §2 justifica N3/N4 pela limitação de `proc_macro::Diagnostic` | `08-api.md:146-147` mostra o custo real de erro em request | Acrescentar ao fim de §2 de `docs/design/04-validacao.md`: "O contraste é o motor de template em runtime: lá, tag não fechada é `EtaParseError` na request (`_RUST/eta-templates/08-api.md:146`); aqui, é `compile_error!` com span, coberto por `trybuild`." |
+| `docs/design/07-js-e-assets.md` §5 promete CSP sem `unsafe-eval` | `10-deno-browser.md:78` mostra o motor compilando com `new Function` | Acrescentar à tabela de `docs/design/07-js-e-assets.md` §5, na coluna "Proibido": "`new Function`/compilação de template em runtime — é o que força `'unsafe-eval'` em qualquer motor EJS-like (`_RUST/eta-templates/10-deno-browser.md:78`)." |
+| `docs/design/02-tipos-e-contextos.md` §3 afirma escape único por contexto | `02-sintaxe.md:20` escapa os mesmos 5 caracteres em texto e atributo | Nenhuma mudança de texto; reforçar com o comentário da tabela de §3: "texto e atributo têm escapes **distintos** justamente porque o motor JS não distingue (`_RUST/eta-templates/02-sintaxe.md:20`)." |
+| `docs/design/01-arquitetura.md` §4 proíbe `app()`/container na view | `09-seguranca.md:87` admite template como "código privilegiado" | Reforço opcional em `docs/design/01-arquitetura.md` §4, lista "O módulo **não pode**": "ler arquivo, compilar template ou resolver nome de template em tempo de execução — não existe caminho (`_RUST/eta-templates/09-seguranca.md:78`)." |
+| `docs/design/12-testes.md` §2 não menciona teste de "template não pode vir de dado" | `13-padroes-avancados.md:202` testa apenas escaping de string | Acrescentar a `docs/design/12-testes.md` §5 (`trybuild`): "e um caso que comprova a ausência de API de template por string (`renderString`/`loadTemplate` não existem) — paridade com `_RUST/eta-templates/08-api.md:28`." |
+| `docs/design/10-ergonomia.md` §3 fixa o formato do `cq fmt` sem justificar contra config | `02-sintaxe.md:145` mostra prefixos reservados e `-`/`_` proibidos nos modos | Acrescentar a `docs/design/10-ergonomia.md` §3: "Não há marcadores de whitespace (`-`/`_`) nem `autoTrim`: o formato é o formato, e é isso que torna `fmt` idempotente (`_RUST/eta-templates/02-sintaxe.md:111`)." |
 
 ## 5. Adições prontas para colar
 
-**5.1 — Decisão D16 (nova), para `docs/13-decisoes.md`:**
+**5.1 — Decisão D16 (nova), para `docs/design/13-decisoes.md`:**
 
 ```markdown
 ## D16 — Nenhum ponto de entrada aceita template por string
@@ -360,13 +360,13 @@ chamada de função; `Markup` só nasce no macro, em `Render` ou em `html-core`.
 reduzida ao repositório.
 ```
 
-**5.2 — Linha para a tabela de `docs/02-tipos-e-contextos.md` §8 ("O que não existe"):**
+**5.2 — Linha para a tabela de `docs/design/02-tipos-e-contextos.md` §8 ("O que não existe"):**
 
 ```markdown
 | template em runtime (`render`/`renderString`/`loadTemplate`) | é o `Raw` por outra porta (D16) |
 ```
 
-**5.3 — Bloco para `docs/06-shell-e-tema.md` §1 (contrato de slots):**
+**5.3 — Bloco para `docs/design/06-shell-e-tema.md` §1 (contrato de slots):**
 
 ```markdown
 Slots são **exaustivos**: o shell recebe `main: Markup` e cada região opcional é `Option<Markup>`.
@@ -374,21 +374,21 @@ Slot não preenchido é ausência declarada; não existe fallback silencioso nem
 string. Não existe `it.body`: o miolo é valor, não chave de dados.
 ```
 
-**5.4 — Item de checklist para `docs/12-testes.md` §5:**
+**5.4 — Item de checklist para `docs/design/12-testes.md` §5:**
 
 ```markdown
 - [ ] A crate não expõe construtor de `Markup` a partir de `&str`/`String` (paridade com a ausência de
       `renderString`/`loadTemplate` de motores em runtime).
 ```
 
-**5.5 — Regra para `docs/09-desempenho-e-cache.md` §2:**
+**5.5 — Regra para `docs/design/09-desempenho-e-cache.md` §2:**
 
 ```markdown
 Nenhuma opção de configuração afeta a emissão. Se um dia existir uma, ela é **major** (D15), porque
 muda bytes e, portanto, `ETag` de páginas já cacheadas.
 ```
 
-**5.6 — Linha para a tabela de `docs/07-js-e-assets.md` §5:**
+**5.6 — Linha para a tabela de `docs/design/07-js-e-assets.md` §5:**
 
 ```markdown
 | `new Function` / template compilada em runtime | força `'unsafe-eval'`; nenhum ganho de HTML |
@@ -436,8 +436,8 @@ muda bytes e, portanto, `ETag` de páginas já cacheadas.
 7. **Nada sobre composição tipada de fragmento.** `capture` devolve `string`; não há noção de fragmento
    com contrato (props/children) — o desenho de primitivo é inteiramente nosso.
 8. **Nada sobre auditoria de saída.** Não há lint de HTML gerado; a crate decide as regras de N4 sozinha
-   (`docs/04` §6).
+   (`docs/design/04` §6).
 9. **Nada sobre o que o Eta considera "erro recuperável".** `EtaRuntimeError` aparece só com `debug`
-   (`08:147`); não há política de fail-safe — a crate adota "dado inválido é ignorado" (`docs/04` §7).
+   (`08:147`); não há política de fail-safe — a crate adota "dado inválido é ignorado" (`docs/design/04` §7).
 10. **Nada sobre integração com banco/editor.** A doc trata template como arquivo de repositório e não
     entra no caso "conteúdo editável" além de dizer "trate como código privilegiado" (`09:87`).

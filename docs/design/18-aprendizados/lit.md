@@ -108,13 +108,13 @@ vocabulário fechado de `html-auy`, e a que preço. Versão declarada em `VERSIO
 ### A13. `:host-context()` é a única "herança de ancestral" que o shadow oferece
 - Citação: `04-estilos-css.md:57` — ":host-context(.dark-theme) { /* ancestral com classe dark-theme */ }"
 - Semântica: para reagir a um ancestral, o componente precisa desse seletor; sem ele, só custom property herdada atravessa.
-- Consequência: se CE entrasse, `data-theme` do `<html>` (docs/06) deixaria de ser suficiente: cada componente precisaria de `:host-context` ou de token herdado — uma regra a mais por primitivo.
+- Consequência: se CE entrasse, `data-theme` do `<html>` (docs/design/06) deixaria de ser suficiente: cada componente precisaria de `:host-context` ou de token herdado — uma regra a mais por primitivo.
 - Veredito: refina D12 — o tema por token já resolve; `:host-context` seria dívida nova.
 
 ### A14. Tema vive fora do shadow, em custom properties globais
 - Citação: `04-estilos-css.md:123` — "// tokens.css — global, não no Shadow DOM"
 - Semântica: a recomendação explícita é manter tokens no documento e consumir via `var(--…)` dentro do componente.
-- Consequência: é *o mesmo* desenho de `docs/06-shell-e-tema.md` (tokens → `/theme.css` → `var()`), o que explica por que a crate não precisa de CE para tematizar.
+- Consequência: é *o mesmo* desenho de `docs/design/06-shell-e-tema.md` (tokens → `/theme.css` → `var()`), o que explica por que a crate não precisa de CE para tematizar.
 - Veredito: confirma D12.
 
 ### A15. `part`/`exportparts` são API pública de estilo
@@ -180,7 +180,7 @@ vocabulário fechado de `html-auy`, e a que preço. Versão declarada em `VERSIO
 ### A25. O corpus ensina um padrão que a crate proíbe
 - Citação: `06-eventos.md:142` — "role="menuitem""
 - Semântica: o exemplo emite `role="menuitem"` + `tabindex` + `aria-disabled` em `<div>`, com `@keydown` manual para `Enter`/`Espaço`.
-- Consequência: é precisamente o "widget ARIA reconstruído em `div`" que `docs/05-acessibilidade.md` §4 trata como advisory; a crate empurraria para `<button>`/`<a>` reais.
+- Consequência: é precisamente o "widget ARIA reconstruído em `div`" que `docs/design/05-acessibilidade.md` §4 trata como advisory; a crate empurraria para `<button>`/`<a>` reais.
 - Veredito: refuta o padrão; confirma P3/P4.
 
 ### A26. O SSR do Lit materializa o shadow tree em `<template shadowroot>`
@@ -210,14 +210,14 @@ vocabulário fechado de `html-auy`, e a que preço. Versão declarada em `VERSIO
 ### A30. i18n em runtime tem custo declarado de SEO
 - Citação: `14-localizacao.md:370` — "| SEO por locale | ⚠️ Requer setup | ✅ Bundles separados |"
 - Semântica: modo runtime troca locale sem reload com ~5 KB de overhead (`14-localizacao.md:369`); transform gera um bundle por locale.
-- Consequência: `Msg` resolvido na request (docs/02 §6) entrega o resultado do "transform mode" sem bundle por locale e sem negociar SEO.
+- Consequência: `Msg` resolvido na request (docs/design/02 §6) entrega o resultado do "transform mode" sem bundle por locale e sem negociar SEO.
 - Veredito: confirma a decisão de i18n da crate (e a `LUrl` com locale).
 
 ### A31. Plural e formatação ficam no cliente
 - Citação: `14-localizacao.md:108` — "msg(str`${count} item${count === 1 ? '' : 's'}`);"
 - Semântica: pluralização é "manual", expressa em JS dentro da mensagem.
 - Consequência: a crate já resolve isso em Rust (`Count`, `Money`, `Timestamp` formatados no servidor), com paridade garantida por gate.
-- Veredito: confirma docs/02 §7 · refuta mover i18n para o cliente.
+- Veredito: confirma docs/design/02 §7 · refuta mover i18n para o cliente.
 
 ### A32. Troca de locale é um evento global na `window`
 - Citação: `14-localizacao.md:188` — "window.addEventListener('lit-localize-status', this._onStatus as EventListener);"
@@ -258,7 +258,7 @@ vocabulário fechado de `html-auy`, e a que preço. Versão declarada em `VERSIO
 ### A38. O padrão "dado em atributo" volta pela porta dos fundos
 - Citação: `general-cross-lang-usage.md:523` — "<my-data-table" seguido de `data='{ "items": [...] }'`
 - Semântica: o corpus recomenda serializar dados no atributo porque o backend "não sabe" que existe propriedade JS.
-- Consequência: conflita com `docs/03-vocabulario-de-elementos.md` §6 (todo `data-*` enumerado) e com a proibição de string com semântica.
+- Consequência: conflita com `docs/design/03-vocabulario-de-elementos.md` §6 (todo `data-*` enumerado) e com a proibição de string com semântica.
 - Veredito: refuta o padrão · confirma a regra de `data-*` tipado.
 
 ### A39. O contrato de um CE é duplex; o da crate é unidirecional
@@ -294,21 +294,21 @@ vocabulário fechado de `html-auy`, e a que preço. Versão declarada em `VERSIO
 
 | O que a crate diz hoje | O que o corpus diz | Correção (frase exata + arquivo) |
 |---|---|---|
-| `docs/00-principios.md` §3 lista não-objetivos, sem mencionar custom elements | CE é "a UI vive no cliente, o backend só serve dados" (`general-cross-lang-usage.md:31`); sem JS o host fica sem shadow tree (A29, A40) | Inserir em `docs/00-principios.md` §3, tabela de não-objetivos: `\| Elementos personalizados (`<my-*>`, `customElements.define`, Shadow DOM, `<slot>`) \| o comportamento passaria a viver no cliente; o HTML deixaria de ser o artefato (P1) e o FOUC de elemento indefinido não é representável no vocabulário \|` |
-| A spec tem 65 elementos e nenhum `slot`/`template` — a ausência é acidental, não decidida | slot só existe com shadow root (`01-arquitetura-fundamentos.md:142`) e `::slotted` é raso (`05-shadow-dom.md:82-85`) | Inserir em `docs/03-vocabulario-de-elementos.md` §8 (governança), após a lista de passos: "`slot`, `template` e qualquer elemento com hífen no nome (`<x-…>`, `<my-…>`) são rejeitados por princípio: projeção exige Shadow DOM e comportamento exige `customElements.define`, ambos fora de P1/P5." |
-| `docs/03-vocabulario-de-elementos.md` §5 proíbe `style`, `on*`, `srcdoc`, `@*`, `hx-on*` | `part`/`exportparts` são o canal de estilo externo de CE (`04-estilos-css.md:344`, `:365`); `slot` é o canal de projeção | Acrescentar à tabela de §5: `\| slot, part, exportparts, is \| atributos de Shadow DOM/custom elements: só têm sentido com árvore encapsulada e `customElements.define` (ver `18-aprendizados/lit.md` §2) \|` |
-| `docs/07-js-e-assets.md` §10 tem 6 regras e nenhuma sobre o que o asset **não** pode fazer | Lit substitui conteúdo por render próprio (`01-arquitetura-fundamentos.md:16`) e "hidrata" tags trocadas por HTMX (`general-cross-lang-usage.md:304`) | Acrescentar regra 7 em `docs/07-js-e-assets.md` §10: "7. Nenhum asset define custom element, anexa Shadow Root ou substitui conteúdo do documento: o que saiu no HTML é o que o usuário vê (P1); o JS só lê `data-*` e melhora o que já existe." |
-| `docs/04-validacao.md` §6 lista regras N4 e nenhuma barra `<template shadowroot>`/`<slot>`/tag com hífen | DSD do SSR emite `<template shadowroot="open">` + `<style>` (`11-ssr.md:77-79`) | Acrescentar em `docs/04-validacao.md` §6: "ausência de `<template shadowroot>`/`<slot>`/elemento com hífen (indício de custom element ou de saída de SSR de terceiro)" |
-| `docs/12-testes.md` §9 reusa gates do consumidor sem gate de "nada de CE" | o corpus recomenda fixture com `shadowRoot.querySelector` + `updateComplete` (`12-ferramentas.md:219-225`) — teste que a crate não quer precisar | Acrescentar em `docs/12-testes.md` §9: "`grep` de `customElements.define`, `attachShadow` e `<template shadowroot` sobre a saída renderizada e sobre os assets; ocorrência = falha do gate, não advisory." |
-| `docs/13-decisoes.md` vai de D0 a D15; a exclusão de Web Components não está registrada | todo o conjunto `lit` é a evidência de que CE = runtime + toolchain + SSR Labs (`11-ssr.md:3`) | Acrescentar **D16 — Sem custom elements** (texto completo em §5 abaixo) em `docs/13-decisoes.md`. |
-| `docs/17-faq.md` não responde "por que não Web Components/Lit?" | o corpus oferece a alternativa pronta e seus custos (`general-cross-lang-usage.md:554`, `:561`) | Acrescentar a pergunta/resposta de §5 em `docs/17-faq.md`, depois de "Como usar htmx?". |
+| `docs/design/00-principios.md` §3 lista não-objetivos, sem mencionar custom elements | CE é "a UI vive no cliente, o backend só serve dados" (`general-cross-lang-usage.md:31`); sem JS o host fica sem shadow tree (A29, A40) | Inserir em `docs/design/00-principios.md` §3, tabela de não-objetivos: `\| Elementos personalizados (`<my-*>`, `customElements.define`, Shadow DOM, `<slot>`) \| o comportamento passaria a viver no cliente; o HTML deixaria de ser o artefato (P1) e o FOUC de elemento indefinido não é representável no vocabulário \|` |
+| A spec tem 65 elementos e nenhum `slot`/`template` — a ausência é acidental, não decidida | slot só existe com shadow root (`01-arquitetura-fundamentos.md:142`) e `::slotted` é raso (`05-shadow-dom.md:82-85`) | Inserir em `docs/design/03-vocabulario-de-elementos.md` §8 (governança), após a lista de passos: "`slot`, `template` e qualquer elemento com hífen no nome (`<x-…>`, `<my-…>`) são rejeitados por princípio: projeção exige Shadow DOM e comportamento exige `customElements.define`, ambos fora de P1/P5." |
+| `docs/design/03-vocabulario-de-elementos.md` §5 proíbe `style`, `on*`, `srcdoc`, `@*`, `hx-on*` | `part`/`exportparts` são o canal de estilo externo de CE (`04-estilos-css.md:344`, `:365`); `slot` é o canal de projeção | Acrescentar à tabela de §5: `\| slot, part, exportparts, is \| atributos de Shadow DOM/custom elements: só têm sentido com árvore encapsulada e `customElements.define` (ver `18-aprendizados/lit.md` §2) \|` |
+| `docs/design/07-js-e-assets.md` §10 tem 6 regras e nenhuma sobre o que o asset **não** pode fazer | Lit substitui conteúdo por render próprio (`01-arquitetura-fundamentos.md:16`) e "hidrata" tags trocadas por HTMX (`general-cross-lang-usage.md:304`) | Acrescentar regra 7 em `docs/design/07-js-e-assets.md` §10: "7. Nenhum asset define custom element, anexa Shadow Root ou substitui conteúdo do documento: o que saiu no HTML é o que o usuário vê (P1); o JS só lê `data-*` e melhora o que já existe." |
+| `docs/design/04-validacao.md` §6 lista regras N4 e nenhuma barra `<template shadowroot>`/`<slot>`/tag com hífen | DSD do SSR emite `<template shadowroot="open">` + `<style>` (`11-ssr.md:77-79`) | Acrescentar em `docs/design/04-validacao.md` §6: "ausência de `<template shadowroot>`/`<slot>`/elemento com hífen (indício de custom element ou de saída de SSR de terceiro)" |
+| `docs/design/12-testes.md` §9 reusa gates do consumidor sem gate de "nada de CE" | o corpus recomenda fixture com `shadowRoot.querySelector` + `updateComplete` (`12-ferramentas.md:219-225`) — teste que a crate não quer precisar | Acrescentar em `docs/design/12-testes.md` §9: "`grep` de `customElements.define`, `attachShadow` e `<template shadowroot` sobre a saída renderizada e sobre os assets; ocorrência = falha do gate, não advisory." |
+| `docs/design/13-decisoes.md` vai de D0 a D15; a exclusão de Web Components não está registrada | todo o conjunto `lit` é a evidência de que CE = runtime + toolchain + SSR Labs (`11-ssr.md:3`) | Acrescentar **D16 — Sem custom elements** (texto completo em §5 abaixo) em `docs/design/13-decisoes.md`. |
+| `docs/design/17-faq.md` não responde "por que não Web Components/Lit?" | o corpus oferece a alternativa pronta e seus custos (`general-cross-lang-usage.md:554`, `:561`) | Acrescentar a pergunta/resposta de §5 em `docs/design/17-faq.md`, depois de "Como usar htmx?". |
 
 ## 5. Adições prontas para colar
 
-**5.1 — Linha para `docs/00-principios.md` §3 (não-objetivos):**
+**5.1 — Linha para `docs/design/00-principios.md` §3 (não-objetivos):**
 `| Elementos personalizados (`<my-*>`, `customElements.define`, Shadow DOM, `<slot>`) | comportamento passaria a viver no cliente; o HTML deixaria de ser o artefato (P1), o FOUC de elemento indefinido não é representável no vocabulário, e a paridade sem-JS só existe via SSR Labs com `<style>` inline |`
 
-**5.2 — D16 para `docs/13-decisoes.md`:**
+**5.2 — D16 para `docs/design/13-decisoes.md`:**
 
 ```
 ## D16 — Sem custom elements
@@ -328,7 +328,7 @@ virtualizada, editor colaborativo) — que passam a ser script de domínio decla
 não componente de markup.
 ```
 
-**5.3 — Pergunta para `docs/17-faq.md`:**
+**5.3 — Pergunta para `docs/design/17-faq.md`:**
 
 ```
 **Por que não Web Components / Lit?**
@@ -349,10 +349,10 @@ name_pattern = "^[a-z][a-z0-9-]*$"     # hífen = custom element = rejeitado
 attributes = ["slot", "part", "exportparts", "is"]
 ```
 
-**5.5 — Linha para a tabela de `docs/07-js-e-assets.md` §3 (`data-*`):**
+**5.5 — Linha para a tabela de `docs/design/07-js-e-assets.md` §3 (`data-*`):**
 `| `data-*` | **somente tokens enumerados** — nunca JSON, nunca chave livre (`data='{"items":[…]}` é o anti-padrão de `general-cross-lang-usage.md:523`) | o asset lê o token, nunca desserializa estado |`
 
-**5.6 — Tabela comparativa de i18n (para `docs/02-tipos-e-contextos.md` §6 ou `README.md`):**
+**5.6 — Tabela comparativa de i18n (para `docs/design/02-tipos-e-contextos.md` §6 ou `README.md`):**
 
 | Critério | `@lit/localize` runtime | `@lit/localize` transform | `Msg` da crate |
 |---|---|---|---|
@@ -362,7 +362,7 @@ attributes = ["slot", "part", "exportparts", "is"]
 | Cache/`ETag` | ⚠️ re-render muda DOM | ✅ | ✅ bytes fixos |
 | Paridade de tradução | ❌ runtime | ⚠️ build | ✅ gate por variante |
 
-**5.7 — Item para `docs/05-acessibilidade.md` §8 (o que fica fora):**
+**5.7 — Item para `docs/design/05-acessibilidade.md` §8 (o que fica fora):**
 `| a11y **dentro** de Shadow Root (se um dia houver CE) | nenhum gate atual cobre; exigiria traversal explícito — motivo adicional de D16 |`
 
 ## 6. Armadilhas de complexidade
@@ -378,7 +378,7 @@ attributes = ["slot", "part", "exportparts", "is"]
    client-side por definição; `args`+`AbortSignal` não têm representação em `Markup`.
 5. **`@lit-labs/ssr` + DSD** — o SSR do Lit emite `<style>` inline e shadow tree serializado
    (`11-ssr.md:77-79`); viola D3/N4 e dobra os bytes da página, exatamente onde o orçamento de 14 KB
-   (docs/09) morde.
+   (docs/design/09) morde.
 6. **`reflect: true` como atalho de estado** — refletir objeto/array significa `JSON.stringify` em
    atributo a cada update (`02-componentes-propriedades.md:104`, `:163`); serialização cara e atributo
    ilegível no snapshot.
@@ -400,7 +400,7 @@ attributes = ["slot", "part", "exportparts", "is"]
 3. **Form-associated custom elements / `ElementInternals`** — o corpus só diz que `<form>` não vê
    inputs no shadow (`01-arquitetura-fundamentos.md:171`); não cobre `static formAssociated`.
 4. **CSP × Declarative Shadow DOM** — nunca mencionado. A saída de `11-ssr.md:78` é `<style>` dentro de
-   template, o que colide com `style-src 'self'` (docs/08 §6) — [INFERENCE] minha, e é decisiva.
+   template, o que colide com `style-src 'self'` (docs/design/08 §6) — [INFERENCE] minha, e é decisiva.
 5. **Tamanho absoluto do bundle Lit** — não há número; só `~5KB` do `@lit/localize` runtime
    (`14-localizacao.md:369`) e URLs de `lit-core.min.js`. Docs/09 pede orçamento de JS ≤ 150 KB.
 6. **Baseline de browser** — nenhum dado de suporte a `adoptedStyleSheets`, DSD ou `::part`; o corpus

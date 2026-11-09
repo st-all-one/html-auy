@@ -1,7 +1,7 @@
 # Valores das lints (os níveis estão em `Cargo.toml` → `[workspace.lints]`).
 #
 # `msrv` é o contrato (`rust-version`), não o pin: com ele o clippy não sugere API mais nova
-# que a 1.92 (docs/22 §2).
+# que a 1.92 (docs/design/22 §2).
 msrv = "1.92"
 
 # Caminhos absolutos: `crate::` e `core/alloc::` até 3 segmentos são aceitos; acima disso, `use`.
@@ -12,7 +12,7 @@ absolute-paths-max-segments = 3
 cognitive-complexity-threshold = 15
 type-complexity-threshold = 150
 too-many-arguments-threshold = 5
-# Nesting: 5, não 3. O número de `docs/22` veio de um cliente de rede; num parser/codegen escrito à
+# Nesting: 5, não 3. O número de `docs/design/22` veio de um cliente de rede; num parser/codegen escrito à
 # mão o `for` + `match` de um tokenizador já passa de 3, e a exceção vira ruído de `#[expect]` em
 # toda função. Com 5 a lint ainda pega o aninhamento profundo que esconde complexidade.
 excessive-nesting-threshold = 5

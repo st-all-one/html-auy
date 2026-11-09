@@ -5,17 +5,20 @@
 Leia, nesta ordem:
 
 1. [`AGENTS.md`](AGENTS.md) — regras de evolução e fronteiras do projeto.
-2. [`docs/00-principios.md`](docs/00-principios.md) — princípios e não-objetivos.
-3. [`docs/01-arquitetura.md`](docs/01-arquitetura.md) — os três crates e as fronteiras.
-4. [`docs/04-validacao.md`](docs/04-validacao.md) — níveis de validação e escopos das invariantes.
-5. [`docs/11-estabilidade.md`](docs/11-estabilidade.md) — semver, MSRV e release.
-6. [`docs/22-rigor.md`](docs/22-rigor.md) — lints, supply chain e CI.
+2. [`docs/design/00-principios.md`](docs/design/00-principios.md) — princípios e não-objetivos.
+3. [`docs/design/01-arquitetura.md`](docs/design/01-arquitetura.md) — os três crates e as fronteiras.
+4. [`docs/design/04-validacao.md`](docs/design/04-validacao.md) — níveis de validação e escopos das invariantes.
+5. [`docs/design/11-estabilidade.md`](docs/design/11-estabilidade.md) — semver, MSRV e release.
+6. [`docs/design/22-rigor.md`](docs/design/22-rigor.md) — lints, supply chain e CI.
 
 ## Regras
 
 1. **Toda regra nova declara onde é cobrada.** Tipo, erro de macro, teste de saída (`N4`) ou gate de CI. Regra sem nível definido não entra.
 2. **Regra que cabe no tipo não vira teste.** Se o defeito pode ser impedido por ausência de API ou parâmetro obrigatório, é ali que ele mora.
-3. **Mudança em `spec/elements.toml` é mudança de contrato.** Exige justificativa em [`docs/13-decisoes.md`](docs/13-decisoes.md), regeneração das duas cópias de `table.rs` com `tools/gen_spec.py` e teste de paridade.
+3. **Mudança em `spec/elements.toml` é mudança de contrato.** Exige ADR em
+   [`docs/adr/`](docs/adr/README.md) (e referência ao ledger em
+   [`docs/design/13-decisoes.md`](docs/design/13-decisoes.md)), regeneração das duas cópias de
+   `table.rs` com `tools/gen_spec.py` e teste de paridade.
 4. **Nada de `unsafe`.** Dependência nova exige decisão registrada; o crate público é `no_std` + `alloc`, e `html5ever` só entra com `audit`. Não introduza `build.rs`; a tabela é gerada por `tools/gen_spec.py` e versionada.
 5. **Nada de template em runtime, `Raw`/`PreEscaped` público, `on*` ou `<style>`.** `style=` é escape hatch auditado (D3/D34), não caminho de apresentação.
 6. **Toda mensagem de erro nova tem caso `trybuild`.** Mensagem não testada apodrece.
@@ -23,7 +26,7 @@ Leia, nesta ordem:
 8. **O crate não mede CSS.** Contraste, alvo, foco visível, oclusão, reflow e tabulação continuam gates do consumidor (`axe`, `sniffCSS`, e2e). Não prometa no README ou na doc o que o crate não observa.
 9. **Não edite tabelas geradas.** Edite `spec/elements.toml`; rode `python3 tools/gen_spec.py`; valide com `python3 tools/gen_spec.py --check` e `python3 tools/validate_spec.py`.
 10. **Mudança pública incompatível sobe o minor em `0.x`.** Não publique uma tag sem atualizar a versão, o `CHANGELOG.md` e o gate de release.
-11. **Documentação tem idioma definido.** `README.md`, `docs/`, `docs/usage/` e `docs/acessibility.md` são em português; `SKILL.md`, `llms.txt` e `llms-full.txt` são em inglês.
+11. **Documentação tem idioma definido.** `README.md`, `docs/`, `docs/usage/` e `docs/design/acessibility.md` são em português; `SKILL.md`, `llms.txt` e `llms-full.txt` são em inglês.
 12. **Licença é dual.** Mantenha `LICENSE-MIT` e `LICENSE-APACHE` na raiz e nos três crates; o campo do workspace é `MIT OR Apache-2.0`.
 
 ## Fluxo de mudança

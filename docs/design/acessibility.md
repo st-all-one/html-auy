@@ -259,5 +259,5 @@ Uma mudança que altere um primitivo de acessibilidade deve atualizar o teste de
 - [`05-acessibilidade.md`](05-acessibilidade.md) — mapeamento completo WCAG 2.2 AA/eMAG em português.
 - [`04-validacao.md`](04-validacao.md) — níveis de validação e escopos das invariantes.
 - [`23-acessibilidade-e-css.md`](23-acessibilidade-e-css.md) — o que é decidível no crate versus CSS de navegador.
-- [`usage/11-acessibilidade.md`](usage/11-acessibilidade.md) — guia operacional de acessibilidade.
+- [`usage/11-acessibilidade.md`](../usage/11-acessibilidade.md) — guia operacional de acessibilidade.
 - [`12-testes.md`](12-testes.md) — camadas de teste e gates de CI.

@@ -28,11 +28,11 @@ declarou não querer.
 | # | Achado | Evidência no repositório | O que compra | Veredito |
 |---|---|---|---|---|
 | A1 | **Spec como dado gerado** custa mais do que rende | `spec/elements.toml` (900 linhas) + `build.rs` + "esquema 2" (migração v1→v2) + `tools/validate_spec.py`; o próprio repositório já acusava "63 elementos" com 97 na tabela, e precisei **adicionar um gate de contagem** para isso virar falha | tabela auditável | **cortar**: tabela em Rust (const/macro), sem esquema, sem geração; a checagem de docs passa a ser um teste |
-| A2 | **`cq fmt` é um segundo printer** | `docs/01` §2 promete "o maior ganho do projeto: 250 LOC em vez de meses" | formatação canônica | **cortar**: a macro já emite ordem canônica; o fonte é formatado pelo rustfmt |
-| A3 | **`cq fix` faz o que o tipo deveria fazer sozinho** | `docs/01` §1: `fix` aplica `type="button"`, `aria-hidden`, `<figure>` | correção mecânica | **cortar**: se a correção é mecânica, o gerador a aplica silenciosamente (default), sem CLI |
-| A4 | **Camada advisory (N3) não é garantia** | `docs/04` §5 + D10: aviso com ratchet e ledger | nada bloqueia | **cortar**: ou é erro de compilação, ou é teste que falha; aviso sem consequência é documentação de pior qualidade |
-| A5 | **`cq audit` é relatório que ninguém lê** | `docs/01` §1 | — | **cortar**: a informação já é `grep`ável nos docs |
-| A6 | **`N4` como crate `html-lint`** | `docs/01` §1/§7 (html5ever "pesado", não entra no binário) | lint de página | **virar `dev-dependency` + teste**: o consumidor roda no CI dele, não num binário nosso |
+| A2 | **`cq fmt` é um segundo printer** | `docs/design/01` §2 promete "o maior ganho do projeto: 250 LOC em vez de meses" | formatação canônica | **cortar**: a macro já emite ordem canônica; o fonte é formatado pelo rustfmt |
+| A3 | **`cq fix` faz o que o tipo deveria fazer sozinho** | `docs/design/01` §1: `fix` aplica `type="button"`, `aria-hidden`, `<figure>` | correção mecânica | **cortar**: se a correção é mecânica, o gerador a aplica silenciosamente (default), sem CLI |
+| A4 | **Camada advisory (N3) não é garantia** | `docs/design/04` §5 + D10: aviso com ratchet e ledger | nada bloqueia | **cortar**: ou é erro de compilação, ou é teste que falha; aviso sem consequência é documentação de pior qualidade |
+| A5 | **`cq audit` é relatório que ninguém lê** | `docs/design/01` §1 | — | **cortar**: a informação já é `grep`ável nos docs |
+| A6 | **`N4` como crate `html-lint`** | `docs/design/01` §1/§7 (html5ever "pesado", não entra no binário) | lint de página | **virar `dev-dependency` + teste**: o consumidor roda no CI dele, não num binário nosso |
 | A7 | **Invariantes de página anunciadas como de compilação** | 73 invariantes; eram **8 de página**, restam **5** (2 entraram do catálogo de a11y — [`23`](23-acessibilidade-e-css.md)) (`single_h1`, `main_unique`, `landmark_names_distinct`, …) | promessa falsa | **corrigido** (§7.1): escopo declarado no spec; a macro só cobra `block` |
 
 ## 3. Onde o desenho já está certo (não mexer)
@@ -110,7 +110,7 @@ e falha se ele estiver velho).
 
 ### 4.2 Por que o tema sai do crate
 
-`docs/06` descreve tokens `oklch`, `@property`, precedência de cinco camadas, `/theme.css` com `ETag`,
+`docs/design/06` descreve tokens `oklch`, `@property`, precedência de cinco camadas, `/theme.css` com `ETag`,
 preview e contraste verificado no save. Isso é um **segundo produto** — precisa de armazenamento, HTTP,
 cache e um painel — e não tem relação com "o HTML não pode ser emitido de forma inválida". O crate
 precisa apenas de duas coisas, e as duas são tipo:
@@ -128,7 +128,7 @@ cache de tema e algoritmo de contraste dentro de um crate que não faz I/O.
 | "um `<h1>` por página", "um `main`", "landmarks com nomes distintos" | `N4` (teste) — escopo `page` no spec, já declarado |
 | contraste, alvo mínimo, ordem de foco, `CLS` | `axe` + `sniffCSS` + Playwright no consumidor |
 | comportamento de JS pós-swap (foco, `aria-busy`) | e2e do consumidor; o crate só emite o contrato |
-| tema, tokens, `/theme.css`, preview | consumidor (`docs/06` vira contrato de shell, não código do crate) |
+| tema, tokens, `/theme.css`, preview | consumidor (`docs/design/06` vira contrato de shell, não código do crate) |
 | "performance < 20 µs" | benchmark informativo; `LCP`/`INP` são de campo, nunca teste de parede |
 
 A frase que resume a fronteira: **o crate garante o que o compilador consegue recusar; o resto é gate
@@ -155,9 +155,9 @@ que falha.** Depois desta revisão, nenhuma promessa fica em cima de "o desenvol
 2. **Elementos de documento não compilam em `html!`**: `html`, `head`, `body`, `title`, `meta`, `link`,
    `script` e `noscript` marcavam `only = "shell"` e carregavam `shell_only_elements` (escopo
    `block`). A "base estrutural impossível de contornar" deixou de ser convenção: virou erro de
-   compilação — e o mesmo movimento converteu 5 regras de página em regras de tipo (§4.0 do docs/04).
+   compilação — e o mesmo movimento converteu 5 regras de página em regras de tipo (§4.0 do docs/design/04).
    **Emenda 0.1.0:** `h1` saiu de `only = "shell"`; a view pode declarar o heading e `single_h1` passou
-   a `output` (ver docs/04 §4.0).
+   a `output` (ver docs/design/04 §4.0).
 3. **Fronteira de framework resolvida**: `Page`/`ShellData` no core (sem `http`), `impl
    IntoResponse` do consumidor em 6 linhas ([`06`](06-shell-e-tema.md) §1, [`01`](01-arquitetura.md) §3).
 

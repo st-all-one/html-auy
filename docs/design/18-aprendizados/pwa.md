@@ -75,7 +75,7 @@ JavaScript obrigatório ou API que aceite string crua, ele entra como **armadilh
 - Citação: `02-web-app-manifest.md:269` — "| `start_url` relativo | Resolvido contra URL do manifest; usar caminho consistente |"; `06-best-practices.md:135` — "`start_url` **não** deve conter fingerprinting (`?user=123`)".
 - Semântica: a resolução é contra a URL do **manifest**, não do documento — logo a localização do manifest altera o significado do `start_url`.
 - Consequência: se o pipeline renomear o manifest com hash em subdiretório diferente, `start_url: "."` muda de destino. Regra de pipeline: manifest com URL estável, na raiz do `scope`.
-- Veredito: refina §8 de `docs/07-js-e-assets.md` (hash para CSS/JS/fontes, **não** para o manifest).
+- Veredito: refina §8 de `docs/design/07-js-e-assets.md` (hash para CSS/JS/fontes, **não** para o manifest).
 
 #### A7. `scope` exige barra final
 - Citação: `02-web-app-manifest.md:270` — "| `scope` sem trailing `/` | Prefix match pode capturar paths indesejados |"; `02-web-app-manifest.md:36` — "| `scope` | String (URL) | Opcional | Path das páginas do app. Sempre terminar com `/` |"
@@ -117,7 +117,7 @@ JavaScript obrigatório ou API que aceite string crua, ele entra como **armadilh
 - Citação: `08-cycletracker-tutorial.md:181` — "{ \"src\": \"icons/circle.svg\", \"sizes\": \"72x72 96x96\", \"purpose\": \"maskable\" }"; `08-cycletracker-tutorial.md:183` — "{ \"src\": \"icons/wheel.svg\", \"sizes\": \"512x512\" }"
 - Semântica: um arquivo pode declarar vários tamanhos (SVG escala; PNG não), e `sizes` é string com gramática própria dentro do JSON.
 - Consequência: `sizes` no manifest **não** é o `sizes` de `<link>`/`sizes` de imagem responsiva. Precisa de tipo próprio (`IconSizes`) que valide `NxN` ou lista separada por espaço, e que recuse lista para PNG.
-- Veredito: refina `Sizes` de `docs/02-tipos-e-contextos.md` (gramática `(condition) length` não serve aqui).
+- Veredito: refina `Sizes` de `docs/design/02-tipos-e-contextos.md` (gramática `(condition) length` não serve aqui).
 
 #### A14. `screenshots` exige `label` e distingue `form_factor`
 - Citação: `02-web-app-manifest.md:80-81` — "`label`: obrigatório para acessibilidade" … "`form_factor`: `narrow` (mobile) ou `wide` (desktop)"
@@ -129,7 +129,7 @@ JavaScript obrigatório ou API que aceite string crua, ele entra como **armadilh
 - Citação: `13-pwa-nuances.md:83` — "No Chromium Android, se o manifest incluir `description` e `screenshots`, o install prompt nativo mostra:"
 - Semântica: campos "de marketing" têm efeito funcional no diálogo de instalação — e só nessa plataforma.
 - Consequência: `description` deve vir do mesmo `Msg`/SEO que o `<meta name=description>`, não de um campo duplicado; senão o app instalado e a página contam histórias diferentes.
-- Veredito: refina `ShellCtx.meta` (`docs/06-shell-e-tema.md:40`): um valor, dois destinos.
+- Veredito: refina `ShellCtx.meta` (`docs/design/06-shell-e-tema.md:40`): um valor, dois destinos.
 
 #### A16. `shortcuts` são URLs dentro do `scope`
 - Citação: `02-web-app-manifest.md:122-123` — "- `name` e `url` são obrigatórios" … "- `url` deve estar dentro do `scope`"
@@ -191,13 +191,13 @@ JavaScript obrigatório ou API que aceite string crua, ele entra como **armadilh
 - Citação: `13-pwa-nuances.md:131` — "O escopo do service worker é determinado pelo diretório onde o `sw.js` está"; `13-pwa-nuances.md:139-142` — "O escopo pode ser expandido via `Service-Worker-Allowed` header HTTP:" … "Service-Worker-Allowed: /"; `SKILL.md:29` — "Serve SW from the scope root; `Service-Worker-Allowed` for wider scopes."
 - Semântica: `/assets/js/sw.a1b2.js` controla só `/assets/js/` — inútil. SW tem que morar na raiz.
 - Consequência: esse é o argumento definitivo contra "hash no nome do SW sem pensar": se o pipeline separa assets por tipo em diretórios, o SW quebra silenciosamente. Regra: `sw.js` na raiz, ou header dedicado.
-- Veredito: refina §8 de `docs/07-js-e-assets.md` com exceção explícita.
+- Veredito: refina §8 de `docs/design/07-js-e-assets.md` com exceção explícita.
 
 #### A26. Atualização do SW só acontece por diferença de bytes no script
 - Citação: `03-service-worker-patterns.md:164` — "A única maneira de forçar atualização do service worker é alterar o arquivo `sw.js` (mudança de byte)."
 - Semântica: o gatilho de update é o arquivo do SW; o cache name dentro dele é convenção sua, não mecanismo.
 - Consequência: o `sw.js` **não pode** receber hash no nome (URL nova = registro novo, não update) nem ser servido `immutable`. Se o pipeline hasheia tudo, o SW fica de fora com justificativa registrada.
-- Veredito: correção direta à regra "tudo tem hash" do `docs/07-js-e-assets.md:137`.
+- Veredito: correção direta à regra "tudo tem hash" do `docs/design/07-js-e-assets.md:137`.
 
 #### A27. O update passa por `waiting`, e `skipWaiting()` é decisão, não default
 - Citação: `SKILL.md:28` — "Version caches; activate with `skipWaiting()` + `clients.claim()` only when safe (avoid broken sessions)."; `13-pwa-nuances.md:217` — "- [ ] skipWaiting ⏤ use em dev, avalie em prod"
@@ -208,7 +208,7 @@ JavaScript obrigatório ou API que aceite string crua, ele entra como **armadilh
 #### A28. `addAll` é atômico: um 404 derruba a instalação inteira
 - Citação: `03-service-worker-patterns.md:28` — "Se `addAll` falhar para qualquer recurso, a instalação inteira falha"
 - Semântica: precache é tudo-ou-nada; um asset renomeado no deploy impede o SW de instalar.
-- Consequência: precache deve conter só o que é **estável e indispensável** (shell, CSS, bundle, offline), e o pipeline precisa de um gate que compare a lista de precache com o registro de assets — exatamente o `cq check` de assets que já existe (`docs/06-shell-e-tema.md:160`).
+- Consequência: precache deve conter só o que é **estável e indispensável** (shell, CSS, bundle, offline), e o pipeline precisa de um gate que compare a lista de precache com o registro de assets — exatamente o `cq check` de assets que já existe (`docs/design/06-shell-e-tema.md:160`).
 - Veredito: confirma o gate de assets; adiciona "lista de precache" como consumidor do registro.
 
 #### A29. Precachear o `manifest.json` cria manifest congelado
@@ -245,7 +245,7 @@ JavaScript obrigatório ou API que aceite string crua, ele entra como **armadilh
 - Citação: `03-service-worker-patterns.md:60` — "**Nunca** intercepte POST requests (semântica de mutação)"; `13-pwa-nuances.md:202` — "event.respondWith(cacheFirst(event.request));" (exemplo rotulado ERRADO)
 - Semântica: cache de POST corrompe semântica; o filtro é `request.method !== "GET"` no topo.
 - Consequência: formulário do portal (que existe em toda página pública) nunca pode ser servido por cache. Isso valida a escolha de HTML `no-cache` + network-first.
-- Veredito: confirma `docs/09-desempenho-e-cache.md:29` na parte de formulário.
+- Veredito: confirma `docs/design/09-desempenho-e-cache.md:29` na parte de formulário.
 
 #### A35. Response é stream; sem `clone()` o corpo é consumido
 - Citação: `13-pwa-nuances.md:34` — "cache.put(request, response.clone());"; `03-service-worker-patterns.md:61` — "Responses são streams: use `.clone()` antes de `cache.put()`"
@@ -257,7 +257,7 @@ JavaScript obrigatório ou API que aceite string crua, ele entra como **armadilh
 - Citação: `12-manifest-serviceworker.md:29` — "| `use_cache` | Boolean | Não | Como usar HTTP cache durante atualizações |"; `03-service-worker-patterns.md:170` — "Browser detecta diferença no byte do `sw.js`, instala novo SW em background, ativa quando páginas antigas fecharem."
 - Semântica: o navegador pode servir o próprio `sw.js` do HTTP cache, e `updateViaCache` decide o que é revalidado.
 - Consequência: `Cache-Control` no `sw.js` importa duas vezes — é o que garante que "mudança de byte" seja vista. Regra: `no-cache` (revalidar sempre), nunca `immutable`.
-- Veredito: refina a tabela de cache de `docs/09-desempenho-e-cache.md`.
+- Veredito: refina a tabela de cache de `docs/design/09-desempenho-e-cache.md`.
 
 ### 2.3 Nuances que recaem sobre o produto
 
@@ -281,7 +281,7 @@ JavaScript obrigatório ou API que aceite string crua, ele entra como **armadilh
 
 #### A40. O `EXAMPLE.md` viola o vocabulário duas vezes
 - Citação: `EXAMPLE.md:805` — "<main style=\"text-align:center;padding:4rem 1rem;\">"; `EXAMPLE.md:809` — "<button onclick=\"window.location.reload()\">Try again</button>"
-- Semântica: a página offline de referência usa `style=` inline e handler inline — justamente o que `docs/03-vocabulario-de-elementos.md:114-119` proíbe (CSP sem inline).
+- Semântica: a página offline de referência usa `style=` inline e handler inline — justamente o que `docs/design/03-vocabulario-de-elementos.md:114-119` proíbe (CSP sem inline).
 - Consequência: copiar esse arquivo como "boa prática" reintroduz o defeito. A versão correta é `Page` com `Tone`/`Class` e um asset `Shared` que expõe "recarregar" por `data-*`.
 - Veredito: refuta o exemplo; registra a correção em §4.
 
@@ -292,7 +292,7 @@ JavaScript obrigatório ou API que aceite string crua, ele entra como **armadilh
 3. **Vocabulário fechado (D4) aplica-se a valores** — `13:105-108` (display), `02:270` (scope com barra), `02:66` (purpose) mostram três enums que hoje seriam strings num manifest escrito à mão.
 4. **Hash de conteúdo autoriza `immutable`; ausência de hash proíbe cache-first** — `03:156` + `03:164`: cache-first só é correto quando o nome muda com o conteúdo, e o SW é a exceção onde o nome **não** pode mudar.
 5. **Cor é token, não configuração (D12)** — `02:94` exige que `background_color` combine com o CSS; a única forma de garantir isso é derivar do mesmo token.
-6. **Acessibilidade não termina no HTML** — `02:80` exige `label` em `screenshots`; `docs/05-acessibilidade.md` não cobre metadado de manifest. Lacuna real, não conflito.
+6. **Acessibilidade não termina no HTML** — `02:80` exige `label` em `screenshots`; `docs/design/05-acessibilidade.md` não cobre metadado de manifest. Lacuna real, não conflito.
 7. **Determinismo de bytes (P6/D14) sobrevive ao PWA** — todas as variações são por media query (`EXAMPLE:39-40`), não por script; nenhum membro do manifest exige valor por request.
 8. **Sem JS obrigatório** — `06:42` ("HTML semântico (`<button>`, `<form>`, `<nav>`) — já suporta todos os inputs nativamente") e a ordem de enhancement em `01:64-68` põem HTML antes de tudo.
 9. **A crate não decide cache** — `13:17-34` mostra que o cache do cliente é volátil e evictável; decisão de `Cache-Control` continua no consumidor, com as regras de §5b.
@@ -301,13 +301,13 @@ JavaScript obrigatório ou API que aceite string crua, ele entra como **armadilh
 
 | O que a crate diz hoje | O que o corpus diz | Correção (frase exata + arquivo) |
 |---|---|---|
-| `docs/07-js-e-assets.md:137`: "css (tailwind + daisyUI) ─┐ … hash sha256 do conteúdo ─▶ nome.a1b2c3.css/.js" para **todo** asset | `03:164`: SW atualiza por byte-diff; `13:131`: escopo do SW é o diretório do script | Inserir em `docs/07-js-e-assets.md` §8: **"Exceção ao hash: `/sw.js` e `/manifest.webmanifest` têm URL estável e não recebem hash — o primeiro porque a atualização do service worker é detectada por diferença de bytes na mesma URL, o segundo porque `start_url` relativo é resolvido contra a URL do manifest."** |
-| `docs/09-desempenho-e-cache.md:29`: "`Cache-Control: public, no-cache` para HTML com formulário em área própria; HTML público pode ser cacheável (decisão do consumidor)." | `13:5`: SW roda para todo visitante, instalado ou não; `03:156`: cache-first só para estático | Acrescentar em `docs/09-desempenho-e-cache.md` §2: **"Com service worker ativo, `Cache-Control` deixa de ser a política efetiva: o SW responde antes. Regra de compatibilidade: HTML nunca é cache-first no SW; asset com hash é cache-first e `immutable`; `/theme.css` e `/manifest.webmanifest` são `no-cache` + `ETag`; `/sw.js` é `no-cache`, nunca `immutable`."** |
-| `docs/06-shell-e-tema.md:104`: "`304` por revalidação, não por `immutable` (o tema muda sem deploy)." | `EXAMPLE:39-40` mostra `<meta name=theme-color media=…>` casando com o tema | Acrescentar em `docs/06-shell-e-tema.md` §4: **"O mesmo token de tema alimenta `theme_color`/`background_color` do manifest e os dois `<meta name=\"theme-color\">` (light/dark, nesta ordem); não existe cor de PWA configurada separadamente."** |
+| `docs/design/07-js-e-assets.md:137`: "css (tailwind + daisyUI) ─┐ … hash sha256 do conteúdo ─▶ nome.a1b2c3.css/.js" para **todo** asset | `03:164`: SW atualiza por byte-diff; `13:131`: escopo do SW é o diretório do script | Inserir em `docs/design/07-js-e-assets.md` §8: **"Exceção ao hash: `/sw.js` e `/manifest.webmanifest` têm URL estável e não recebem hash — o primeiro porque a atualização do service worker é detectada por diferença de bytes na mesma URL, o segundo porque `start_url` relativo é resolvido contra a URL do manifest."** |
+| `docs/design/09-desempenho-e-cache.md:29`: "`Cache-Control: public, no-cache` para HTML com formulário em área própria; HTML público pode ser cacheável (decisão do consumidor)." | `13:5`: SW roda para todo visitante, instalado ou não; `03:156`: cache-first só para estático | Acrescentar em `docs/design/09-desempenho-e-cache.md` §2: **"Com service worker ativo, `Cache-Control` deixa de ser a política efetiva: o SW responde antes. Regra de compatibilidade: HTML nunca é cache-first no SW; asset com hash é cache-first e `immutable`; `/theme.css` e `/manifest.webmanifest` são `no-cache` + `ETag`; `/sw.js` é `no-cache`, nunca `immutable`."** |
+| `docs/design/06-shell-e-tema.md:104`: "`304` por revalidação, não por `immutable` (o tema muda sem deploy)." | `EXAMPLE:39-40` mostra `<meta name=theme-color media=…>` casando com o tema | Acrescentar em `docs/design/06-shell-e-tema.md` §4: **"O mesmo token de tema alimenta `theme_color`/`background_color` do manifest e os dois `<meta name=\"theme-color\">` (light/dark, nesta ordem); não existe cor de PWA configurada separadamente."** |
 | `spec/elements.toml:106` permite `crossorigin` em `link` como texto | `06:137`: precisa ser exatamente `use-credentials` sob auth | Em `spec/elements.toml`, comentar a entrada: **"`crossorigin` é enum `anonymous|use-credentials`; o gerador emite o valor como keyword, nunca string livre."** |
-| `spec/elements.toml:96-97` permite `meta` com `media`, sem regra de multiplicidade | `EXAMPLE:39-40` usa duas ocorrências com `prefers-color-scheme` | Em `docs/06-shell-e-tema.md` §3, adicionar: **"`theme-color` é emitido no máximo duas vezes (light e dark, nessa ordem canônica), logo após `<meta name=\"viewport\">`."** |
-| `docs/03-vocabulario-de-elementos.md:114-119` proíbe `style`/`on*` | `EXAMPLE:805,809` usa ambos na página offline | Nenhuma mudança na regra; corrigir a cópia do exemplo. Registrar em `docs/17-faq.md`: **"A página offline é uma `Page` normal; `EXAMPLE.md` do corpus a escreve com `style=`/`onclick=` e não deve ser copiado."** |
-| Nenhum documento menciona PWA | `01:17-18`, `02:10`, `SKILL:24` | Criar `docs/19-pwa.md` com §5a/§5b deste documento e uma linha no índice do `README.md`. |
+| `spec/elements.toml:96-97` permite `meta` com `media`, sem regra de multiplicidade | `EXAMPLE:39-40` usa duas ocorrências com `prefers-color-scheme` | Em `docs/design/06-shell-e-tema.md` §3, adicionar: **"`theme-color` é emitido no máximo duas vezes (light e dark, nessa ordem canônica), logo após `<meta name=\"viewport\">`."** |
+| `docs/design/03-vocabulario-de-elementos.md:114-119` proíbe `style`/`on*` | `EXAMPLE:805,809` usa ambos na página offline | Nenhuma mudança na regra; corrigir a cópia do exemplo. Registrar em `docs/design/17-faq.md`: **"A página offline é uma `Page` normal; `EXAMPLE.md` do corpus a escreve com `style=`/`onclick=` e não deve ser copiado."** |
+| Nenhum documento menciona PWA | `01:17-18`, `02:10`, `SKILL:24` | Criar `docs/design/19-pwa.md` com §5a/§5b deste documento e uma linha no índice do `README.md`. |
 
 ## 5. Adições prontas para colar
 
@@ -402,7 +402,7 @@ atômico (`03:28`), e a lista é comparada ao registro de assets no `cq check`.
    fixa a ordem em §5a e testa por golden.
 6. **`hidden` e acessibilidade** — `05:34` mostra `<button id="install" hidden>`, sem discutir que
    `hidden` remove o elemento da árvore acessível. Aceitável (é o comportamento desejado), mas a crate
-   precisa afirmar isso em `docs/05-acessibilidade.md`.
+   precisa afirmar isso em `docs/design/05-acessibilidade.md`.
 7. **Ícone `monochrome`/badge e `Src`** — `04:143` usa `/badge.png` para notificação; a crate não tem
    categoria de asset para "ícone de notificação". Decisão: asset comum com `purpose` declarado.
 8. **`start_url` e analytics** — `06:135` proíbe fingerprinting, mas não diz se parâmetros de campanha

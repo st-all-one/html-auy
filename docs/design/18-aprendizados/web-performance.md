@@ -11,7 +11,7 @@ inline.
 
 > Citações do corpus trazem `arquivo.md:linha` (verificadas nesta leitura). Afirmações sobre o repositório
 > `html-auy` são citadas por arquivo + seção/chave, com `[sem linha]` quando a linha não é estável —
-> `spec/elements.toml` e `docs/06`, `07`, `09` estavam em edição concorrente durante esta leitura.
+> `spec/elements.toml` e `docs/design/06`, `07`, `09` estavam em edição concorrente durante esta leitura.
 
 ## 1. Inventário arquivo-a-arquivo
 
@@ -45,14 +45,14 @@ inline.
 - Semântica: o servidor envia ~1 janela de congestionamento sem esperar ACK; o que não cabe custa RTT.
 - Consequência: o `<head>` inteiro (charset, viewport, meta, hints, preload, stylesheet, scripts) precisa
   caber nesse orçamento — o que só é possível se a ordem e o conteúdo do `<head>` forem fixos.
-- Veredito: confirma P6/D14 e o gate de `docs/09 §4`; **refina** (falta o número absoluto).
+- Veredito: confirma P6/D14 e o gate de `docs/design/09 §4`; **refina** (falta o número absoluto).
 
 ### A2. Cada byte além do 14 KB custa um round trip
 - Citação: `11-network-deep-dive.md:125` — "**Ignoring the first 14KB budget** — every byte beyond it costs an extra RTT"
 - Semântica: o custo é por pacote, não por byte; o excesso antecipa a segunda janela.
 - Consequência: o gate precisa medir o **prefixo** (até o último elemento do `<head>`), não a página; a
   página tem orçamento separado, porque depois do primeiro paint o custo é banda, não latência.
-- Veredito: refina o gate atual, que só compara "HTML de página de lista" (`docs/09 §4`).
+- Veredito: refina o gate atual, que só compara "HTML de página de lista" (`docs/design/09 §4`).
 
 ### A3. A unidade do 14 KB é ambígua no corpus
 - Citação: `EXAMPLE.md:189` — "/* This file is inlined in <head> — keep under 14KB (compressed) */"
@@ -65,7 +65,7 @@ inline.
 ### A4. "Inline critical CSS" é a receita central — e nós a proibimos
 - Citação: `03-critical-rendering-path.md:72` — "└─ Inline critical CSS (< 14KB)"
 - Semântica: o corpus trata `<style>` no `<head>` como o mecanismo padrão de acelerar o first paint.
-- Consequência: proibido por D3/CSP (`<style>` não existe, `docs/07 §5`). O ganho passa a vir de outra
+- Consequência: proibido por D3/CSP (`<style>` não existe, `docs/design/07 §5`). O ganho passa a vir de outra
   alavanca: **um** stylesheet pequeno + ordem fixa + orçamento — nunca de inlining.
 - Veredito: **refuta** para o nosso desenho; registra o custo aceito (perdemos o ótimo do corpus).
 
@@ -86,8 +86,8 @@ inline.
 ### A7. `@import` serializa — e o CSS de tema é nosso, então dá para garantir
 - Citação: `03-critical-rendering-path.md:134` — "❌ **`@import` in CSS** — serializes loading instead of parallel `<link>` tags"
 - Semântica: `@import` cria dependência em série e atrasa o CSSOM inteiro.
-- Consequência: `/theme.css` é gerado pela crate a partir de tokens (`docs/06 §4`); o schema já recusa
-  `url()`/`@import` (`docs/08 §4`). Falta a asserção sobre os **bytes** do CSS emitido.
+- Consequência: `/theme.css` é gerado pela crate a partir de tokens (`docs/design/06 §4`); o schema já recusa
+  `url()`/`@import` (`docs/design/08 §4`). Falta a asserção sobre os **bytes** do CSS emitido.
 - Veredito: confirma D12; **refina** (falta teste de saída).
 
 ### A8. `media` como escape para CSS não-bloqueante
@@ -100,7 +100,7 @@ inline.
 ### A9. Existe uma ordem de `<head>` canônica no corpus
 - Citação: `04-loading-strategies.md:114-115` — `<meta charset="utf-8" />` … `<meta name="viewport" content="width=device-width,initial-scale=1" />`
 - Semântica: charset e viewport primeiro; depois hints, preloads, CSS, scripts.
-- Consequência: o shell é dono único do `<head>` (`docs/06 §1`), logo essa ordem pode ser fixa e testada
+- Consequência: o shell é dono único do `<head>` (`docs/design/06 §1`), logo essa ordem pode ser fixa e testada
   por bytes — a maior vitória barata deste conjunto.
 - Veredito: confirma D11; **refina** (a ordem não está escrita em nenhum doc).
 
@@ -108,14 +108,14 @@ inline.
 - Citação: `11-network-deep-dive.md:127` — "**JavaScript-discovered resources** — the preload scanner cannot see them"
 - Semântica: recurso criado por JS não é descoberto na varredura antecipada e perde um RTT.
 - Consequência: validade retroativa de `ctx.require(Asset)` — todo asset existe como tag no HTML
-  (`docs/07 §2`). Proíbe também "carregar CSS/JS condicionalmente por script".
+  (`docs/design/07 §2`). Proíbe também "carregar CSS/JS condicionalmente por script".
 - Veredito: confirma D13 por via independente; nenhum código novo.
 
 ### A11. Injeção condicional de recurso quebra o scanner
 - Citação: `02-how-browsers-work.md:103` — "don't interfere by having server-side conditional resource injection that the speculative parser can't see"
 - Semântica: a varredura antecipada depende de o HTML estar completo no primeiro pacote.
 - Consequência: `ctx.require` precisa rodar antes do shell — o que a assinatura já força (`shell()` consome
-  o `Ctx`, `docs/06 §9`) — e nenhum `<link>` pode aparecer depois do fecho do `<head>`.
+  o `Ctx`, `docs/design/06 §9`) — e nenhum `<link>` pode aparecer depois do fecho do `<head>`.
 - Veredito: confirma a assinatura atual; irrelevante como mudança.
 
 ### A12. `preload` só para o que é descoberto tarde
@@ -128,7 +128,7 @@ inline.
 ### A13. Teto de `preconnect`: 2–3 críticos, 3–6 no limite
 - Citação: `04-loading-strategies.md:155` — "**Preconnecting to too many origins** — uses socket and memory resources; limit to 3-6"
 - Semântica: cada `preconnect` abre socket e TLS de verdade, mesmo que nunca seja usado.
-- Consequência: com origem única e sem CDN (`docs/07 §8`), o número normal é **zero**; o teto vira regra
+- Consequência: com origem única e sem CDN (`docs/design/07 §8`), o número normal é **zero**; o teto vira regra
   do caso de terceiro (VLibras) e precisa ser contado no gate.
 - Veredito: confirma D9 (dependências mínimas); refina com número.
 
@@ -179,9 +179,9 @@ inline.
 - Citação: `06-core-web-vitals.md:173` — "❌ **Images without dimensions** — single biggest cause of CLS"
 - Semântica: sem proporção intrínseca o navegador reserva 0×0 e desloca o conteúdo ao decodificar.
 - Consequência: `width`/`height` são `Option` na spec e o gerador os declara opcionais
-  (`docs/03 §7`). Toda imagem sem dimensão é CLS em potencial; o único caso legítimo de ausência é pixel
+  (`docs/design/03 §7`). Toda imagem sem dimensão é CLS em potencial; o único caso legítimo de ausência é pixel
   de tracking, que não usamos.
-- Veredito: **refuta** o "opcional"; correção em §4 (major, `docs/11 §2`).
+- Veredito: **refuta** o "opcional"; correção em §4 (major, `docs/design/11 §2`).
 
 ### A21. `aspect-ratio` é o substituto moderno, mas mora no CSS
 - Citação: `06-core-web-vitals.md:108` — `.hero { aspect-ratio: 16 / 9; }`
@@ -201,7 +201,7 @@ inline.
 - Citação: `EXAMPLE.md:126` — `<section style="content-visibility: auto; contain-intrinsic-size: 400px">`
 - Semântica: a seção fora da tela não renderiza; sem altura intrínseca declarada a barra de rolagem pula.
 - Consequência: é CSS, não atributo; o caminho legítimo é `SectionId` + regra fixa no `/theme.css`.
-  Emitir por elemento exigiria `style=`, que não existe (D3). O `docs/09 §3.1` já registra o par.
+  Emitir por elemento exigiria `style=`, que não existe (D3). O `docs/design/09 §3.1` já registra o par.
 - Veredito: confirma D12 e o doc atual; **armadilha** se tentarmos modelar altura no markup (§6).
 
 ### A24. `display:none` para conteúdo fora da tela não economiza nada
@@ -215,7 +215,7 @@ inline.
 - Semântica: com `block` (o default), o texto fica invisível enquanto a fonte carrega.
 - Consequência: o `@font-face` é gerado pela crate no CSS de tema; "swap sempre" é gate sobre os bytes do
   `/theme.css`, um dos poucos lugares onde medimos CSS diretamente.
-- Veredito: confirma `docs/09 §3`; refina (o doc afirma, não testa).
+- Veredito: confirma `docs/design/09 §3`; refina (o doc afirma, não testa).
 
 ### A26. `font-size-adjust: from-font` reduz — não zera — o shift do swap
 - Citação: `06-core-web-vitals.md:129-133` — "**CSS font-size-adjust** (modern) to reduce layout shift when fallback fonts swap" … `font-size-adjust: from-font;`
@@ -227,7 +227,7 @@ inline.
 ### A27. Fonte: uma família, poucos pesos, `woff2`, subset
 - Citação: `SKILL.md:29` — "Fonts: `font-display: swap`, preload critical fonts, subset."
 - Semântica: cada peso é um arquivo; preload de vários compete com o herói pelo primeiro pacote.
-- Consequência: o `docs/09 §3` fala em "`preload` do único arquivo de texto", frase que descreve artefato
+- Consequência: o `docs/design/09 §3` fala em "`preload` do único arquivo de texto", frase que descreve artefato
   inexistente (texto não tem arquivo). Precisa virar: 1 família, `woff2`, `font-display: swap`,
   `preload as="font" type="font/woff2" crossorigin`, ≤ 2 pesos.
 - Veredito: **corrige** a redação atual; sem impacto de arquitetura.
@@ -235,39 +235,39 @@ inline.
 ### A28. Dois regimes de cache, nunca um só
 - Citação: `15-delivery-and-caching.md:87` — "| Versioned JS/CSS | `max-age=31536000, immutable` | `app.abc123.js` |"
 - Semântica: asset com hash no nome nunca muda → `immutable` por um ano; HTML muda → revalidação.
-- Consequência: o regime de asset já está em `docs/07 §8`; o lado HTML só tem `ETag` em `docs/09 §2`.
+- Consequência: o regime de asset já está em `docs/design/07 §8`; o lado HTML só tem `ETag` em `docs/design/09 §2`.
   Como o nome carrega `sha256` do conteúdo, `immutable` é seguro **por construção**.
-- Veredito: confirma D14; refina (o lado HTML precisa da regra explícita em `docs/09`).
+- Veredito: confirma D14; refina (o lado HTML precisa da regra explícita em `docs/design/09`).
 
 ### A29. `304` custa zero bytes; `no-store` custa o bfcache
 - Citação: `15-delivery-and-caching.md:80` — "# Response: 304 Not Modified (zero bytes transferred)"
 - Semântica: revalidar é mais barato que reenviar; `no-store` impede qualquer cache, inclusive o de histórico.
 - Consequência: `13-performance-apis.md:67` lista `Cache-Control: no-store` como bloqueio de bfcache. Logo
-  HTML público **nunca** leva `no-store`; o `docs/09 §2` precisa dizer isso e reservar `no-store` para
-  preview/área autenticada (`docs/06 §6`).
+  HTML público **nunca** leva `no-store`; o `docs/design/09 §2` precisa dizer isso e reservar `no-store` para
+  preview/área autenticada (`docs/design/06 §6`).
 - Veredito: confirma `ETag`/304; **refina** a política de `Cache-Control`.
 
 ### A30. Brotli pré-comprimido no build — e o serving tem duas linhas obrigatórias
 - Citação: `15-delivery-and-caching.md:5` — "Compression reduces transfer size by 70-85%"
 - Semântica: o ganho é de ordem de magnitude em texto; comprimir por request paga CPU sem ganho.
-- Consequência: `docs/09 §3` já manda gerar `.br`/`.gz` no build com hash — coerente. Falta a consequência
+- Consequência: `docs/design/09 §3` já manda gerar `.br`/`.gz` no build com hash — coerente. Falta a consequência
   de serving: `Content-Encoding: br` + `Vary: Accept-Encoding`, senão cache intermediário entrega binário
   a cliente que não aceita.
-- Veredito: confirma `docs/09 §3`; refina (headers).
+- Veredito: confirma `docs/design/09 §3`; refina (headers).
 
 ### A31. Orçamentos são numéricos e por categoria de recurso
 - Citação: `07-measurement-and-monitoring.md:72-75` — `"resource-summary": { "script": { "maxSize": "300KB" }, "image": { "maxSize": "500KB" }, "total": { "maxSize": "1MB" } }`
 - Semântica: budget é limite quantitativo por categoria, verificado a cada PR.
 - Consequência: dá o formato; os números do exemplo servem a uma SPA e precisam ser reescalados para um
   portal sem JS de aplicação — ver §5b.
-- Veredito: confirma o gate de `docs/09 §4`; refina (números).
+- Veredito: confirma o gate de `docs/design/09 §4`; refina (números).
 
 ### A32. RUM vs sintético: papéis que não se substituem
 - Citação: `07-measurement-and-monitoring.md:53` — "| **Repeatability** | ✅ Yes (deterministic) | ❌ No (varies per user) |"
 - Semântica: laboratório é determinístico e serve a regressão; campo tem variância e serve a tendência.
 - Consequência: o único teste honesto em CI é sobre **atributos e bytes**; qualquer número de tempo em CI
   é ruído com nome bonito. Valida o desenho "orçamento de bytes com ratchet".
-- Veredito: confirma `docs/12 §7` e D10 (tipo primeiro, advisory com ratchet).
+- Veredito: confirma `docs/design/12 §7` e D10 (tipo primeiro, advisory com ratchet).
 
 ### A33. Métrica de campo não é gate
 - Citação: `07-measurement-and-monitoring.md:163` — "❌ **Relying solely on Lighthouse scores** — they're lab data, not real user experience"
@@ -286,9 +286,9 @@ inline.
 ### A35. `103 Early Hints` é a alternativa legítima ao preload no HTML
 - Citação: `08-modern-patterns.md:81` — "| **Resource Hints as HTTP headers** | `Link: <...>; rel=preload` via `103 Early Hints` ou response headers | High |"
 - Semântica: o header chega antes do corpo; o download começa antes do primeiro byte de HTML.
-- Consequência: é fronteira do consumidor (`docs/08 §7`: cabeçalhos HTTP são do consumidor). A crate pode
+- Consequência: é fronteira do consumidor (`docs/design/08 §7`: cabeçalhos HTTP são do consumidor). A crate pode
   documentar a receita e **não** deve ter API de hints.
-- Veredito: confirma o não-objetivo; vira nota em `docs/09`, não código.
+- Veredito: confirma o não-objetivo; vira nota em `docs/design/09`, não código.
 
 ### A36. Client Hints mudam a resposta por cliente e quebram o `ETag`
 - Citação: `14-adaptive-content.md:166` — `res.setHeader('Vary', 'DPR, Width, ECT');`
@@ -303,20 +303,20 @@ inline.
   `fold_controls_loading`, `srcset_requires_sizes_and_dims`) que não são definidos em nenhum arquivo do
   repositório — só o corpus sustenta o significado, implicitamente.
 - Consequência: contrato citado sem definição não é verificável nem testável; cada nome precisa de uma
-  linha normativa em `docs/03 §3` e de um teste (§5c).
+  linha normativa em `docs/design/03 §3` e de um teste (§5c).
 - Veredito: **conflito de processo**: a spec referencia contrato inexistente.
 
 ## 3. Confirmações do desenho
 
-1. **Ordem determinística de assets** (`BTreeSet`, `docs/07 §2`) é pré-condição do orçamento de 14 KB: sem ordem estável, o prefixo varia por request (`11:19`).
+1. **Ordem determinística de assets** (`BTreeSet`, `docs/design/07 §2`) é pré-condição do orçamento de 14 KB: sem ordem estável, o prefixo varia por request (`11:19`).
 2. **`ctx.require` declarativo** confirma-se por dois lados: o scanner só vê tags (`11:127`) e injeção condicional o atrapalha (`02:103`).
-3. **Origem única sem CDN** (`docs/07 §8`) elimina a maior parte do capítulo de hints: `preconnect`/`dns-prefetch` para a própria origem são inúteis (`04:156`).
-4. **`ETag` = `sha256` dos bytes finais** (`docs/09 §2`) é o que torna `immutable` seguro em asset com hash (`15:87`) e `304` sem corpo (`15:80`).
-5. **`SrcSet` ordenado por largura e agrupado por MIME** (`docs/02 §7`) é o único jeito de o `srcset` ser estável — e ele exige `sizes` casado (`14:236`).
-6. **`WidthPx`/`HeightPx` (> 0, sem unidade)** (`docs/02 §7`) é exatamente o formato com que o navegador reserva espaço (`06:36`).
+3. **Origem única sem CDN** (`docs/design/07 §8`) elimina a maior parte do capítulo de hints: `preconnect`/`dns-prefetch` para a própria origem são inúteis (`04:156`).
+4. **`ETag` = `sha256` dos bytes finais** (`docs/design/09 §2`) é o que torna `immutable` seguro em asset com hash (`15:87`) e `304` sem corpo (`15:80`).
+5. **`SrcSet` ordenado por largura e agrupado por MIME** (`docs/design/02 §7`) é o único jeito de o `srcset` ser estável — e ele exige `sizes` casado (`14:236`).
+6. **`WidthPx`/`HeightPx` (> 0, sem unidade)** (`docs/design/02 §7`) é exatamente o formato com que o navegador reserva espaço (`06:36`).
 7. **CSP sem inline** ganha justificativa de performance além da de segurança: as duas receitas centrais do corpus (`03:72`, `04:129`) exigem inline; sobra um head menor e mais previsível.
 8. **`no_http_equiv`** (`spec/elements.toml [element.meta]`) barra `Accept-CH` e `Refresh`, ambos com efeito em cache (`14:166`).
-9. **Orçamento por ratchet** (`docs/12 §7`) é a forma correta de gate, porque só bytes são determinísticos em CI (`07:53`).
+9. **Orçamento por ratchet** (`docs/design/12 §7`) é a forma correta de gate, porque só bytes são determinísticos em CI (`07:53`).
 10. **Dimensões e `Alt` no tipo** mantêm a decisão no call site — o corpus mostra que "é decorativa?" e "que tamanho?" nunca têm default seguro (`09:39`).
 
 ## 4. Conflitos e correções
@@ -325,16 +325,16 @@ inline.
 |---|---|---|
 | `spec/elements.toml [element.link].allowed` — `["as", "type", "media", "integrity", "hreflang", "sizes", "fetchpriority", "disabled"]` (sem `crossorigin`) | `02:111` — sem `crossorigin` "only DNS lookup happens" | Em `spec/elements.toml`, inserir `"crossorigin"` na allowlist de `link`, logo após `"integrity"`. O invariante `preload_requires_as_and_crossorigin` já o exige. |
 | `script` aceita `defer` e `async` ambos opcionais (`[element.script].allowed`) | `02:108` — script sem `defer`/`async` bloqueia render | Em `spec/elements.toml`, `[element.script]`: `required = ["src", "defer"]` e `async` sai da allowlist, passando a tipo `ScriptLoading::{Defer, Async}` no gerador. |
-| `img` com `width`/`height` opcionais (`[element.img].required = ["src", "alt"]`; `docs/03 §7` mostra `width?: Option<WidthPx>`) | `06:173` — "single biggest cause of CLS" | Em `docs/03 §3`, linha do `img`: "`img` — `src` + `alt` + `width` + `height` obrigatórios no primitivo `Img`; ausência de dimensão é erro de compilação". |
-| `docs/09 §3` — "Fontes: `woff2` com `font-display: swap`, `preload` do único arquivo de texto." | `02:89` + `SKILL:29` — preload é de **fonte**, com `crossorigin`, `type` e subset | Substituir a frase por: "Fontes: uma família, no máximo dois pesos, `woff2` com subset, `font-display: swap`, e `preload as=\"font\" type=\"font/woff2\" crossorigin` do peso do corpo de texto." |
-| Nenhuma ordem de `<head>` declarada | `04:114-133` — charset, viewport, hints, preload, CSS, scripts | Inserir em `docs/06 §1`, após a lista de campos do `ShellCtx`: "**Ordem fixa do `<head>`**: `charset` → `viewport` → `title` → `meta` de SEO → `preconnect`/`dns-prefetch` → `preload` → `link rel=stylesheet` → `link` do `/theme.css` → `script defer` → `JsonLd`. Outra ordem é erro do shell, não configuração." |
-| `docs/09 §2` — `Cache-Control: public, no-cache` para HTML com formulário, sem tratar `no-store`/bfcache | `15:87-92`, `13:67` | Completar: "HTML público: `public, no-cache` + `ETag`; área autenticada: `private, no-cache`; `no-store` só em preview e rascunho — `no-store` em página navegável desliga o bfcache." |
-| `docs/09 §4` — só ratchet percentual ("não pode crescer além de N%") | `11:25` — o prefixo tem limite absoluto | Inserir em `docs/09 §4`: "Além do ratchet: prefixo do `<head>` (até o último elemento do head) ≤ 14 KB comprimidos; HTML de página de lista ≤ 50 KB comprimidos." |
-| `docs/09 §3` — `.br`/`.gz` no build, sem regra de serving | `15:5`, `15:13` | Acrescentar: "O `.br` é servido com `Content-Encoding: br` e `Vary: Accept-Encoding`; o `.gz` é fallback, nunca o padrão." |
-| `link` sem enum de `rel` (`link_rel_enum` citado, não definido) | `04:22-29` lista os hints válidos | Em `docs/03 §3`, linha do `link`: "`rel` ∈ {`stylesheet`, `preload`, `preconnect`, `dns-prefetch`, `canonical`, `alternate`, `icon`}; `preload` exige `as`, exige `crossorigin` quando `as=\"font\"`, e é proibido para recurso já presente no `<head>`." |
-| `docs/07 §8` — "Sem CDN" sem consequência de TTFB | `06:42` — "Improve TTFB (CDN, early hints, server optimization)" | Acrescentar em `docs/09 §3`: "Sem CDN, o TTFB é do servidor do consumidor: o orçamento de 800 ms é medido no origin e não é compensável pelo markup." |
-| Nenhum limite no número de hints | `04:155` — "limit to 3-6" | Inserir em `docs/06 §8`: "No máximo dois `preconnect` por página, e nenhum para a origem do próprio site." |
-| `docs/06 §8` não menciona `preload` | `04:154` — preload de recurso já descoberto desperdiça o scanner | Acrescentar ao item 6 da lista: "`preload` só para fonte e imagem herói; nunca para stylesheet ou script que já estão no `<head>`." |
+| `img` com `width`/`height` opcionais (`[element.img].required = ["src", "alt"]`; `docs/design/03 §7` mostra `width?: Option<WidthPx>`) | `06:173` — "single biggest cause of CLS" | Em `docs/design/03 §3`, linha do `img`: "`img` — `src` + `alt` + `width` + `height` obrigatórios no primitivo `Img`; ausência de dimensão é erro de compilação". |
+| `docs/design/09 §3` — "Fontes: `woff2` com `font-display: swap`, `preload` do único arquivo de texto." | `02:89` + `SKILL:29` — preload é de **fonte**, com `crossorigin`, `type` e subset | Substituir a frase por: "Fontes: uma família, no máximo dois pesos, `woff2` com subset, `font-display: swap`, e `preload as=\"font\" type=\"font/woff2\" crossorigin` do peso do corpo de texto." |
+| Nenhuma ordem de `<head>` declarada | `04:114-133` — charset, viewport, hints, preload, CSS, scripts | Inserir em `docs/design/06 §1`, após a lista de campos do `ShellCtx`: "**Ordem fixa do `<head>`**: `charset` → `viewport` → `title` → `meta` de SEO → `preconnect`/`dns-prefetch` → `preload` → `link rel=stylesheet` → `link` do `/theme.css` → `script defer` → `JsonLd`. Outra ordem é erro do shell, não configuração." |
+| `docs/design/09 §2` — `Cache-Control: public, no-cache` para HTML com formulário, sem tratar `no-store`/bfcache | `15:87-92`, `13:67` | Completar: "HTML público: `public, no-cache` + `ETag`; área autenticada: `private, no-cache`; `no-store` só em preview e rascunho — `no-store` em página navegável desliga o bfcache." |
+| `docs/design/09 §4` — só ratchet percentual ("não pode crescer além de N%") | `11:25` — o prefixo tem limite absoluto | Inserir em `docs/design/09 §4`: "Além do ratchet: prefixo do `<head>` (até o último elemento do head) ≤ 14 KB comprimidos; HTML de página de lista ≤ 50 KB comprimidos." |
+| `docs/design/09 §3` — `.br`/`.gz` no build, sem regra de serving | `15:5`, `15:13` | Acrescentar: "O `.br` é servido com `Content-Encoding: br` e `Vary: Accept-Encoding`; o `.gz` é fallback, nunca o padrão." |
+| `link` sem enum de `rel` (`link_rel_enum` citado, não definido) | `04:22-29` lista os hints válidos | Em `docs/design/03 §3`, linha do `link`: "`rel` ∈ {`stylesheet`, `preload`, `preconnect`, `dns-prefetch`, `canonical`, `alternate`, `icon`}; `preload` exige `as`, exige `crossorigin` quando `as=\"font\"`, e é proibido para recurso já presente no `<head>`." |
+| `docs/design/07 §8` — "Sem CDN" sem consequência de TTFB | `06:42` — "Improve TTFB (CDN, early hints, server optimization)" | Acrescentar em `docs/design/09 §3`: "Sem CDN, o TTFB é do servidor do consumidor: o orçamento de 800 ms é medido no origin e não é compensável pelo markup." |
+| Nenhum limite no número de hints | `04:155` — "limit to 3-6" | Inserir em `docs/design/06 §8`: "No máximo dois `preconnect` por página, e nenhum para a origem do próprio site." |
+| `docs/design/06 §8` não menciona `preload` | `04:154` — preload de recurso já descoberto desperdiça o scanner | Acrescentar ao item 6 da lista: "`preload` só para fonte e imagem herói; nunca para stylesheet ou script que já estão no `<head>`." |
 
 ## 5. Adições prontas para colar
 
@@ -359,9 +359,9 @@ inline.
 | Item | Limite | Como medir | Fonte do número |
 |---|---|---|---|
 | Prefixo do `<head>` (até o último elemento do head) | ≤ 14 KB comprimidos | tamanho do `.br` do trecho, no build | `11:19`, `11:25` |
-| HTML de página de lista | ≤ 50 KB comprimidos | `.br` do corpo de `Page` | `docs/09 §4` + formato de `07:72-75` |
+| HTML de página de lista | ≤ 50 KB comprimidos | `.br` do corpo de `Page` | `docs/design/09 §4` + formato de `07:72-75` |
 | CSS base | ≤ 30 KB comprimidos | `.br` do asset | `15:5` |
-| `/theme.css` | ≤ 8 KB comprimidos | `.br` do CSS canônico | `docs/06 §4` (determinismo) |
+| `/theme.css` | ≤ 8 KB comprimidos | `.br` do CSS canônico | `docs/design/06 §4` (determinismo) |
 | JS inicial por página | ≤ 150 KB comprimidos | soma dos assets de `Ctx` | `EXAMPLE.md:671` |
 | JS total (todos os bundles) | ≤ 400 KB comprimidos | registro de assets | `EXAMPLE.md:672`, ajustado às 2.804 LOC |
 | Fonte | ≤ 50 KB por arquivo, ≤ 2 arquivos | tamanho do `woff2` | `EXAMPLE.md:673` |
@@ -389,7 +389,7 @@ inline.
 | nenhum `<script>` executável sem `defer`/`async` | N2/N4 | `02:108` |
 | ordem do `<head>` igual à canônica (sequência de tags) | N4 (golden) | `04:114-133` |
 | nenhum `meta http-equiv` | N2 | `EXAMPLE.md:44`, `14:166` |
-| dois renders → mesmos bytes | property | `docs/12 §3` |
+| dois renders → mesmos bytes | property | `docs/design/12 §3` |
 
 ### (d) O que **não** se testa, e por quê
 
@@ -397,7 +397,7 @@ inline.
 |---|---|
 | LCP, INP, CLS numéricos | são de campo; em CI variam por VM e rede (`07:53`, `07:163`) |
 | score do Lighthouse, Speed Index, TBT | "lab data, not real user experience" (`07:163`); score agrega pesos arbitrários |
-| TTFB medido | depende do servidor e do caminho de rede; sem CDN é ruído local (`docs/07 §8`) |
+| TTFB medido | depende do servidor e do caminho de rede; sem CDN é ruído local (`docs/design/07 §8`) |
 | P75 de qualquer métrica | exige milhares de amostras (`09:59`); PR não tem amostra |
 | taxa de compressão real | depende do conteúdo; o gate é o tamanho do `.br` (`15:5`) |
 | FPS, long tasks, jank | não emitimos JS nem animação (`05:16-22`) |

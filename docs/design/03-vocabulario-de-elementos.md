@@ -197,7 +197,8 @@ erro: elemento `blink` não existe no vocabulário html-auy
 ## 8. Como adicionar um elemento (governança)
 
 1. PR em `spec/elements.toml` com `category`, `required`, `allowed`, `children`.
-2. Entrada em `docs/13-decisoes.md` com o motivo e o caso de uso real.
+2. ADR em `docs/adr/` com o motivo e o caso de uso real; referencie a decisão em
+   `docs/design/13-decisoes.md` quando ela alterar uma regra existente.
 3. Teste de conformidade: fixture renderizada + golden.
 4. `tools/gen_spec.py` regenera as duas cópias de `table.rs` (commitadas); o teste de paridade e
    `tools/validate_spec.py` validam (**D27**).

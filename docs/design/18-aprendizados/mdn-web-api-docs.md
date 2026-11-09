@@ -151,7 +151,7 @@ qualquer linha de Rust.
 ### A18. Cabeçalhos em português dentro de um guia que manda usar inglês sentence case
 - Citação: `09-template-eventos.md:51` — "## Sintaxe" (e `:60` "## Tipo de Evento", `:100` "## Especificações", `:108` "## Veja também")
 - Semântica: `17-convencoes-titulos.md:9` manda "Sentence case" em inglês; o doc 09 escreve os cabeçalhos em português, e o doc 99 mistura os dois idiomas na mesma página (`99:580` "## Type", `99:588` "## Cancelável").
-- Consequência: em um sistema com texto tipado e localizado isso seria impossível — o cabeçalho é dado, não literal. Na crate, texto visível é `Msg` resolvido por locale (`docs/02-tipos-e-contextos.md` §6); nenhum lint de capitalização sobre string é necessário nem desejável.
+- Consequência: em um sistema com texto tipado e localizado isso seria impossível — o cabeçalho é dado, não literal. Na crate, texto visível é `Msg` resolvido por locale (`docs/design/02-tipos-e-contextos.md` §6); nenhum lint de capitalização sobre string é necessário nem desejável.
 - Veredito: irrelevante para a crate · refuta a coerência do conjunto.
 
 ### A19. `js-nolint` vs `js`: a distinção sintaxe/exemplo é o achado mais portável
@@ -169,7 +169,7 @@ qualquer linha de Rust.
 ### A21. Guias são raros: a documentação vive no índice
 - Citação: `13-convencoes-guias.md:5` — "Subdiretórios de guia (`api/nome_api/using_algo/`) são **opcionais e raros** — apenas ~45 das 1228+ APIs (~3.7%) os possuem."
 - Semântica: fragmentar documentação em subpáginas é exceção, não regra; o padrão é um único `index.md` por API.
-- Consequência: argumento quantitativo contra fragmentar nossa documentação: um doc por primitivo, sem "guia de uso do `Field`" separado do doc do `Field`. Também vale para `docs/18-aprendizados/`: um arquivo por corpus é o limite.
+- Consequência: argumento quantitativo contra fragmentar nossa documentação: um doc por primitivo, sem "guia de uso do `Field`" separado do doc do `Field`. Também vale para `docs/design/18-aprendizados/`: um arquivo por corpus é o limite.
 - Veredito: confirma P1/P9 no plano da documentação.
 
 ### A22. Regra de tamanho explícita para extrair conteúdo
@@ -193,19 +193,19 @@ qualquer linha de Rust.
 ### A25. Cross-link em vez de duplicata (media/ ↔ api/)
 - Citação: `14-integracao-media-api-v2.md:89` — "| Referência de API (interfaces, métodos, propriedades, eventos, construtores) | `/api/` | `Request`, `Response`, `fetch()` |"
 - Semântica: o conjunto dedica dois documentos (07 e 14) a mapear sobreposição entre as seções `/media/` e `/api/` e a recomendar links bidirecionais (`14:99`–`:100`) em vez de cópia.
-- Consequência: aplica-se à nossa documentação: `docs/18-aprendizados/<corpus>.md` detalha, `docs/18-aprendizados/README.md` resume e linka — já é o arranjo adotado; o corpus recomenda não repetir o conteúdo nos dois.
+- Consequência: aplica-se à nossa documentação: `docs/design/18-aprendizados/<corpus>.md` detalha, `docs/design/18-aprendizados/README.md` resume e linka — já é o arranjo adotado; o corpus recomenda não repetir o conteúdo nos dois.
 - Veredito: confirma P1 no plano editorial.
 
 ### A26. Tradução: o slug não muda, o rótulo muda
 - Citação: `06-glossario-macros-tipos.md:150` — "Nota: o slug NÃO muda em traduções — apenas o title."
 - Semântica: identidade (o caminho/URL) e rótulo humano (o título) são coisas distintas; traduzir o rótulo nunca reescreve a identidade, e macros "NÃO devem ser traduzidas" (`:154`).
 - Consequência: é a separação que a crate já faz entre `Msg` (texto localizado) e o token/`id` (identidade estável). A regra inversa — traduzir a identidade — é a que quebra links e determinismo.
-- Veredito: **confirma** D14 e `docs/02` §6 — com o argumento de i18n que faltava.
+- Veredito: **confirma** D14 e `docs/design/02` §6 — com o argumento de i18n que faltava.
 
 ### A27. `EmbedGHLiveSample`: exemplo como asset endereçável, não blob inline
 - Citação: `11-macros-adicionais.md:28` — "| `{{EmbedLiveSample}}` | Bloco de código inline na página | Autocontido, sem dependência externa |"
 - Semântica: quando o exemplo precisa de vários arquivos (HTML+CSS+JS), ele deixa de ser texto na página e vira caminho em repositório — `{{EmbedGHLiveSample('dom-examples/webgl-examples/tutorial/sample8/index.html', 670, 510)}}` (`:14`).
-- Consequência: é a mesma fronteira da crate: exemplo no doc = Rust inline; demo com arquivos = `Asset` declarado com hash (`docs/07`). O corpus mostra que a fronteira é inevitável e que mantê-la explícita evita um sistema de exemplos dentro do outro.
+- Consequência: é a mesma fronteira da crate: exemplo no doc = Rust inline; demo com arquivos = `Asset` declarado com hash (`docs/design/07`). O corpus mostra que a fronteira é inevitável e que mantê-la explícita evita um sistema de exemplos dentro do outro.
 - Veredito: **confirma** D13.
 
 ### A28. Asset inline (base64) é anti-pattern declarado
@@ -217,7 +217,7 @@ qualquer linha de Rust.
 ### A29. Nenhum corpus cobre `Intl`; o único uso vizinho é cliente-side
 - Citação: `lit/13-custom-directives.md:85` — "return new Intl.DateTimeFormat('pt-BR', format).format(new Date());"
 - Semântica: formatação localizada só aparece como `Intl` no browser (lit) e como nota de paridade de `Number` (topcoat `10-servicos.md:185`); `mdn-web-api-docs` não menciona `Intl` uma única vez.
-- Consequência: a crate formata em Rust (`Timestamp`, `Count`, `Money` — `docs/02` §7); falta **fonte** para as regras de locale (ordem de campos, separadores, plural). Precisa de decisão própria, não de corpus.
+- Consequência: a crate formata em Rust (`Timestamp`, `Count`, `Money` — `docs/design/02` §7); falta **fonte** para as regras de locale (ordem de campos, separadores, plural). Precisa de decisão própria, não de corpus.
 - Veredito: lacuna — ver §7.
 
 ## 3. Confirmações do desenho
@@ -234,24 +234,24 @@ qualquer linha de Rust.
 
 | O que a crate diz hoje | O que o corpus diz | Correção (frase exata a inserir e onde) |
 |---|---|---|
-| `docs/07-js-e-assets.md` (D13) diz que comportamento é arquivo JS declarado | `99:126` exemplifica com `document.getElementById` + `{{EmbedLiveSample}}` (iframe executando JS inline) | Em `docs/07-js-e-assets.md`, após a tabela de assets: "Exemplo de documentação de primitivo **nunca** assume `document.querySelector` nem iframe executável; demo interativa, quando existir, é `Asset` declarado e carregada da mesma origem." |
-| `docs/03` (vocabulário) e `spec/elements.toml` não têm noção de "tipo de página" | `06:114`/`20:13` oferecem 12+ `page-type` mutuamente inconsistentes | Em `docs/03-vocabulario-de-elementos.md`, na abertura: "Não existe taxonomia de páginas de documentação: um elemento tem **um** doc (o próprio verbete da spec) e nenhum metadado de 'tipo de página'." |
-| `docs/02` §6 exige `Msg` para todo texto visível, resolvido por locale | `17:9` normaliza capitalização de título em **inglês** (`Concepts and Usage` → `Concepts and usage`) | Em `docs/02-tipos-e-contextos.md` §6, ao fim do bloco de i18n: "Capitalização de título é dado do catálogo de tradução, por locale; nenhum lint compara strings visíveis com regras de sentence case em inglês." |
+| `docs/design/07-js-e-assets.md` (D13) diz que comportamento é arquivo JS declarado | `99:126` exemplifica com `document.getElementById` + `{{EmbedLiveSample}}` (iframe executando JS inline) | Em `docs/design/07-js-e-assets.md`, após a tabela de assets: "Exemplo de documentação de primitivo **nunca** assume `document.querySelector` nem iframe executável; demo interativa, quando existir, é `Asset` declarado e carregada da mesma origem." |
+| `docs/design/03` (vocabulário) e `spec/elements.toml` não têm noção de "tipo de página" | `06:114`/`20:13` oferecem 12+ `page-type` mutuamente inconsistentes | Em `docs/design/03-vocabulario-de-elementos.md`, na abertura: "Não existe taxonomia de páginas de documentação: um elemento tem **um** doc (o próprio verbete da spec) e nenhum metadado de 'tipo de página'." |
+| `docs/design/02` §6 exige `Msg` para todo texto visível, resolvido por locale | `17:9` normaliza capitalização de título em **inglês** (`Concepts and Usage` → `Concepts and usage`) | Em `docs/design/02-tipos-e-contextos.md` §6, ao fim do bloco de i18n: "Capitalização de título é dado do catálogo de tradução, por locale; nenhum lint compara strings visíveis com regras de sentence case em inglês." |
 | `spec/elements.toml` declara ordem de atributos = ordem de emissão (D14) | `SKILL.md:91` e `11:127` dão duas ordens de badge incompatíveis (A14) | No cabeçalho de `spec/elements.toml`, junto ao comentário de ordem: "Ordem de emissão é a ordem deste arquivo e ponto final; não há regra de ordenação derivada de 'tipo de badge' ou de qualquer heurística externa." |
-| `docs/05-acessibilidade.md` exige nome acessível e `id` gerado por primitivo | `18:24`–`18:130` liga macro a cabeçalho por slug textual com case-sensitive | Em `docs/04-validacao.md` §4 (N2 — o que a macro valida), acrescentar item: "toda referência por `id` (`for`, `aria-*`, `popovertarget`, `commandfor`) aponta para um `id` existente no bloco; não existe referência por texto normalizado." |
-| `docs/13-decisoes.md` D5 (spec versionada por campo) não diz cardinalidade de referências | `19:13` critica 14 `spec-urls` e prescreve 1, no máximo 2–3 disjuntas | Em `docs/03-vocabulario-de-elementos.md`, na tabela de campos do verbete: "`spec` é **uma** URL canônica por elemento — nunca lista, nunca versão datada de rascunho, nunca spec tangencial." |
-| `docs/12-testes.md` fala de `trybuild` para erro de tipo | `SKILL.md:193`/`:196` exigem blocos de sintaxe não executáveis e tratamento de erro em todo exemplo | Em `docs/12-testes.md`, na seção de `trybuild`: "Cada exemplo em `docs/` é de um destes tipos: `syntax` (não compila por desenho), `ok` (compila, `trybuild` verifica) ou `bad` (erro esperado, `trybuild` verifica a mensagem). Exemplo sem tipo declarado é doc incompleta." |
-| `docs/18-aprendizados/README.md` já corrige o corpus em 3 linhas | este documento tem 300+ linhas | Nenhuma: o resumo linka este arquivo; a duplicação é intencional na medida em que o resumo não repete as citações (conforme `14:99`–`:100`, cross-link em vez de cópia). |
+| `docs/design/05-acessibilidade.md` exige nome acessível e `id` gerado por primitivo | `18:24`–`18:130` liga macro a cabeçalho por slug textual com case-sensitive | Em `docs/design/04-validacao.md` §4 (N2 — o que a macro valida), acrescentar item: "toda referência por `id` (`for`, `aria-*`, `popovertarget`, `commandfor`) aponta para um `id` existente no bloco; não existe referência por texto normalizado." |
+| `docs/design/13-decisoes.md` D5 (spec versionada por campo) não diz cardinalidade de referências | `19:13` critica 14 `spec-urls` e prescreve 1, no máximo 2–3 disjuntas | Em `docs/design/03-vocabulario-de-elementos.md`, na tabela de campos do verbete: "`spec` é **uma** URL canônica por elemento — nunca lista, nunca versão datada de rascunho, nunca spec tangencial." |
+| `docs/design/12-testes.md` fala de `trybuild` para erro de tipo | `SKILL.md:193`/`:196` exigem blocos de sintaxe não executáveis e tratamento de erro em todo exemplo | Em `docs/design/12-testes.md`, na seção de `trybuild`: "Cada exemplo em `docs/` é de um destes tipos: `syntax` (não compila por desenho), `ok` (compila, `trybuild` verifica) ou `bad` (erro esperado, `trybuild` verifica a mensagem). Exemplo sem tipo declarado é doc incompleta." |
+| `docs/design/18-aprendizados/README.md` já corrige o corpus em 3 linhas | este documento tem 300+ linhas | Nenhuma: o resumo linka este arquivo; a duplicação é intencional na medida em que o resumo não repete as citações (conforme `14:99`–`:100`, cross-link em vez de cópia). |
 
 ## 5. Adições prontas para colar
 
-**5.1 Vocabulário de exemplo (para `docs/12-testes.md` ou `docs/10-ergonomia.md`):**
+**5.1 Vocabulário de exemplo (para `docs/design/12-testes.md` ou `docs/design/10-ergonomia.md`):**
 
 | tipo de exemplo | compila? | verificado por | uso |
 |---|---|---|---|
 | `syntax` | não (por desenho) | inspeção em revisão | mostra assinatura/sobrecargas, como `js-nolint` no MDN (`SKILL.md:193`) |
 | `ok` | sim | `trybuild` (`pass`) | uso canônico de um primitivo |
-| `bad` | não | `trybuild` (`compile_fail` + mensagem) | erro de marcação com a mensagem exata (`docs/02` §9) |
+| `bad` | não | `trybuild` (`compile_fail` + mensagem) | erro de marcação com a mensagem exata (`docs/design/02` §9) |
 | `advisory` | sim | lint N3 com supressão declarada | caso em que a acessibilidade avisa e o autor aceita (D10) |
 
 **5.2 Checklist de revisão de doc de primitivo (derivado de `SKILL.md:378`, filtrado pelo nosso escopo):**
@@ -261,7 +261,7 @@ qualquer linha de Rust.
 - [ ] toda referência por id no exemplo existe no bloco (18:24 → D8)
 - [ ] exemplo declara seu tipo: syntax | ok | bad | advisory (§5.1)
 - [ ] nenhum exemplo usa document.*, event handler inline ou iframe executável (99:126 → D3/D13)
-- [ ] texto visível é Msg; nenhum literal em inglês ou português no exemplo (docs/02 §6)
+- [ ] texto visível é Msg; nenhum literal em inglês ou português no exemplo (docs/design/02 §6)
 - [ ] o exemplo cabe em ~200 linhas; se não, o primitivo faz duas coisas (03:27)
 - [ ] nenhum campo de estado duplicado: nada de "experimental" fora da presença no vocabulário (12:94 → D5)
 ```
@@ -293,9 +293,9 @@ O corpus não cobre **nenhuma** das APIs que a crate precisa. Para cada uma, ond
 | **Popover** (`popover`, `popovertarget`, `popovertargetaction`, light dismiss, `:popover-open`, `::backdrop`) | **zero** (`popover` não ocorre) | `html-moderno/03_MODERN_PATTERNS.md:88`–`:112` (três valores, três ações, CSS) e `07_INTERDEPENDENCIES.md:43`, `:117`. Falta a interação entre `popover="auto"` e `<dialog>` modal, e a ancoragem (`anchor` + `anchor()`) só é mencionada de passagem — **fonte externa**: HTML Living Standard §popover. |
 | **Constraint validation** (`required`, `pattern`, `minlength`, `min`, `step`, `ValidityState`, mensagens, `reportValidity`) | **zero** (`reportValidity`, `ValidityState`, `setCustomValidity` não ocorrem) | `html-moderno/11_CONSTRAINT_VALIDATION.md:35`–`:53` (métodos e os 10 membros de `ValidityState`), `:123` (elementos que suportam `setCustomValidity`), `03_MODERN_PATTERNS.md:202`–`:211`. Falta **localização das mensagens nativas** e a política de quando confiar no browser — decisão da crate (mensagem própria, `aria-describedby`, `:user-invalid`), fora de qualquer corpus. |
 | **`inert`** | **zero** (`inert` não ocorre) | `html-moderno/04_ACCESSIBILITY.md:171`, `09_BOILERPLATE.md:340`, `18_GLOBAL_ATTRIBUTES.md` (via `SKILL.md:83`); semântica de foco e de árvore de acessibilidade: **fonte externa** (HTML Living Standard §inert). |
-| **`Intl` / formatação localizada** | **zero** (nenhuma ocorrência de `Intl`) | Nenhum corpus cobre. O único uso vizinho é cliente-side (`lit/13-custom-directives.md:85` — `new Intl.DateTimeFormat('pt-BR', …)`) e uma nota de paridade (`topcoat/10-servicos.md:185` — "`Number` segue `Intl.NumberFormat`"). A crate formata em Rust (`docs/02` §7: `Timestamp`, `Count`, `Money`): a tabela de locale (ordem de campos, separador de milhar, plural, moeda) precisa de **fonte externa** — CLDR/UTR#35 — e de decisão registrada em `docs/13-decisoes.md`. |
+| **`Intl` / formatação localizada** | **zero** (nenhuma ocorrência de `Intl`) | Nenhum corpus cobre. O único uso vizinho é cliente-side (`lit/13-custom-directives.md:85` — `new Intl.DateTimeFormat('pt-BR', …)`) e uma nota de paridade (`topcoat/10-servicos.md:185` — "`Number` segue `Intl.NumberFormat`"). A crate formata em Rust (`docs/design/02` §7: `Timestamp`, `Count`, `Money`): a tabela de locale (ordem de campos, separador de milhar, plural, moeda) precisa de **fonte externa** — CLDR/UTR#35 — e de decisão registrada em `docs/design/13-decisoes.md`. |
 | **Invoker Commands** (`command`, `commandfor`) | **zero** | `html-moderno/03_MODERN_PATTERNS.md:84`–`:85`, marcado como experimental; `03_MODERN_PATTERNS.md:110` lista o CSS relacionado. Não pode ser caminho obrigatório (registrado como armadilha na seção `html-moderno` do resumo). |
-| **`<details name>` (acordeão nativo), `<search>`, `inputmode`, `autocomplete`** | **zero** | `html-moderno/03_MODERN_PATTERNS.md:114`–`:121` (`details name`), `11_CONSTRAINT_VALIDATION.md`, e a tabela do resumo em `docs/18-aprendizados/README.md` (seção `html-moderno`). |
+| **`<details name>` (acordeão nativo), `<search>`, `inputmode`, `autocomplete`** | **zero** | `html-moderno/03_MODERN_PATTERNS.md:114`–`:121` (`details name`), `11_CONSTRAINT_VALIDATION.md`, e a tabela do resumo em `docs/design/18-aprendizados/README.md` (seção `html-moderno`). |
 
 Conclusão operacional: **este corpus não deve ser reaberto** por nenhuma pergunta sobre comportamento de
 elemento ou de API. Ele só responde a perguntas de forma documental (como nomear um guia, quantas

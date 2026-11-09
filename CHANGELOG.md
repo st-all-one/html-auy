@@ -2,7 +2,7 @@
 
 All notable changes to `html-auy` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow the policy in
-[`docs/11-estabilidade.md`](docs/11-estabilidade.md).
+[`docs/design/11-estabilidade.md`](docs/design/11-estabilidade.md).
 
 ## [0.1.1] - 2026-11-07
 
@@ -48,7 +48,7 @@ dual licensing.
 - Public packages `html-auy`, `html-auy-macros`, and `html-auy-macros-core`.
 - Tag-driven release workflow that publishes to crates.io in dependency order and creates a GitHub
   Release without binary artifacts.
-- Documentation and agent context: usage wiki, `docs/acessibility.md`, `llms.txt`,
+- Documentation and agent context: usage wiki, `docs/design/acessibility.md`, `llms.txt`,
   `llms-full.txt`, `SKILL.md`, expanded `AGENTS.md`, and contributor guidance for `0.1.0`.
 
 ### Changed

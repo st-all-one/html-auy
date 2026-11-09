@@ -332,9 +332,9 @@ conforto do framework empurra para **`unsafe-inline`**. É a demonstração de q
 crate precisa vem do desenho (forms nativos + `Vary: HX-Request`), não de script inline.
 
 ### Adições aceitas
-- `docs/02`: "nenhum primitivo aceita closure/callback como prop; `children` é consumido uma vez".
-- `docs/04`: "correção do parser do browser nunca é aceita; `<tbody>` emitido explicitamente".
-- `docs/07`: "não existe `nonce` — nenhum byte variável por request entra no HTML".
-- `docs/09`: "nenhum identificador de build/componente no HTML; assets por hash de conteúdo do arquivo";
+- `docs/design/02`: "nenhum primitivo aceita closure/callback como prop; `children` é consumido uma vez".
+- `docs/design/04`: "correção do parser do browser nunca é aceita; `<tbody>` emitido explicitamente".
+- `docs/design/07`: "não existe `nonce` — nenhum byte variável por request entra no HTML".
+- `docs/design/09`: "nenhum identificador de build/componente no HTML; assets por hash de conteúdo do arquivo";
   "estado nunca serializado no HTML".
 - Checklist de determinismo: rebuild sem mudança de fonte → `ETag` idêntico.
