@@ -1,5 +1,9 @@
 # 25 — Como é usar o crate (demonstração teórica)
 
+> **Executável:** a versão compilável e completa desta cena está em
+> [`usage/18-exemplo-portal.md`](../usage/18-exemplo-portal.md) e em
+> [`crates/html-auy/examples/portal_governamental.rs`](../../crates/html-auy/examples/portal_governamental.rs).
+
 > **Critério de aceite de leitura de F0–F6.** Se o uso abaixo não compilar, não gerar os bytes
 > mostrados e não falhar onde está dito, a fase correspondente não está pronta. O núcleo já está
 > implementado; as extensões de formulário e mídia desta rodada aparecem em §5 e §5.1. Ele também é o

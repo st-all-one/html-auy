@@ -1,4 +1,4 @@
-[← Projeto mínimo com Axum](16-projeto-minimo-axum.md) · [Índice](README.md) · [Próximo →](99-referencia-rapida.md)
+[← Projeto mínimo com Axum](16-projeto-minimo-axum.md) · [Índice](README.md) · [Próximo →](18-exemplo-portal.md)
 
 # 17 — Guia de implementação
 
@@ -314,4 +314,4 @@ por que a API é assim, volte à [Filosofia](00-filosofia.md).
 
 ---
 
-[← Projeto mínimo com Axum](16-projeto-minimo-axum.md) · [Índice](README.md) · [Próximo →](99-referencia-rapida.md)
+[← Projeto mínimo com Axum](16-projeto-minimo-axum.md) · [Índice](README.md) · [Próximo →](18-exemplo-portal.md)

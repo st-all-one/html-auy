@@ -1,4 +1,4 @@
-[← Guia de implementação](17-guia-de-implementacao.md) · [Índice](README.md)
+[← Exemplo completo: portal governamental](18-exemplo-portal.md) · [Índice](README.md)
 
 # 99 — Referência rápida
 
@@ -212,4 +212,4 @@ Regras: `main_unique`, `single_h1`, `heading_levels_no_skips`, `ids_unique`,
 
 ---
 
-[← Guia de implementação](17-guia-de-implementacao.md) · [Índice](README.md)
+[← Exemplo completo: portal governamental](18-exemplo-portal.md) · [Índice](README.md)

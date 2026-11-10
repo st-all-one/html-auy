@@ -757,6 +757,7 @@ Primary references:
 - [HTTP and integrations](https://github.com/st-all-one/html-auy/blob/main/docs/usage/12-http-e-integracoes.md)
 - [Minimal Axum project](https://github.com/st-all-one/html-auy/blob/main/docs/usage/16-projeto-minimo-axum.md)
 - [Implementation guide](https://github.com/st-all-one/html-auy/blob/main/docs/usage/17-guia-de-implementacao.md)
+- [Complete government portal example](https://github.com/st-all-one/html-auy/blob/main/docs/usage/18-exemplo-portal.md)
 - [Testing and diagnostics](https://github.com/st-all-one/html-auy/blob/main/docs/usage/13-testes-e-diagnostico.md)
 - [Recipes](https://github.com/st-all-one/html-auy/blob/main/docs/usage/14-receitas.md)
 - [Architecture](https://github.com/st-all-one/html-auy/blob/main/docs/usage/15-arquitetura.md)
