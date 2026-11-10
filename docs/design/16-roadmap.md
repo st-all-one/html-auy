@@ -20,8 +20,9 @@
 > **Decidido em 2026-11-06:** D27–D32 aceitas ([`13`](13-decisoes.md)). A coluna "anterior" é
 > **registro histórico**; a coluna "decidido" é o desenho a implementar.
 >
-> **MVP × pós-MVP.** O MVP é **F-1 → F6 + F6.1** ([`21`](21-implementacao.md) §0). O corpus de
-> conformidade (F7) e a exportação ([`24`](24-exportacao.md)) são **pós-MVP**.
+> **MVP × descartado.** O MVP é **F-1 → F6 + F6.1** ([`21`](21-implementacao.md) §0). O corpus de
+> conformidade exportado (F7) e a exportação ([`24`](24-exportacao.md)) estão **descartados**
+> ([ADR 0002](../adr/0002-sem-exportacao-fora-do-rust.md)).
 >
 > **Vigente × proposta.** A coluna *vigente* é o desenho atual (4 crates + `cq`). A *proposta* é o corte
 > de [`19`](19-revisao-arquitetural.md) §8 (**D27–D30**, aceitas em 2026-11-06). As decisões **D21–D26**
@@ -108,7 +109,7 @@ Ao encerrar, o repositório permanece como **registro de decisão** (este conjun
 3. html! com parse + codegen sem validação    (prova o pipeline)
 4. validação N2 completa + trybuild
 5. output/N4 como dev-dependency + teste      (D30)
-6. corpus de conformidade                     (pós-MVP, F7)
+6. corpus de conformidade                     (descartado, F7 — ADR 0002)
 ```
 
 Cada passo tem que deixar o repositório **verde** (`cargo fmt --check` + `clippy -D warnings` +

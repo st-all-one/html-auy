@@ -12,10 +12,10 @@
 > não compilar, não gerar os bytes mostrados e não falhar onde está dito, a fase correspondente não está
 > pronta — é a definição de "aceito" que vale para F0–F6.
 >
-> **MVP = F-1 → F6 + F6.1.** O corpus de conformidade (**F7**) e a exportação para outros ecossistemas
-> ([`24`](24-exportacao.md)) são **pós-MVP**: estão documentados para não se perderem, mas **não
-> bloqueiam nenhuma fase e não entram no primeiro ciclo**. Tema/shell de consumidor (**D29**) também fica
-> fora — o crate nasce sem I/O e sem cache.
+> **MVP = F-1 → F6 + F6.1.** O corpus de conformidade exportado (**F7**) e a exportação para outros
+> ecossistemas ([`24`](24-exportacao.md)) estão **descartados** por
+> [ADR 0002](../adr/0002-sem-exportacao-fora-do-rust.md): o projeto é Rust-only e os `trybuild` já são o
+> corpus. Tema/shell de consumidor (**D29**) também fica fora — o crate nasce sem I/O e sem cache.
 
 ### 0.1 Pré-requisitos (estado verificado)
 
@@ -498,7 +498,10 @@ D26 decide que o conjunto de `data-*` pertence ao JS do consumidor, não ao crat
 **DoD.** Uma tabela, três consultas, uma saída; mesmo formato do `validate_spec.py` (linha por problema,
 código de saída 1).
 
-### F7 — corpus de conformidade (exportação) — **pós-MVP, não bloqueia o crate**
+### F7 — corpus de conformidade (exportação) — **descartado (ADR 0002)**
+
+Não perseguido: o projeto é Rust-only, e os `trybuild` de F3 já **são** o corpus. O texto abaixo fica
+como registro do que a fase exigiria caso uma porta voltasse a ser considerada.
 
 Gerado **dos** `trybuild` de F3 + das regras de F6, no formato de
 [`24`](24-exportacao.md) §3 (`id`, `input`, `expect`, `invariant`, `scope`). É o artefato que permite
@@ -519,7 +522,7 @@ graph LR
   F3 --> F5[F5 Page/View/Form/Field]
   F4 --> F6[F6 output]
   F5 --> F6
-  F6 -.-> F7[F7 corpus · pós-MVP]
+  F6 -.-> F7["F7 corpus · descartado (ADR 0002)"]
 ```
 
 F0 é o **ponto de parada**: se F0 não pagar (M1 de [`16`](16-roadmap.md)), o plano B é maud + valores

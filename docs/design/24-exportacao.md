@@ -1,9 +1,8 @@
 # 24 — Exportar para outros ecossistemas
 
-> **Status: pós-MVP.** Nada aqui bloqueia o crate ([`21`](21-implementacao.md) §0). Está escrito agora
-> porque a decisão de **como** exportar muda o que se guarda hoje (o corpus, a spec como dado) — e essa
-> parte já está paga: `spec/elements.toml`, as invariantes e o corpus de conformidade existem. A
-> execução (F7 + `html-vocab`) só entra depois de F6.
+> **Status: não perseguido ([ADR 0002](../adr/0002-sem-exportacao-fora-do-rust.md)).** O projeto
+> permanece Rust-only: não há `html-vocab`, wasm, F7 nem porta. Este documento fica como a análise que
+> sustentou a decisão; §4B, §6 e §7 descrevem caminhos avaliados e descartados.
 
 > **Pergunta:** isto pode virar PHP, Node, Java? **Resposta curta:** o *crate* não; o **contrato** sim.
 > O que viaja é a spec + o modelo de valores + o corpus de conformidade. O mecanismo (macro, plugin,
@@ -79,7 +78,7 @@ spec/conformance/*.json ──► suíte de teste da implementação
 Prós: melhor ergonomia possível em cada linguagem (JSX, builder, macro); erro no fonte do autor.
 Contras: N implementações para manter; cada uma envelhece no seu ritmo.
 
-### B. Um binário, N consumidores (`html-vocab check`)
+### B. Um binário, N consumidores (`html-vocab check`) — descartado (ADR 0002)
 
 ```bash
 # qualquer ecossistema, no CI, sem reimplementar nada
@@ -92,8 +91,9 @@ se espalham — e é o mesmo desenho do `sniff-css` (CLI + JSONL que qualquer li
 Contras: valida **saída**, não fonte — não há span do autor, então o DX é pior e a garantia é de **gate**,
 não de "estado ilegal inexpressável".
 
-**Recomendação:** B **primeiro** (uma semana, reaproveita o `N4`), A **só** onde há demanda real — e
-começando por Node/JSX, onde o custo é o menor.
+**Decisão (2026-11-10, [ADR 0002](../adr/0002-sem-exportacao-fora-do-rust.md)):** nenhum dos dois. O
+crate permanece **Rust-only**; o wasm foi avaliado e não paga o custo porque valida uma string, não a
+construção. A análise acima fica como registro do que foi considerado.
 
 ## 5. A regra de ouro da portabilidade
 
@@ -119,6 +119,9 @@ Três consequências práticas:
 | **depois de F6** | `html-vocab check` (L4 do `N4` + CLI + JSONL) — exporta para *qualquer* ecossistema | ~3 dias |
 | **quando houver demanda** | plugin JSX/Vite em Node (L3 build-time) | ~2 semanas |
 | **só com demanda forte** | Java (Error Prone) / C# (Roslyn) | ~1 mês cada |
+
+**Decisão (ADR 0002):** nenhuma linha desta tabela é trabalho planejado. F7 e `html-vocab` estão
+descartados; os `trybuild` continuam sendo o corpus, e o crate não publica artefato de checagem.
 
 ## 7. Risco: cinco dialetos
 

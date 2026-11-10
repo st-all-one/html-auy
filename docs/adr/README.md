@@ -74,6 +74,7 @@ O ADR real e completo que inaugura esta pasta é o
 | ADR | Decisão | Status |
 |---|---|---|
 | [0001](0001-separar-design-de-adr.md) | Separar `design/`, `usage/` e `adr/`; novos contratos viram ADR | aceito |
+| [0002](0002-sem-exportacao-fora-do-rust.md) | Sem exportação fora do Rust: sem `html-vocab`, wasm, F7 ou portas | aceito |
 
 ## Registro histórico (D0–D35)
 

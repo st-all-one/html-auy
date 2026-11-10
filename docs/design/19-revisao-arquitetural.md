@@ -174,7 +174,7 @@ destino de cada um, com a forma de API e o custo, está em
 `View` (substitui pilha), `FieldState` e `Class` combinável; **não absorve** attribute bag, plural e
 componente por string — e cada recusa tem um motivo de garantia, não de preguiça.
 
-## 7.2 Portabilidade: o que sustenta o projeto fora do Rust (**pós-MVP**)
+## 7.2 Portabilidade: o que sustenta o projeto fora do Rust (**descartado — ADR 0002**)
 
 [`24-exportacao.md`](24-exportacao.md) fecha a pergunta "isto vira PHP/Node/Java?": **spec + modelo de
 valores + corpus de conformidade** viajam (L0/L1/L2 ≈ 90–100%); o macro (L3) não. O teto de cada
@@ -184,6 +184,9 @@ linguagem é diferente e é normativo: Node/TS chega a build-time (JSX + plugin)
 
 **Decisão de sequência:** fica para **depois** do crate funcionar (F6). O único efeito no MVP é não
 perder o corpus: F3 já produz os casos, F7 só os exporta.
+
+**Estado em 2026-11-10.** Superada por [ADR 0002](../adr/0002-sem-exportacao-fora-do-rust.md): o
+projeto é Rust-only. F3 continua produzindo os casos; não existe F7 nem artefato exportado.
 
 ## 8. Decisões propostas — **decididas em 2026-11-06**
 
