@@ -1,6 +1,6 @@
 # Uso do `html-auy`
 
-**Wiki operacional da série `0.1.x`.** Ela responde “como eu faço isto?” com código que segue a API
+**Wiki operacional da série `0.2.x`.** Ela responde “como eu faço isto?” com código que segue a API
 atual. A filosofia operacional está em [00 — Filosofia](00-filosofia.md); o *porquê* histórico das
 decisões fica em [`docs/design/00`](../design/00-principios.md) a [`docs/design/27`](../design/27-licoes-do-eta.md). Aqui o foco
 é a interface que o consumidor vê.
@@ -27,14 +27,20 @@ decididos** e devolve **bytes determinísticos**.
 ## Começo em 30 segundos
 
 ```rust
-use html_auy::{html, Lang, Page, ShellData, Text, View};
+use html_auy::prelude::*;
+
+#[derive(Clone, Copy, Msg)]
+enum M {
+    #[msg("Início")]
+    Home,
+    #[msg("Olá, mundo.")]
+    Greeting,
+}
 
 fn page() -> Page {
     let lang = Lang::parse("pt-BR").expect("constante");
-    let data = ShellData::new(Text::new("Início"), Text::new("Início"), lang);
-    let view = View::new(html! {
-        p { Text::new("Olá, mundo.") }
-    });
+    let data = ShellData::new(Text::msg(M::Home), Text::msg(M::Home), lang);
+    let view = View::new(html! { p { M::Greeting } });
     Page::new(&data, view)
 }
 ```
@@ -89,7 +95,7 @@ a saída exata e a fronteira HTTP, está em [Primeira página](02-primeira-pagin
 | [12 — HTTP e integrações](12-http-e-integracoes.md) | Como responder, cachear, fazer `303`/`422` e resposta parcial? |
 | [16 — Projeto mínimo com Axum](16-projeto-minimo-axum.md) | Como juntar Cargo, adapter, views, assets, erros e formulários? |
 | [17 — Guia de implementação](17-guia-de-implementacao.md) | Em que ordem implementar uma aplicação em fatias verticais? |
-| [18 — Exemplo completo: portal governamental](18-exemplo-portal.md) | Como fica uma página inteira de portal municipal? |
+| [18 — Exemplo completo: portal governamental](18-exemplo-portal.md) | Como fica uma página inteira de portal municipal em quatro idiomas? |
 
 ### Qualidade e referência
 
@@ -114,7 +120,7 @@ a saída exata e a fronteira HTTP, está em [Primeira página](02-primeira-pagin
 
 ## Convenções desta wiki
 
-- `M` é um `enum` do consumidor que implementa `html_auy::Msg`; cada variante resolve um texto.
+- `M` é um `enum` do consumidor com `#[derive(Clone, Copy, Msg)]` e `#[msg("…")]`; cada variante resolve um texto. Os exemplos começam com `use html_auy::prelude::*;`.
 - `expect("…")` aparece em exemplos para deixar o valor visível. Em produção, propague o `Option`
   ou trate o dado na borda.
 - Blocos marcados **“esboço”** dependem de tipos do seu domínio; os demais usam apenas a API pública.

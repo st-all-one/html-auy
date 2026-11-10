@@ -6,8 +6,8 @@ Vocabulário HTML tipado para Rust — atributos validados em compilação, esca
 
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-2b3a42?style=for-the-badge)](./LICENSE-MIT)
 [![Rust](https://img.shields.io/badge/rust-1.92%2B-DEA584?style=for-the-badge&logo=rust&logoColor=000)](https://www.rust-lang.org/)
-[![crates.io](https://img.shields.io/badge/crates.io-0.1.1-009739?style=for-the-badge)](https://crates.io/crates/html-auy)
-[![Version](https://img.shields.io/badge/version-0.1.1-6E56CF?style=for-the-badge)](CHANGELOG.md)
+[![crates.io](https://img.shields.io/badge/crates.io-0.2.0-009739?style=for-the-badge)](https://crates.io/crates/html-auy)
+[![Version](https://img.shields.io/badge/version-0.2.0-6E56CF?style=for-the-badge)](CHANGELOG.md)
 
 </div>
 
@@ -15,19 +15,27 @@ O `html-auy` é uma biblioteca Rust que trata HTML como **artefato**, não como 
 
 ```toml
 [dependencies]
-html-auy = "0.1"
+html-auy = "0.2"
 ```
 
 ```rust
-use html_auy::{html, Lang, Page, ShellData, Text, View};
+use html_auy::prelude::*;
+
+#[derive(Clone, Copy, Msg)]
+enum M {
+    #[msg("Início")]
+    Home,
+    #[msg("Olá, mundo.")]
+    Greeting,
+}
 
 let data = ShellData::new(
-    Text::new("Início"),
-    Text::new("Início"),
+    Text::msg(M::Home),
+    Text::msg(M::Home),
     Lang::parse("pt-BR").expect("idioma"),
 );
 let view = View::new(html! {
-    p { Text::new("Olá, mundo.") }
+    p { M::Greeting }
 });
 let page = Page::new(&data, view);
 ```
@@ -46,7 +54,7 @@ Para habilitar o passe de documento inteiro:
 
 ```toml
 [dependencies]
-html-auy = { version = "0.1", features = ["audit"] }
+html-auy = { version = "0.2", features = ["audit"] }
 ```
 
 `audit` adiciona `html5ever` + `markup5ever_rcdom` e expõe `html_auy::audit::check`. Ele fica fora da árvore de dependências padrão.
@@ -54,18 +62,31 @@ html-auy = { version = "0.1", features = ["audit"] }
 ## Uso
 
 ```rust
-use html_auy::{Href, LUrl, Text, html};
+use html_auy::prelude::*;
+
+#[derive(Clone, Copy, Msg)]
+enum M {
+    #[msg("Notícias")]
+    News,
+}
 
 let link = html! {
-    a href=(Href::internal(LUrl::new("/news").expect("rota constante"))) {
-        (Text::new("Notícias"))
-    }
+    a href="/news" { M::News }
 };
 
 assert_eq!(link.as_str(), r#"<a href="/news">Notícias</a>"#);
 ```
 
-- Texto estático traduzido usa `Msg`; texto dinâmico usa `Text::new`; markup já renderizado entra como `(markup)`.
+`prelude` reúne o vocabulário do dia a dia; rotas internas literais são validadas no macro, e URL
+externa continua tipada.
+
+- Texto de UI estático usa `#[derive(Msg)]` + `#[msg("…")]` e entra como `M::X`; onde a API pede
+  `Text`, use `Text::msg(M::X)`. Texto dinâmico usa `Text::new`; markup já renderizado entra como `(markup)`.
+- `Markup::concat([a, b])` compõe irmãos; `(a)(b)` é erro com essa dica.
+- `Regions::new().header(…).before_main(…).footer(…)` compõe o shell; `Assets` é coletado de
+  `[Option<Asset>]` (`collect` ou `extend_options`).
+- `Date::new`/`Date::parse` e `Timestamp::parse_rfc3339` preenchem `<time datetime>`; o crate valida,
+  não formata a data visível.
 - Atributos tipados usam `attr=(valor)`; opcionais usam `attr?=(Option<T>)`.
 - Booleanos usam presença (`disabled=(true)`), nunca `disabled="false"`.
 - `class` é canônica: ordenada e sem duplicatas.
@@ -112,6 +133,7 @@ Detalhes: [`docs/design/acessibility.md`](docs/design/acessibility.md) e [`docs/
 | Tema | Referência |
 |---|---|
 | Wiki de uso | [`docs/usage/README.md`](docs/usage/README.md) |
+| Exemplo multilíngue | [`examples/portal_governamental_preview/`](examples/portal_governamental_preview/README.md) |
 | Índice da documentação | [`docs/README.md`](docs/README.md) |
 | Guia para agentes/LLM | [`SKILL.md`](SKILL.md) |
 | Índice para LLM | [`llms.txt`](llms.txt) |

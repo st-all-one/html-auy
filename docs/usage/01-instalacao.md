@@ -22,20 +22,20 @@ O crate é uma biblioteca. Ele não instala servidor, CLI, `build.rs` ou gerador
 
 ```toml
 [dependencies]
-html-auy = "0.1"
+html-auy = "0.2"
 ```
 
 Com o passe de documento inteiro:
 
 ```toml
 [dependencies]
-html-auy = { version = "0.1", features = ["audit"] }
+html-auy = { version = "0.2", features = ["audit"] }
 ```
 
 O nome do pacote usa hífen; o nome do crate Rust usa sublinhado:
 
 ```rust
-use html_auy::{html, Lang, Page, ShellData, Text, View};
+use html_auy::prelude::*;
 ```
 
 Não adicione `html-auy-macros` nem `html-auy-macros-core` como dependências de aplicação. Eles são
@@ -65,30 +65,33 @@ usar em um alvo sem `std`, mantenha um allocator disponível e compile com a fea
 
 ## Versão e compatibilidade
 
-`0.1.x` é a primeira série pública. A política é semver para a API pública de `html-auy`; em `0.x`,
-uma quebra de código válido sobe o **minor**. A política completa, incluindo MSRV e congelamento da
-spec, está em [`docs/design/11`](../design/11-estabilidade.md).
+`0.2.x` é a série atual; `0.1.x` foi a primeira série pública. A política é semver para a API
+pública de `html-auy`; em `0.x`, uma quebra de código válido sobe o **minor**. A política completa,
+incluindo MSRV e congelamento da spec, está em
+[`docs/design/11`](../design/11-estabilidade.md).
 
 ## Configuração mínima de uma aplicação
 
 ```rust
-use html_auy::{html, Lang, Page, ShellData, Text, View};
+use html_auy::prelude::*;
+
+#[derive(Clone, Copy, Msg)]
+enum M {
+    #[msg("Início")]
+    Home,
+    #[msg("Conteúdo")]
+    Content,
+}
 
 fn render_page() -> Page {
     let lang = Lang::parse("pt-BR").expect("idioma constante");
-    let data = ShellData::new(
-        Text::new("Início"),
-        Text::new("Início"),
-        lang,
-    );
-    let view = View::new(html! {
-        p { Text::new("Conteúdo") }
-    });
+    let data = ShellData::new(Text::msg(M::Home), Text::msg(M::Home), lang);
+    let view = View::new(html! { p { M::Content } });
     Page::new(&data, view)
 }
 ```
 
-Isso compila com o crate padrão. Para uma aplicação real, você vai querer um `enum` de mensagens
+Isso compila com o crate padrão. Para uma aplicação real, você vai querer um catálogo maior
 (veja [Texto e i18n](05-texto-e-i18n.md)), assets ([Shell e assets](08-shell-assets-e-tema.md)) e um
 adaptador HTTP ([HTTP e integrações](12-http-e-integracoes.md)). O esqueleto completo está em
 [Projeto mínimo com Axum](16-projeto-minimo-axum.md).

@@ -13,28 +13,25 @@ pub trait Msg: Copy {
 }
 ```
 
-O `enum` é do consumidor. O crate só chama `as_str()`:
+O `enum` é do consumidor. O crate só chama `as_str()`; o derive gera o `match` a partir do
+atributo `#[msg("…")]`:
 
 ```rust
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Msg)]
 enum M {
+    #[msg("Notícias")]
     Title,
+    #[msg("Últimas notícias")]
     Latest,
+    #[msg("Ler notícia")]
     Read,
+    #[msg("Pular para o conteúdo")]
     Skip,
 }
-
-impl html_auy::Msg for M {
-    fn as_str(self) -> &'static str {
-        match self {
-            M::Title => "Notícias",
-            M::Latest => "Últimas notícias",
-            M::Read => "Ler notícia",
-            M::Skip => "Pular para o conteúdo",
-        }
-    }
-}
 ```
+
+O `impl Msg` manual continua válido quando o catálogo precisa de lógica própria. O derive exige
+variantes unitárias e uma string literal por variante; variante sem `#[msg]` é erro de compilação.
 
 Em uma aplicação real, `as_str` lê o catálogo já resolvido para o locale da request. O crate não
 recebe `Locale`, não consulta ambiente e não formata plural. Paridade de tradução, CLDR e
@@ -112,7 +109,7 @@ let data = ShellData::new(
 ## Texto dinâmico e escaping
 
 ```rust
-use html_auy::{Render, Text};
+use html_auy::prelude::*;
 
 let title = "<script>alert(1)</script>";
 let text = Text::new(title);
@@ -145,6 +142,89 @@ let label = catalog.read_item(&item.title); // String
 html! { a href=(url) { Text::new(&label) } }
 ```
 
+## Vários locales sem runtime
+
+O crate não recebe `Locale`: ele recebe um `Msg` já resolvido. Para mais de um idioma, o valor do
+`Msg` pode carregar o locale e a chave, sem alocar e sem perder a checagem do compilador:
+
+```rust
+#[derive(Clone, Copy)]
+enum Locale { PtBr, En, Es, Fr }
+
+#[derive(Clone, Copy)]
+enum Key { Title, Services, Skip, MainNav }
+
+#[derive(Clone, Copy)]
+struct Message { locale: Locale, key: Key }
+
+impl Msg for Message {
+    fn as_str(self) -> &'static str {
+        match self.locale {
+            Locale::PtBr => match self.key {
+                Key::Title => "Portal da Prefeitura",
+                Key::Services => "Serviços",
+                Key::Skip => "Pular para o conteúdo",
+                Key::MainNav => "Navegação principal",
+            },
+            Locale::En => match self.key {
+                Key::Title => "City Hall Portal",
+                Key::Services => "Services",
+                Key::Skip => "Skip to content",
+                Key::MainNav => "Main navigation",
+            },
+            Locale::Es => match self.key {
+                Key::Title => "Portal del Ayuntamiento",
+                Key::Services => "Servicios",
+                Key::Skip => "Saltar al contenido",
+                Key::MainNav => "Navegación principal",
+            },
+            Locale::Fr => match self.key {
+                Key::Title => "Portail de la Mairie",
+                Key::Services => "Services",
+                Key::Skip => "Aller au contenu",
+                Key::MainNav => "Navigation principale",
+            },
+        }
+    }
+}
+
+fn msg(locale: Locale, key: Key) -> Message {
+    Message { locale, key }
+}
+
+impl Message {
+    fn text(locale: Locale, key: Key) -> Text<'static> {
+        Text::msg(Self { locale, key })
+    }
+}
+```
+
+A view recebe o locale já resolvido pelo adapter HTTP (path, `Accept-Language`, sessão ou cookie) e
+usa `Message::text(locale, Key::…)`:
+
+```rust
+fn header(locale: Locale) -> Markup {
+    html! {
+        nav aria_label=(Label::text(msg(locale, Key::MainNav))) {
+            a href="/servicos" { Message::text(locale, Key::Services) }
+        }
+    }
+}
+```
+
+- O `match` é exaustivo: uma `Key` nova quebra a compilação até existir em todos os locales.
+- O locale não é lido dentro de `html!`; a view recebe o valor já decidido.
+- `Message::text` é um caminho (`Type::fn`). Uma chamada solta como `tr(locale, key)` dentro de um
+  corpo de `html!` seria lida como o elemento `<tr>`; use um caminho ou `(tr(locale, key))`.
+- `Lang` vem de `Lang::parse(locale.tag())`; não monte a etiqueta BCP-47 à mão.
+- `dir` vem do locale (`ShellData::dir(locale.dir())`): `Dir::Ltr` para pt/en/es/fr; um locale RTL
+  usa `Dir::Rtl` no mesmo ponto. O crate não infere direção a partir da etiqueta.
+- Para SEO, `ShellData::alternates` recebe `Alternate::new(lang, url)` de cada locale e um
+  `Alternate::x_default(url)`; o `canonical` continua sendo o da página atual.
+
+O exemplo completo, com catálogo de quatro idiomas, está em
+[18 — Exemplo completo: portal governamental](18-exemplo-portal.md).
+
 ## Plural, rich text e formatação
 
 Ficam no consumidor:
@@ -153,7 +233,7 @@ Ficam no consumidor:
 |---|---|
 | plural/`trans_choice` | catálogo do consumidor; produza um `String` e use `Text::new` |
 | rich text (negrito/link) | renderizador confiável que produza `Markup` |
-| datas/números localizados | biblioteca do consumidor; o crate só emite `Timestamp`/números de máquina |
+| datas/números localizados | biblioteca do consumidor; o crate só emite `Date`/`Timestamp`/números de máquina |
 | dinheiro | inteiro em centavos + `Msg` de moeda; nunca `f64` |
 | paridade de locales | gate de CI do consumidor |
 

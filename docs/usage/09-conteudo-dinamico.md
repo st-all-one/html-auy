@@ -56,7 +56,7 @@ O `for` é Rust; `items.iter().enumerate()` e padrões funcionam. Evite construi
 Um componente é um tipo que escreve bytes confiáveis. Use os valores tipados para o dado:
 
 ```rust
-use html_auy::{Markup, Render, Text};
+use html_auy::prelude::*;
 
 struct Badge<'a> {
     label: Text<'a>,
@@ -72,7 +72,7 @@ impl Render for Badge<'_> {
     }
 }
 
-let badge = Markup::from_render(&Badge { label: Text::new("Novo") });
+let badge = Markup::from_render(&Badge { label: Text::msg(M::New) });
 ```
 
 Regras:
@@ -132,6 +132,8 @@ fn classes(user_tokens: &[String]) -> Option<ClassList> {
 ## Atributos dinâmicos
 
 ```rust
+use html_auy::{AttrVal, Id};
+
 let maybe_id: Option<Id<'_>> = item.anchor.as_deref().map(Id::new);
 let value = AttrVal::new(&item.value);
 

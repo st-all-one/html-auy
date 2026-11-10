@@ -32,7 +32,7 @@ fica em [`../usage/`](../usage/README.md) e as decisões novas em [`../adr/`](..
 | [24 — Exportação](24-exportacao.md) | portabilidade do vocabulário |
 | [25 — Exemplo de uso](25-exemplo-de-uso.md) | contraste entre desenho e uso |
 | [26 — D29 no consumidor](26-d29-consumidor.md) | tema e shell fora do crate |
-| [27 — Lições do Eta](27-licoes-do-eta.md) | o que o corpus ensinou |
+| [27 — Lições do Eta](27-licoes-do-eta.md) | lições do `eta` para o 0.1.0 |
 | [Acessibilidade](acessibility.md) | arquitetura de acessibilidade em português |
 
 ## Regras

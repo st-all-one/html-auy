@@ -8,13 +8,13 @@
 ## Forma básica
 
 ```rust
-use html_auy::{html, Href, LUrl, Markup, Text};
+use html_auy::prelude::*;
 
 fn card(title: &str, href: LUrl<'_>) -> Markup {
     html! {
         article class="card" data_kind="news" {
             h2 { Text::new(title) }
-            a href=(Href::internal(href)) { Text::new("Ler") }
+            a href=(Href::internal(href)) { M::Read }
         }
     }
 }
@@ -25,7 +25,7 @@ Cada elemento usa `<tag atributo=valor …> { filhos }`; elementos vazios termin
 ```rust
 html! {
     br;
-    img src=(Src::parse("/media/a.avif").unwrap())
+    img src="/media/a.avif"
         alt=(Alt::new("Descrição"))
         width=(WidthPx::new(640)) height=(HeightPx::new(480));
 }
@@ -65,11 +65,17 @@ confiável, `(markup)`. A regra completa está em [Texto e i18n](05-texto-e-i18n
 
 ```rust
 html! {
+    a href="/noticias" { M::News }
+    a href="#conteudo" { M::SkipToContent }
+    img src="/media/a.avif" alt=(Alt::decorative()) width=(WidthPx::new(1)) height=(HeightPx::new(1));
     a href=(Href::external(url)) target="_blank" rel="external" { M::Site }
     button type="button" disabled=(true) { M::Close }
 }
 ```
 
+- `href` e `src` literais aceitam **caminho interno** (`/…`) e, no `href`, fragmento (`#…`). O macro
+  valida o caminho; `href="javascript:…"`, `src="https://…"` e `..` são erro de compilação.
+- URL externa continua tipada (`Href::external`/`Src::parse`): o literal não esconde a decisão.
 - O nome do atributo é do vocabulário (`spec/elements.toml`); `hreff`, `onclick`, `srcdoc` e
   `hx-*` não compilam.
 - `target="_blank"` sem `rel` ganha `rel="noopener noreferrer"`; se você declarar um `rel` literal
@@ -80,6 +86,8 @@ html! {
 ### Expressão tipada
 
 ```rust
+use html_auy::Id;
+
 let id: Option<Id<'_>> = Some(Id::new("relatorio"));
 let href = Href::internal(LUrl::new("/relatorios/1").expect("rota"));
 
@@ -91,7 +99,8 @@ html! {
 
 `atributo=(expr)` exige um tipo que implemente `AttrValue` (`Href`, `Src`, `Alt`, `Class`,
 `ClassList`, `Timestamp`, `WidthPx`, …). `&str` e `String` **não** implementam; use `Text`,
-`AttrVal` ou o tipo de contexto.
+`AttrVal` ou o tipo de contexto. `datetime` é a exceção tipada: aceita `Date` ou `Timestamp` via
+`DateTimeValue`.
 
 `atributo?=(Option<T>)` só emite quando o `Option` é `Some`. `None` não vira atributo vazio.
 
@@ -111,6 +120,8 @@ system, `Class::of`; para valores calculados, `ClassList::try_new`. `class` vazi
 ### `data-*` e `aria-*`
 
 ```rust
+use html_auy::AttrVal;
+
 html! {
     nav aria_label=(Label::text(M::MainNav)) {
         a href=(home) aria_current="page" { M::Home }
@@ -169,6 +180,8 @@ O crate tem componentes que devolvem `Markup` (`Form::open`, `Field::*`, `Img::r
 `Video::render`, …). Eles entram como composição:
 
 ```rust
+use html_auy::{CsrfToken, Field, FieldName, Form, Method};
+
 let form = Form::open(&action, Method::Post(csrf), html! {
     (Field::text(FieldName::new("nome"), M::Name, &state))
     button type="submit" { M::Send }
@@ -182,8 +195,8 @@ let view = View::new(html! {
 `Form::open` também aceita a forma `Form::open(...) { filhos }` dentro do macro, mas a forma com
 `html!` + `(form)` é mais legível e evita confundir o bloco do formulário com o bloco da view.
 
-> **Vários `Markup` seguidos:** `(a) (b)` é lido como a chamada `(a)(b)`. Para emitir vários
-> componentes em sequência, separe-os com um elemento ou use `for item in [...] { (item) }`.
+> **Vários `Markup` irmãos:** use `Markup::concat([a, b])`. `(a) (b)` é lido como a chamada
+> `(a)(b)` e o erro aponta o `concat`.
 
 ## Elementos e aninhamento
 
@@ -235,7 +248,9 @@ html! {
 | `atributo desconhecido 'hreff' em 'a'` | corrija o nome ou veja a lista válida na mensagem |
 | `img exige alt` | `Alt::new("…")` ou `Alt::decorative()` |
 | `img exige width/height` | `WidthPx::new(…)`/`HeightPx::new(…)` |
-| `texto literal não é permitido` | `Msg::X` ou `Text::new(&valor)` |
+| `texto literal não é permitido` | `M::X` (estático) ou `Text::new(&valor)` (dinâmico) |
+| `duas expressões (…) seguidas` | `Markup::concat([a, b])` |
+| `href`/`src` literal inválido | `/caminho` interno ou forma tipada |
 | `aria-label literal` | `aria_label=(Label::text(M::X))` |
 | `button exige type` | `type="button"`, `"submit"` ou `"reset"` |
 | `th exige scope` | `scope="col"`/`"row"` |

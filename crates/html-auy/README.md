@@ -5,18 +5,25 @@ attributes validated before compilation, and accessibility enforced by the types
 
 ```toml
 [dependencies]
-html-auy = "0.1"
+html-auy = "0.2"
 ```
 
 ```rust
-use html_auy::{Href, LUrl, Text, html};
+use html_auy::prelude::*;
+
+#[derive(Clone, Copy, Msg)]
+enum M {
+    #[msg("News")]
+    News,
+}
 
 let link = html! {
-    a href=(Href::internal(LUrl::new("/news").expect("constant route"))) {
-        (Text::new("News"))
-    }
+    a href="/news" { M::News }
 };
 ```
+
+`prelude` gathers the everyday vocabulary. Internal literal routes are validated by the macro;
+external URLs remain typed (`Href::external`, `Src::parse`).
 
 `html!` is a compile-time checked vocabulary, not a general-purpose string template. Errors such as
 an unknown attribute, an `img` without `alt`, or a `button` with a bad accessible name are emitted

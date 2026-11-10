@@ -1,0 +1,5 @@
+error: variante sem `#[msg("…")]`
+ --> tests/ui/msg_derive_missing.rs:5:5
+  |
+5 |     A,
+  |     ^

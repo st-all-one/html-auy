@@ -9,17 +9,36 @@
 ```rust
 use html_auy::{
     html, Action, Alt, Asset, Assets, AttrVal, Audio, Autocomplete, Class, ClassList, ClassToken,
-    CsrfToken, DataAttr, ExternalUrl, Field, FieldName, FieldState, Form, HeightPx, Href,
-    Img, InputType, Integrity, JsonGraph, JsonLd, Label, Lang, LUrl, Markup, Media, Method,
-    Msg, Offset, Page, Partial, Picture, Regions, Render, RootAttributes, SelectOption,
+    ChoiceOption, CsrfToken, DataAttr, Date, DateTimeValue, Dir, ExternalUrl, Field, FieldName, FieldState, Form, Fragment,
+    HeightPx, Href, Img, InputType, Integrity, JsonGraph, JsonLd, Label, Lang, LUrl, Markup, Media,
+    Id, Method, Msg, Offset, Page, Partial, Picture, Regions, Render, RequestClass, RootAttributes, SelectOption, Source,
     ShellData, Sizes, Src, SrcSet, Swap, Text, Timestamp, Tone, Track, Transcript, Variant, View,
     Video, WidthPx, HtmxConfig, OpenGraph, OpenGraphKind, Hint, Preload,
 };
 ```
 
+Para o dia a dia, `use html_auy::prelude::*` reúne `html`, `Page`, `ShellData`, `View`, `Text`,
+`Msg` (trait e derive), `Date`, `Timestamp`, `Href`, `LUrl`, `Lang`, `Dir`, `Markup`, `Asset`, `Assets`,
+`Class`, `Regions`, `Alt`, `ExternalUrl`, `Label`, `JsonLd`, `JsonGraph`, `WidthPx`, `HeightPx`,
+`Offset` e `Render`. O prelude não altera nenhuma regra; é só import.
+
 ## Página mínima
 
 ```rust
+use html_auy::prelude::*;
+
+#[derive(Clone, Copy, Msg)]
+enum M {
+    #[msg("Início")]
+    Title,
+    #[msg("Bem-vindo")]
+    Heading,
+    #[msg("Olá")]
+    Welcome,
+    #[msg("Pular para o conteúdo")]
+    Skip,
+}
+
 let data = ShellData::new(
     Text::msg(M::Title),
     Text::msg(M::Heading),
@@ -46,7 +65,9 @@ let html = page.markup().as_str();
 | texto dinâmico | `p { Text::new(&s) }` |
 | markup | `div { (markup) }` |
 | atributo literal | `type="button"` |
+| rota literal validada | `href="/noticias"` / `src="/media/a.png"` |
 | atributo tipado | `href=(Href::internal(url))` |
+| composição explícita | `Markup::concat([a, b])` |
 | opcional | `id?=(Option<Id>)` |
 | booleano | `disabled=(true)` |
 | classe | `class="a b"` / `class=(Class)` |
@@ -72,9 +93,10 @@ Não existem `@match`, `@let`, template runtime, `on*`, `<style>` nem `<form>` e
 | `sizes` | `Sizes::new("(min-width: 48em) 50vw, 100vw")` |
 | alt | `Alt::new("…")` / `Alt::decorative()` |
 | dimensões | `WidthPx::new(720)` / `HeightPx::new(480)` |
-| data | `Timestamp::new(unix, Offset::UTC)` |
+| data | `Date::new(2026, 11, 5).expect(…)` / `Date::parse("2026-11-05")?` |
+| instante | `Timestamp::parse_rfc3339("2026-11-05T09:00:00-03:00")?` / `Timestamp::new(unix, offset)` |
 | idioma | `Lang::parse("pt-BR")` |
-| classes | `Class::of(&[Token::X])` / `Class::new("a b")` |
+| classes | `Class::of(&[MeuToken::X])` / `Class::new("a b")` |
 | classe dinâmica | `ClassList::try_new(tokens)?` |
 | id | `Id::new("x")` / `Id::try_new("x")?` |
 | campo | `FieldName::new("nome")` |
@@ -91,8 +113,8 @@ let form = Form::open(&action, Method::Post(token), children);
 
 let state = FieldState::new(AttrVal::new(&value))
     .required(true)
-    .help(Text::new("ajuda"))
-    .error(Text::new("erro"));
+    .help(Text::msg(M::Help))
+    .error(Text::msg(M::Error));
 
 let field = Field::text(FieldName::new("nome"), M::Name, &state);
 ```
@@ -116,14 +138,14 @@ let img = Img::new(src, Alt::new("…"), WidthPx::new(720), HeightPx::new(480))
     .responsive(srcset, sizes)
     .lazy();
 
-let video = Video::new(src, Track::captions(vtt, Text::new("Legendas")))
-    .track(Track::descriptions(ad_vtt, Text::new("Audiodescrição")))
+let video = Video::new(src, Track::captions(vtt, Text::msg(M::Captions)))
+    .track(Track::descriptions(ad_vtt, Text::msg(M::AudioDescription)))
     .poster(poster)
     .dimensions(WidthPx::new(1280), HeightPx::new(720));
 
 let audio = Audio::new(src).transcript(Transcript::new(
     Href::internal(LUrl::new("/transcricao").expect("rota")),
-    Text::new("Transcrição"),
+    Text::msg(M::Transcript),
 ));
 ```
 
@@ -135,8 +157,8 @@ quando não há `descriptions`.
 
 ```rust
 let assets: Assets = [
-    Asset::style("/assets/app.css").expect("css"),
-    Asset::script("/assets/app.js").expect("js"),
+    Asset::style("/assets/app.css"),
+    Asset::script("/assets/app.js"),
 ].into_iter().collect();
 
 let data = ShellData::new(title, heading, lang)
@@ -154,7 +176,8 @@ let data = ShellData::new(title, heading, lang)
 | `script` / `classic_script` | `<script defer>` (module ou clássico) |
 | `external_*` | CDN `http(s)` |
 
-Ordem = declaração; dedupe sem mover. `View::asset` entra depois do shell.
+Ordem = declaração; dedupe sem mover. `Assets::extend_options([Option<Asset>])` compõe sem
+interromper no `None`. `View::asset` entra depois do shell.
 
 ## `Page` / `View`
 
@@ -186,7 +209,7 @@ Ordem = declaração; dedupe sem mover. `View::asset` entra depois do shell.
 
 ```rust
 // features = ["audit"]
-let findings = html_auy::audit::check(document);
+let findings = html_auy::audit::check(document.markup().as_str());
 assert!(findings.is_empty(), "{findings:#?}");
 ```
 

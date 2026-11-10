@@ -92,15 +92,19 @@ Consequências:
 ## Assets
 
 ```rust
-use html_auy::{Asset, Assets, Media};
+use html_auy::prelude::*;
+use html_auy::Media;
 
 let assets: Assets = [
-    Asset::style("/assets/app.css").expect("css"),
-    Asset::style_media("/assets/print.css", Media::print()).expect("print"),
-    Asset::script("/assets/app.js").expect("módulo"),
-    Asset::classic_script("/assets/legacy.js").expect("clássico"),
+    Asset::style("/assets/app.css"),
+    Asset::style_media("/assets/print.css", Media::print()),
+    Asset::script("/assets/app.js"),
+    Asset::classic_script("/assets/legacy.js"),
 ].into_iter().collect();
 ```
+
+O `collect` aceita `Option<Asset>`: um caminho inválido vira `None` e não interrompe a composição
+dos demais. Se quiser tratar o erro, use `Asset::style(…)?` antes de inserir.
 
 | Construtor | Emite |
 |---|---|
@@ -139,7 +143,8 @@ origem (`style-src`/`script-src`) e você perde o cache/controle de SRI do self-
 ## Atributos do root
 
 ```rust
-use html_auy::{Class, DataAttr, RootAttributes};
+use html_auy::prelude::*;
+use html_auy::{DataAttr, RootAttributes};
 
 let html_attrs = RootAttributes::new().class(Class::new("dark"));
 let body_attrs = RootAttributes::new()
@@ -177,22 +182,25 @@ Isso mantém o `Page` determinístico: o mesmo `ShellData` gera os mesmos bytes.
 ## Regiões
 
 ```rust
-use html_auy::Regions;
+use html_auy::prelude::*;
 
-let mut regions = Regions::new();
-regions.header = Some(html! {
-    header {
-        nav aria_label=(Label::text(M::MainNav)) {
-            a href=(home) aria_current="page" { M::Home }
+let regions = Regions::new()
+    .header(html! {
+        header {
+            nav aria_label=(Label::text(M::MainNav)) {
+                a href="/" aria_current="page" { M::Home }
+            }
         }
-    }
-});
-regions.before_main = Some(html! {
-    nav aria_label=(Label::text(M::Breadcrumb)) { … }
-});
-regions.after_main = Some(html! { aside aria_label=(Label::text(M::Related)) { … } });
-regions.footer = Some(html! { footer { … } });
+    })
+    .before_main(html! {
+        nav aria_label=(Label::text(M::Breadcrumb)) { … }
+    })
+    .after_main(html! { aside aria_label=(Label::text(M::Related)) { … } })
+    .footer(html! { footer { … } });
 ```
+
+Os campos públicos continuam disponíveis para composição incremental; o builder só evita mutação
+manual.
 
 - Slot vazio não emite nada; não preencha “quase” para segurar espaço.
 - `header`/`footer`/`aside`/`nav` são regiões; a ordem do DOM é a ordem visual.

@@ -1,5 +1,85 @@
 //! Data e hora em RFC 3339, com fuso explícito.
 
+use alloc::string::String;
+
+/// Data-only (`2026-11-05`) para `<time datetime="…">`.
+///
+/// Datas de notícia, ata e calendário não têm hora: emitir `T00:00:00Z` inventaria um instante que
+/// o documento não conhece.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Date {
+    buf: [u8; 10],
+}
+
+impl Date {
+    /// Data no calendário gregoriano, entre `0001-01-01` e `9999-12-31`.
+    #[must_use]
+    pub fn new(year: u16, month: u8, day: u8) -> Option<Self> {
+        if !(1..=9_999).contains(&year) || !(1..=12).contains(&month) {
+            return None;
+        }
+        let max = days_in_month(u32::from(year), month);
+        if !(1..=max).contains(&u32::from(day)) {
+            return None;
+        }
+        let mut buf = [0u8; 10];
+        let mut cursor = 0usize;
+        push_number(&mut buf, &mut cursor, u32::from(year), 4);
+        push_byte(&mut buf, &mut cursor, b'-');
+        push_number(&mut buf, &mut cursor, u32::from(month), 2);
+        push_byte(&mut buf, &mut cursor, b'-');
+        push_number(&mut buf, &mut cursor, u32::from(day), 2);
+        Some(Self { buf })
+    }
+
+    /// `YYYY-MM-DD`.
+    #[must_use]
+    pub fn parse(input: &str) -> Option<Self> {
+        let mut parts = input.split('-');
+        let year = parts.next()?;
+        let month = parts.next()?;
+        let day = parts.next()?;
+        if parts.next().is_some()
+            || year.len() != 4
+            || month.len() != 2
+            || day.len() != 2
+            || !year.chars().all(|ch| ch.is_ascii_digit())
+            || !month.chars().all(|ch| ch.is_ascii_digit())
+            || !day.chars().all(|ch| ch.is_ascii_digit())
+        {
+            return None;
+        }
+        Self::new(year.parse().ok()?, month.parse().ok()?, day.parse().ok()?)
+    }
+
+    /// A data formatada.
+    #[must_use]
+    pub fn as_str(&self) -> &str {
+        core::str::from_utf8(&self.buf).unwrap_or("")
+    }
+}
+
+/// Valor aceito por `datetime`: data-only ou instante RFC 3339.
+///
+/// Implementar este trait é assumir que a saída já é um valor de `datetime` canônico; não use dado
+/// de usuário. O macro só o alcança por `Date`/`Timestamp`; o `Writer` não é API.
+pub trait DateTimeValue {
+    /// Escreve o valor já canônico.
+    fn write_datetime(&self, out: &mut String);
+}
+
+impl DateTimeValue for Date {
+    fn write_datetime(&self, out: &mut String) {
+        out.push_str(self.as_str());
+    }
+}
+
+impl DateTimeValue for Timestamp {
+    fn write_datetime(&self, out: &mut String) {
+        out.push_str(self.as_str());
+    }
+}
+
 /// Deslocamento de fuso horário em segundos.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Offset {
@@ -127,6 +207,42 @@ impl Timestamp {
         Self { buf }
     }
 
+    /// Lê `YYYY-MM-DDTHH:MM:SSZ` ou `YYYY-MM-DDTHH:MM:SS±HH:MM`.
+    ///
+    /// Frações de segundo, hora sem fuso e offsets em segundos não são representáveis neste tipo:
+    /// a entrada é recusada em vez de truncada em silêncio.
+    #[must_use]
+    pub fn parse_rfc3339(input: &str) -> Option<Self> {
+        let (date, time) = input.split_once('T').or_else(|| input.split_once('t'))?;
+        let date = Date::parse(date)?;
+        let (clock, offset) = split_offset(time)?;
+        let offset = Offset::parse(offset)?;
+        let mut fields = clock.split(':');
+        let hour = parse_two(fields.next()?)?;
+        let minute = parse_two(fields.next()?)?;
+        let second = parse_two(fields.next()?)?;
+        if fields.next().is_some() || hour > 23 || minute > 59 || second > 59 {
+            return None;
+        }
+        Some(Self::from_parts(&date, hour, minute, second, offset))
+    }
+
+    fn from_parts(date: &Date, hour: u8, minute: u8, second: u8, offset: Offset) -> Self {
+        let mut buf = [0u8; Self::CAPACITY];
+        let mut cursor = 0usize;
+        for byte in date.as_str().bytes() {
+            push_byte(&mut buf, &mut cursor, byte);
+        }
+        push_byte(&mut buf, &mut cursor, b'T');
+        push_number(&mut buf, &mut cursor, u32::from(hour), 2);
+        push_byte(&mut buf, &mut cursor, b':');
+        push_number(&mut buf, &mut cursor, u32::from(minute), 2);
+        push_byte(&mut buf, &mut cursor, b':');
+        push_number(&mut buf, &mut cursor, u32::from(second), 2);
+        write_offset(&mut buf, &mut cursor, offset);
+        Self { buf }
+    }
+
     /// O instante formatado.
     #[must_use]
     pub fn as_str(&self) -> &str {
@@ -142,8 +258,43 @@ impl Timestamp {
     }
 }
 
+/// Separa `HH:MM:SS` do fuso (`Z`, `+HH:MM` ou `-HH:MM`).
+fn split_offset(time: &str) -> Option<(&str, &str)> {
+    if let Some(clock) = time.strip_suffix('Z').or_else(|| time.strip_suffix('z')) {
+        return Some((clock, "Z"));
+    }
+    let index = time
+        .char_indices()
+        .rev()
+        .find(|(_, ch)| matches!(ch, '+' | '-'))?
+        .0;
+    Some((time.get(..index)?, time.get(index..)?))
+}
+
+/// Campo decimal de exatamente dois dígitos.
+fn parse_two(input: &str) -> Option<u8> {
+    if input.len() != 2 || !input.chars().all(|ch| ch.is_ascii_digit()) {
+        return None;
+    }
+    input.parse().ok()
+}
+
+/// Dias do mês no calendário gregoriano.
+const fn days_in_month(year: u32, month: u8) -> u32 {
+    match month {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 => {
+            let leap =
+                year.is_multiple_of(4) && (!year.is_multiple_of(100) || year.is_multiple_of(400));
+            if leap { 29 } else { 28 }
+        }
+        _ => 0,
+    }
+}
+
 /// Escreve o fuso: `Z` quando UTC, `±HH:MM` caso contrário.
-fn write_offset(buf: &mut [u8; Timestamp::CAPACITY], cursor: &mut usize, offset: Offset) {
+fn write_offset(buf: &mut [u8], cursor: &mut usize, offset: Offset) {
     if offset.secs == 0 {
         push_byte(buf, cursor, b'Z');
         return;
@@ -159,9 +310,9 @@ fn write_offset(buf: &mut [u8; Timestamp::CAPACITY], cursor: &mut usize, offset:
 /// Escreve `value` com `width` dígitos (zero à esquerda).
 #[expect(
     clippy::arithmetic_side_effects,
-    reason = "cursor limitado por CAPACITY e conferido em cada get_mut"
+    reason = "cursor limitado pelo buffer e conferido em cada get_mut"
 )]
-fn push_number(buf: &mut [u8; Timestamp::CAPACITY], cursor: &mut usize, value: u32, width: usize) {
+fn push_number(buf: &mut [u8], cursor: &mut usize, value: u32, width: usize) {
     let mut divisor: u32 = 1;
     let mut index = 1;
     while index < width {
@@ -180,7 +331,7 @@ fn push_number(buf: &mut [u8; Timestamp::CAPACITY], cursor: &mut usize, value: u
     }
 }
 
-fn push_byte(buf: &mut [u8; Timestamp::CAPACITY], cursor: &mut usize, byte: u8) {
+fn push_byte(buf: &mut [u8], cursor: &mut usize, byte: u8) {
     if let Some(slot) = buf.get_mut(*cursor) {
         *slot = byte;
         *cursor = cursor.saturating_add(1);

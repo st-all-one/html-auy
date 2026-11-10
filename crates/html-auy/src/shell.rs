@@ -156,6 +156,16 @@ impl Assets {
         }
     }
 
+    /// Acrescenta assets já validados, ignorando os que falharam na construção.
+    ///
+    /// É o caminho para `[Asset::style(…), Asset::script(…)]` sem `flatten` manual; o `Option`
+    /// continua visível na construção, só não vira ruído no ponto de composição.
+    pub fn extend_options(&mut self, assets: impl IntoIterator<Item = Option<Asset>>) {
+        for asset in assets.into_iter().flatten() {
+            self.insert(asset);
+        }
+    }
+
     /// Itera na ordem declarada.
     pub fn iter(&self) -> core::slice::Iter<'_, Asset> {
         self.items.iter()
@@ -184,6 +194,14 @@ impl FromIterator<Asset> for Assets {
     fn from_iter<T: IntoIterator<Item = Asset>>(iter: T) -> Self {
         let mut assets = Self::new();
         assets.extend(iter);
+        assets
+    }
+}
+
+impl FromIterator<Option<Asset>> for Assets {
+    fn from_iter<T: IntoIterator<Item = Option<Asset>>>(iter: T) -> Self {
+        let mut assets = Self::new();
+        assets.extend_options(iter);
         assets
     }
 }
@@ -428,6 +446,34 @@ impl Regions {
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Cabeçalho do site.
+    #[must_use]
+    pub fn header(mut self, header: crate::Markup) -> Self {
+        self.header = Some(header);
+        self
+    }
+
+    /// Conteúdo entre o header e o `<main>` (breadcrumb, aviso, `<aside>`).
+    #[must_use]
+    pub fn before_main(mut self, content: crate::Markup) -> Self {
+        self.before_main = Some(content);
+        self
+    }
+
+    /// Conteúdo entre o `<main>` e o footer.
+    #[must_use]
+    pub fn after_main(mut self, content: crate::Markup) -> Self {
+        self.after_main = Some(content);
+        self
+    }
+
+    /// Rodapé do site.
+    #[must_use]
+    pub fn footer(mut self, footer: crate::Markup) -> Self {
+        self.footer = Some(footer);
+        self
     }
 }
 

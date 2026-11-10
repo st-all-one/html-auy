@@ -103,7 +103,7 @@ documentada (ou o contrário). O nome é a chave da mensagem de erro e do teste.
 
 | Invariante | Elementos | Regra |
 |---|---|---|
-| `href_is_typed` | `a` | `href` só existe via `Href` (https/relativo/fragmento/mailto/tel); `javascript:`/`data:` não constroem |
+| `href_is_typed` | `a` | `href` literal aceita só caminho interno/fragmento (validado no macro); o resto exige `Href` (https/fragmento/mailto/tel); `javascript:`/`data:` não constroem |
 | `blank_target_implies_noopener` | `a` | `target="_blank"` acrescenta `rel="noopener noreferrer"` automaticamente |
 | `no_aria_label_over_visible_text` | `a`, `button` | com texto visível, nome acessível é o texto; `aria-label` divergente é erro |
 | `a_rel_enum` | `a` | `rel` é enum fechado (`noopener`, `noreferrer`, `external`, `nofollow`, `license`, …); `opener` é proibido |

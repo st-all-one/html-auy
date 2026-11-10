@@ -139,7 +139,7 @@ script-src-attr 'none';
 - O caminho padrão não tem inline; não precisa de nonce.
 - Se usar `style=`, ajuste `style-src-attr` explicitamente.
 - CDN exige allowlist de origem em `script-src`/`style-src`.
-- `Asset` não emite `integrity`; SRI para `link`/`script` não é suportado por esse tipo no `0.1`.
+- `Asset` não emite `integrity`; SRI para `link`/`script` não é suportado por esse tipo no `0.2`.
   Trate a ausência como limite e prefira self-host com CSP; `Integrity` existe para `Preload`.
 - Trusted Types pode ser exigido (`require-trusted-types-for 'script'`); o crate não usa
   `innerHTML`, e scripts são arquivos.

@@ -1,7 +1,7 @@
-error: `href` não aceita literal em `a`
+error: `href="javascript:alert(1)"` não é um destino interno válido
          = regra: contexto de escape (D1)
-         = ajuda: use `href=(Href::internal(LUrl::…))`
+         = ajuda: use `/caminho`, `#fragmento` ou a forma tipada `href=(Href::internal(…))` / `Href::external(…)`
  --> tests/ui/literal_href.rs:6:28
   |
-6 |     let _ = html! { a href="/x" { m } };
-  |                            ^^^^
+6 |     let _ = html! { a href="javascript:alert(1)" { m } };
+  |                            ^^^^^^^^^^^^^^^^^^^^^

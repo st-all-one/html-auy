@@ -14,7 +14,7 @@ Este é o esqueleto operacional. Cache, `ETag`, `303`/`422`, resposta parcial e 
 ```toml
 [package]
 name = "site"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.92"
 
@@ -22,7 +22,7 @@ rust-version = "1.92"
 axum = "0.8"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "net"] }
 serde = { version = "1", features = ["derive"] } # se usar formulários
-html-auy = "0.1"
+html-auy = "0.2"
 
 # opcionais
 tower-http = { version = "0.7", features = ["fs"] } # arquivos estáticos
@@ -65,7 +65,7 @@ impl IntoResponse for PageResponse {
 
 ## 3. `main.rs` mínimo
 
-Este exemplo compila com Axum 0.8.9 e `html-auy` 0.1:
+Este exemplo compila com Axum 0.8.9 e `html-auy` 0.2:
 
 ```rust
 use axum::{
@@ -75,7 +75,27 @@ use axum::{
     routing::get,
     Router,
 };
-use html_auy::{html, Href, Lang, LUrl, Page, ShellData, Text, View};
+use html_auy::prelude::*;
+
+#[derive(Clone, Copy, Msg)]
+enum M {
+    #[msg("Erro")]
+    Error,
+    #[msg("Início")]
+    Home,
+    #[msg("Olá, mundo.")]
+    Hello,
+    #[msg("Notícia")]
+    News,
+    #[msg("Link canônico")]
+    Canonical,
+    #[msg("Slug inválido")]
+    InvalidSlug,
+    #[msg("Página não encontrada")]
+    NotFound,
+    #[msg("Conteúdo vindo do banco.")]
+    Body,
+}
 
 struct PageResponse {
     status: StatusCode,
@@ -97,7 +117,7 @@ fn lang() -> Lang {
 }
 
 fn error_page(status: StatusCode, message: &str) -> PageResponse {
-    let data = ShellData::new(Text::new("Erro"), Text::new("Erro"), lang());
+    let data = ShellData::new(Text::msg(M::Error), Text::msg(M::Error), lang());
     let view = View::new(html! {
         p { Text::new(message) }
     });
@@ -108,9 +128,9 @@ fn error_page(status: StatusCode, message: &str) -> PageResponse {
 }
 
 async fn index() -> PageResponse {
-    let data = ShellData::new(Text::new("Início"), Text::new("Início"), lang());
+    let data = ShellData::new(Text::msg(M::Home), Text::msg(M::Home), lang());
     let view = View::new(html! {
-        p { Text::new("Olá, mundo.") }
+        p { M::Hello }
     });
     PageResponse {
         status: StatusCode::OK,
@@ -120,15 +140,15 @@ async fn index() -> PageResponse {
 
 async fn noticia(Path(slug): Path<String>) -> PageResponse {
     let Some(url) = LUrl::with_segments("/noticias", &[&slug]) else {
-        return error_page(StatusCode::BAD_REQUEST, "Slug inválido");
+        return error_page(StatusCode::BAD_REQUEST, M::InvalidSlug.as_str());
     };
 
-    let data = ShellData::new(Text::new("Notícia"), Text::new("Notícia"), lang());
+    let data = ShellData::new(Text::msg(M::News), Text::msg(M::News), lang());
     let view = View::new(html! {
         article {
             h2 { Text::new(&slug) }
             p {
-                a href=(Href::internal(url)) { Text::new("Link canônico") }
+                a href=(Href::internal(url)) { M::Canonical }
             }
         }
     });
@@ -145,7 +165,7 @@ async fn main() {
         .route("/", get(index))
         .route("/noticias/{slug}", get(noticia))
         .fallback(|| async {
-            error_page(StatusCode::NOT_FOUND, "Página não encontrada")
+            error_page(StatusCode::NOT_FOUND, M::NotFound.as_str())
         });
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
@@ -184,7 +204,7 @@ fn article_page(article: &Article) -> Page {
     let view = View::new(html! {
         article {
             h2 { Text::new(&article.title) }
-            p { Text::new("Conteúdo vindo do banco.") }
+            p { M::Body }
         }
     });
 
@@ -192,9 +212,9 @@ fn article_page(article: &Article) -> Page {
 }
 ```
 
-Para UI fixa, prefira um `enum Msg` implementando `Msg` em vez de `Text::new` em todos os rótulos.
-`Msg` dá catálogo, autocomplete e impede texto literal no markup. Conteúdo dinâmico continua entrando
-por `Text::new`; markup confiável, por `(markup)`.
+Para UI fixa, use um `enum` com `#[derive(Msg)]` em vez de `Text::new` em todos os rótulos.
+`Msg` dá catálogo, autocomplete e impede texto literal no markup; `Text::msg` entra onde a API pede
+`Text`. Conteúdo dinâmico continua entrando por `Text::new`; markup confiável, por `(markup)`.
 
 ## 5. Formulários, CSRF e 422
 

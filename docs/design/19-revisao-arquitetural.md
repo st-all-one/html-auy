@@ -148,6 +148,9 @@ que falha.** Depois desta revisão, nenhuma promessa fica em cima de "o desenvol
 
 ## 7. Aplicado nesta revisão
 
+> **Estado vigente (0.2.0):** 71 invariantes = 59 `block` / 4 `type` / 8 `output`. Os números
+> abaixo são a foto desta revisão, não a contagem atual.
+
 1. **Escopo por invariante** (`spec/elements.toml` → `[invariants]`): **62 `block`** (a macro recusa),
    **6 `type`** (`Page`/`Form` não deixam compilar sem o dado) e **5 `output`** (só o HTML final
    responde). `validate_spec.py` falha se uma invariante usada não declarar escopo. Documentado em

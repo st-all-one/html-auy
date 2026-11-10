@@ -13,7 +13,7 @@ contexto tem um tipo com um construtor seguro e nenhum construtor cru.
 | valor de atributo comum | `AttrVal<'a>` | `AttrVal::new(&str)` | escapa os 5 + `\r\n\t` |
 | rota interna | `LUrl<'a>` | `LUrl::new` · `from_string` · `with_segments` | começa com `/`; sem `//`, `:`, `..`, controle |
 | URL absoluta | `ExternalUrl<'a>` | `ExternalUrl::parse` | só `http`/`https`; esquema normalizado |
-| link | `Href<'a>` | `Href::internal` · `fragment` · `external` · `mailto` · `tel` | une os destinos permitidos |
+| link | `Href<'a>` | literal `/…`/`#…` no `html!` · `Href::internal` · `fragment` · `external` · `mailto` · `tel` | literal validado ou destino tipado |
 | fragmento | `Fragment<'a>` | `Fragment::new` | `#` ou `#id` com alfabeto seguro |
 | e-mail | `MailAddr<'a>` | `MailAddr::parse` | `local@dominio.tld` conservador |
 | telefone | `PhoneNumber<'a>` | `PhoneNumber::parse` | E.164 (`+` + 1..15 dígitos) |
@@ -22,7 +22,9 @@ contexto tem um tipo com um construtor seguro e nenhum construtor cru.
 | `sizes` | `Sizes<'a>` | `Sizes::new` · `try_new` | gramática de lista; inválida vira vazio |
 | texto alternativo | `Alt<'a>` | `Alt::new` · `decorative` | vazio só por declaração explícita |
 | dimensão | `WidthPx` / `HeightPx` | `new(u32)` | nunca zero (0 satura para 1) |
-| data/hora | `Timestamp` | `new(unix_seconds, Offset)` | RFC 3339 com offset |
+| data | `Date` | `new(ano, mês, dia)` · `parse("YYYY-MM-DD")` | data-only; não inventa hora/fuso |
+| data/hora | `Timestamp` | `new(unix_seconds, Offset)` · `parse_rfc3339` | RFC 3339 com offset; fração de segundo é recusada |
+| atributo `datetime` | `DateTimeValue` | `Date` ou `Timestamp` | unifica data-only e instante no mesmo atributo |
 | fuso | `Offset` | `UTC` · `from_seconds` · `from_hms` · `parse` | até ±23:59, em minutos |
 | idioma | `Lang` | `Lang::parse` · `Lang::EN` | BCP-47 canônico (`pt-BR`) |
 | direção | `Dir` | `Ltr` · `Rtl` · `Auto` | `dir` fechado |
@@ -40,7 +42,8 @@ contexto tem um tipo com um construtor seguro e nenhum construtor cru.
 ## URLs: cada destino tem um tipo
 
 ```rust
-use html_auy::{ExternalUrl, Fragment, Href, LUrl, MailAddr, PhoneNumber};
+use html_auy::prelude::*;
+use html_auy::{Fragment, MailAddr, PhoneNumber};
 
 let home = LUrl::new("/").expect("rota constante");
 let article = LUrl::with_segments("/noticias", &["a frota", "ônibus"]).expect("segmentos");
@@ -117,15 +120,18 @@ let src = Src::media(&cover);
 ## Datas e fusos
 
 ```rust
-let offset = Offset::from_hms(-3, 0).expect("UTC-3");
-let stamp = Timestamp::new(1_704_164_645, offset);
+let date = Date::new(2026, 11, 5).expect("data fixa");
+let instant = Timestamp::parse_rfc3339("2026-11-05T09:00:00-03:00").expect("RFC 3339");
 
 html! {
-    time datetime=(stamp) { Text::new("5 de novembro de 2026") }
+    time datetime=(date) { M::DateLabel }
+    time datetime=(instant) { M::DateTimeLabel }
 }
 ```
 
-- `Timestamp` é RFC 3339 **com offset**; não há modo “data sem fuso”.
+- `Date` é data-only (`YYYY-MM-DD`): use em notícia, ata e calendário, onde hora/fuso não existem.
+- `Timestamp` é RFC 3339 **com offset**; `parse_rfc3339` preserva o offset e recusa fração de
+  segundo (o tipo não representa fração).
 - `Offset::from_seconds` exige múltiplo de 60; `parse` aceita `Z`, `+HH:MM` e `-HH:MM`.
 - A formatação visível (“5 de novembro”) continua sendo do consumidor; o crate só emite o valor de
   máquina.
@@ -203,7 +209,7 @@ em [Segurança](10-seguranca.md) e [Conteúdo dinâmico](09-conteudo-dinamico.md
 | Em vez de | Use |
 |---|---|
 | `String` em `class` | `Class`/`ClassList` |
-| `String` em `href` | `Href` + `LUrl`/`ExternalUrl` |
+| `String` em `href` | `href="/rota"` literal ou `Href` + `LUrl`/`ExternalUrl` |
 | `f64` para dinheiro | inteiro em centavos + `Msg` de moeda (do consumidor) |
 | `String` em `style` vindo do usuário | classe/token; `style=` só com valor confiável e auditado |
 | `format!` para montar HTML | `html!`/`Render`/`Markup::from_render` |

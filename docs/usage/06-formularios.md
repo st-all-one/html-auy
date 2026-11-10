@@ -63,8 +63,8 @@ html! {
 ```rust
 let nome = FieldState::new(AttrVal::new(&state.nome))
     .required(true)
-    .help(Text::new("Como no documento"))
-    .error(Text::new("Informe o nome completo"));
+    .help(Text::msg(M::HelpName))
+    .error(Text::msg(M::ErrorName));
 
 let aceite = FieldState::new(AttrVal::new("sim"))
     .checked(state.accepted);
@@ -118,8 +118,8 @@ O HTML de `Field::text("nome", "Nome", state)` é, em forma canônica:
 use html_auy::{AttrVal, SelectOption};
 
 let opcoes = [
-    SelectOption::new(AttrVal::new("sp"), Text::new("São Paulo")).selected(state.uf == "sp"),
-    SelectOption::new(AttrVal::new("rj"), Text::new("Rio de Janeiro")),
+    SelectOption::new(AttrVal::new("sp"), Text::msg(M::SaoPaulo)).selected(state.uf == "sp"),
+    SelectOption::new(AttrVal::new("rj"), Text::msg(M::RioDeJaneiro)),
 ];
 
 let select = Field::select(
@@ -143,7 +143,7 @@ let descricao = Field::textarea(
     M::Description,
     &FieldState::new(AttrVal::new(&state.description))
         .required(true)
-        .help(Text::new("Até 2.000 caracteres")),
+        .help(Text::msg(M::HelpDescription)),
 );
 ```
 
@@ -175,8 +175,8 @@ let aceite = Field::checkbox(
 );
 
 let canais = [
-    ChoiceOption::new(AttrVal::new("email"), Text::new("E-mail")).checked(state.email),
-    ChoiceOption::new(AttrVal::new("telefone"), Text::new("Telefone")),
+    ChoiceOption::new(AttrVal::new("email"), Text::msg(M::Email)).checked(state.email),
+    ChoiceOption::new(AttrVal::new("telefone"), Text::msg(M::Phone)),
 ];
 
 let contato = Field::radio_group(
@@ -201,13 +201,11 @@ O crate não decide status HTTP. O padrão do consumidor é:
 ```rust
 let nome = FieldState::new(AttrVal::new(&submitted.nome))
     .required(true)
-    .error(Text::new("Informe um nome válido"));
+    .error(Text::msg(M::ErrorName));
 
 let form = Form::open(&action, Method::Post(token), html! {
     div role="alert" {
-        a href=(Href::internal(LUrl::new("/solicitacoes#f-nome").expect("âncora"))) {
-            Text::new("Corrija o nome")
-        }
+        a href="/solicitacoes#f-nome" { M::FixName }
     }
     (Field::text(FieldName::new("nome"), M::Name, &nome))
     button type="submit" { M::Send }

@@ -4,6 +4,34 @@ All notable changes to `html-auy` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow the policy in
 [`docs/design/11-estabilidade.md`](docs/design/11-estabilidade.md).
 
+## [0.2.0] - 2026-11-10
+
+Minor release for the ergonomics work built on `0.1.1`: new public API, validated literal URLs,
+and date-only values. No escape or document-order semantics changed.
+
+### Added
+
+- `prelude` for the everyday vocabulary (`html!`, `Page`, `Text`, `Msg`, `Date`, `Dir`, `Href`, …).
+- `Markup::concat` for explicit sibling composition; `(a)(b)` now reports that hint instead of a
+  generic type error.
+- `#[derive(Msg)]` with `#[msg("…")]`, including compile-time diagnostics for missing or malformed
+  messages.
+- Builder methods on `Regions` (`header`, `before_main`, `after_main`, `footer`).
+- `Assets` collection from `Option<Asset>` and `Assets::extend_options`.
+- Validated literal `href`/`src` for internal paths and fragments; external URLs remain typed.
+- `Date` for date-only `<time datetime>` values and `Timestamp::parse_rfc3339`.
+- `DateTimeValue` so a single `datetime` attribute accepts both `Date` and `Timestamp`.
+- Multilingual government portal example (`pt-BR`, `en`, `es`, `fr`) with a locale-keyed `Msg`
+  catalog, explicit `lang`/`dir`, a visible language switcher, per-locale `canonical`/`hreflang`, and
+  generated previews.
+
+### Changed
+
+- Documentation examples now use the `0.2.0` concise surface consistently: `prelude`,
+  `#[derive(Msg)]`/`Text::msg`, validated literal `href`/`src`, `Markup::concat`, `Regions`/`Assets`
+  builders, `Date`/`Timestamp`, and the locale-keyed `Message` pattern. Historical design documents
+  are explicitly marked when their numbers or API names describe earlier versions.
+
 ## [0.1.1] - 2026-11-07
 
 Lint and supply-chain hardening only. No public API or emitted-byte change.

@@ -5,7 +5,7 @@
 //! referências acessíveis, estrutura de tabela e mídia) mora em [`crate::rules`].
 
 use crate::ast::{Attr, AttrValue, Block, Element, IfNode, Item, Otherwise};
-use crate::attrs::{is_boolean, is_typed};
+use crate::attrs::{is_boolean, is_typed, literal_fragment, literal_path};
 use crate::diagnostic::Diag;
 use crate::rules;
 use crate::table::{self, Only, ValueKind};
@@ -627,6 +627,15 @@ fn check_attr_value(element: &Element, spec: &'static table::Element, attr: &Att
         return;
     }
 
+    if matches!(key.as_str(), "href" | "src") {
+        if let AttrValue::Literal { text, span } = &attr.value
+            && let Some(diag) = literal_url_error(&key, text, *span)
+        {
+            ctx.error(diag);
+        }
+        return;
+    }
+
     if is_typed(spec.name, &key) {
         if let AttrValue::Literal { span, .. } = attr.value {
             ctx.error(literal_rejected(spec.name, &key, span));
@@ -667,6 +676,33 @@ fn check_attr_value(element: &Element, spec: &'static table::Element, attr: &Att
             }
         }
     }
+}
+
+fn literal_url_error(key: &str, text: &str, span: Span) -> Option<Diag> {
+    let valid = if key == "href" {
+        literal_fragment(text) || literal_path(text)
+    } else {
+        literal_path(text)
+    };
+    if valid {
+        return None;
+    }
+    let (message, hint) = if key == "href" {
+        (
+            format!("`href=\"{text}\"` não é um destino interno válido"),
+            "use `/caminho`, `#fragmento` ou a forma tipada `href=(Href::internal(…))` / `Href::external(…)`",
+        )
+    } else {
+        (
+            format!("`{key}=\"{text}\"` não é um caminho interno válido"),
+            "use `/caminho` ou a forma tipada `src=(Src::parse(…))`; literais não aceitam URL externa",
+        )
+    };
+    Some(
+        Diag::new(span, message)
+            .rule("contexto de escape (D1)")
+            .hint(hint),
+    )
 }
 
 fn literal_rejected(element: &str, key: &str, span: Span) -> Diag {

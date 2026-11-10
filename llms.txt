@@ -2,7 +2,7 @@
 
 > `html-auy` is a typed HTML vocabulary for Rust: compile-time attribute validation, context-aware escaping, deterministic bytes, and accessibility by construction. HTML is the artifact, not a projection of a reactive tree.
 
-Version `0.1.1`. Rust 1.92+ (edition 2024). `#![no_std]` + `alloc`. No framework, HTTP, router, runtime, or embedded JavaScript. The public crate is `html-auy`; the `html!` macro is implemented by `html-auy-macros` and `html-auy-macros-core`.
+Version `0.2.0`. Rust 1.92+ (edition 2024). `#![no_std]` + `alloc`. No framework, HTTP, router, runtime, or embedded JavaScript. The public crate is `html-auy`; the `html!` macro is implemented by `html-auy-macros` and `html-auy-macros-core`.
 
 ## Canonical facts
 
@@ -24,29 +24,41 @@ Version `0.1.1`. Rust 1.92+ (edition 2024). `#![no_std]` + `alloc`. No framework
 
 ```toml
 [dependencies]
-html-auy = "0.1"
+html-auy = "0.2"
 ```
 
 ```rust
-use html_auy::{html, Lang, Page, ShellData, Text, View};
+use html_auy::prelude::*;
+
+#[derive(Clone, Copy, Msg)]
+enum M {
+    #[msg("Home")]
+    Home,
+    #[msg("Hello, world.")]
+    Greeting,
+}
 
 fn page() -> Page {
     let lang = Lang::parse("en").expect("constant language");
-    let data = ShellData::new(Text::new("Home"), Text::new("Home"), lang);
+    let data = ShellData::new(Text::msg(M::Home), Text::msg(M::Home), lang);
     let view = View::new(html! {
-        p { Text::new("Hello, world.") }
+        p { M::Greeting }
     });
     Page::new(&data, view)
 }
 ```
 
 ```rust
-use html_auy::{html, Href, LUrl, Text};
+use html_auy::prelude::*;
+
+#[derive(Clone, Copy, Msg)]
+enum M {
+    #[msg("News")]
+    News,
+}
 
 let link = html! {
-    a href=(Href::internal(LUrl::new("/news").expect("constant route"))) {
-        (Text::new("News"))
-    }
+    a href="/news" { M::News }
 };
 assert_eq!(link.as_str(), r#"<a href="/news">News</a>"#);
 ```
@@ -66,9 +78,9 @@ typed data -> html! / primitives -> Markup -> View -> Page -> bytes
 
 ## Public surface
 
-- `html!` macro; `Markup`; `Render`.
+- `html!` macro; `Msg` derive; `prelude`; `Markup`; `Render`.
 - `Page`, `ShellData`, `View`, `Regions`, `Alternate`, `OpenGraph`, `Hint`, `Preload`, `Asset`, `Assets`, `RootAttributes`.
-- Values: `Text`, `AttrVal`, `Href`, `LUrl`, `ExternalUrl`, `Fragment`, `MailAddr`, `PhoneNumber`, `Src`, `SrcSet`, `Sizes`, `Alt`, `WidthPx`, `HeightPx`, `Timestamp`, `Offset`, `Lang`, `Dir`, `Label`, `Id`, `FieldName`, `Class`, `ClassList`, `Tone`, `Media`, `Integrity`, `Autocomplete`, `JsonLd`.
+- Values: `Text`, `AttrVal`, `Href`, `LUrl`, `ExternalUrl`, `Fragment`, `MailAddr`, `PhoneNumber`, `Src`, `SrcSet`, `Sizes`, `Alt`, `WidthPx`, `HeightPx`, `Date`, `Timestamp`, `DateTimeValue`, `Offset`, `Lang`, `Dir`, `Label`, `Id`, `FieldName`, `Class`, `ClassList`, `Tone`, `Media`, `Integrity`, `Autocomplete`, `JsonLd`.
 - Forms: `Form`, `Action`, `CsrfToken`, `Method`, `Field`, `FieldState`, `InputType`, `SelectOption`, `ChoiceOption`.
 - Media: `Img`, `Picture`, `Source`, `Video`, `Audio`, `Track`, `TrackKind`, `Transcript`, `Loading`, `MediaPreload`.
 - Optional: `audit::check`, `audit::Finding`.
@@ -76,7 +88,10 @@ typed data -> html! / primitives -> Markup -> View -> Page -> bytes
 ## `html!` essentials
 
 - Syntax: `tag attr=value { children }`; void elements end with `;`.
-- Literal text is forbidden: use `Msg` for static translated text, `Text::new` for dynamic text, `(markup)` for prebuilt markup.
+- Literal text is forbidden: use `M::X` for static UI text, `Text::msg(M)` where the API requires `Text`, `Text::new` only for dynamic data, and `(markup)` for prebuilt markup.
+- `#[derive(Msg)]` with `#[msg("…")]` generates the static message table; manual `Msg` impls remain valid.
+- `href="/path"` and `src="/asset"` accept validated internal literals; `href="#fragment"` is allowed. External URLs stay typed (`Href::external`, `Src::parse`).
+- `Markup::concat([a, b])` composes sibling markup; `(a)(b)` is an error with that hint.
 - Attribute names use Rust `_`; HTML output uses `-` (`aria_label` -> `aria-label`).
 - Typed attributes use `attr=(value)`; optional attributes use `attr?=(Option<T>)`.
 - Boolean attributes use presence: `disabled=(true)` emits `disabled`; `false` omits it.
@@ -144,8 +159,8 @@ typed data -> html! / primitives -> Markup -> View -> Page -> bytes
 
 - `Page` always emits one `<main id="main" tabindex="-1">` and one persistent `role="status" aria-atomic="true"`.
 - `ShellData::help` is emitted after the header and before `before_main`.
-- Empty regions emit nothing.
-- `Assets` preserve declaration order; duplicates do not move position.
+- Empty regions emit nothing; `Regions::new().header(…).before_main(…).footer(…)` builds slots without field mutation.
+- `Assets` preserve declaration order; duplicates do not move position. `collect::<Assets>()` accepts `Option<Asset>` and skips `None`; `Assets::extend_options([...])` is the incremental form.
 - The crate does not emit CSS, theme tokens, cookies, headers, or ETags.
 
 ## Forms and media
@@ -167,7 +182,7 @@ typed data -> html! / primitives -> Markup -> View -> Page -> bytes
 - `spec/elements.toml` — normative element/attribute/invariant table.
 - `spec/data.toml` — consumer `data-*` table.
 - `tools/gen_spec.py`, `tools/validate_spec.py`, `tools/check_links.py`.
-- `demo/` — comparison examples, not published.
+- `examples/portal_governamental_preview/` — generated four-locale portal preview; not published.
 - `fuzz/` — parser fuzz target, separate workspace.
 - `docs/` — design, decisions, accessibility, security, testing, migration, and usage wiki.
 

@@ -34,9 +34,9 @@ tem **um** tipo, com **um** construtor seguro e nenhum construtor cru.
 
 | Tipo | Contexto | Construção | Regras |
 |---|---|---|---|
-| `Text<'a>` | texto de conteúdo | `Text::new(&str)` · `Text::msg(Msg)` | escapa `&` `<` `>` `"` `'` e NUL; **nunca** vira markup |
+| `Text<'a>` | texto de conteúdo | `Text::new(&str)` · `Text::msg(m: impl Msg)` | escapa `&` `<` `>` `"` `'` e NUL; **nunca** vira markup |
 | `AttrVal<'a>` | valor de atributo comum | `AttrVal::new` | escapa os 5 + `\r` `\n` `\t` como entidades numéricas |
-| `Href` | link | `Href::internal(LUrl)` · `Href::fragment(Fragment)` · `Href::external(https)` · `Href::mailto` · `Href::tel` | **recusa** `javascript:`, `data:`, `vbscript:`; normaliza esquema em minúsculas |
+| `Href` | link | `Href::internal(LUrl)` · `Href::fragment(Fragment)` · `Href::external(https)` · `Href::mailto` · `Href::tel`; literal `href="/…"`/`"#…"` só interno | **recusa** `javascript:`, `data:`, `vbscript:`; normaliza esquema em minúsculas |
 | `LUrl` | rota interna | `LUrl::new("/…")` · `LUrl::with_segments(base, &[seg])` | começa com `/`, sem `//`, sem `:`, sem `..` (nem `%2e%2e`); o locale/rota é helper do consumidor (C2) |
 | `Src` | URL de recurso | `Src::media(&impl MediaPath)` · `Src::asset(Asset)` · `Src::parse(&str)` | interno validado (`LUrl`) ou `http(s)` absoluto; `javascript:`/`data:` não constroem |
 | `SrcSet` | conjunto responsivo | `SrcSet::from_variants(&[Variant])` | `src` interno validado ou `http(s)` absoluto; ordena por largura, deduplica e emite `Nw`; **determinístico** |
@@ -53,7 +53,9 @@ tem **um** tipo, com **um** construtor seguro e nenhum construtor cru.
 | `Tone` | cor por identidade | `Tone::Primary` … (enum) | nunca hex; ver [`06-shell-e-tema.md`](06-shell-e-tema.md) |
 | `SectionId` | identidade de seção | enum por módulo | chave do mapa de tokens |
 | `WidthPx`/`HeightPx` | dimensão | `WidthPx::new(u32)` | > 0; emite `width`/`height` como número |
-| `Timestamp` | `<time datetime>` | `Timestamp::new(i64, offset)` | `RFC 3339` com offset preservado |
+| `Timestamp` | `<time datetime>` | `Timestamp::new(i64, offset)` · `Timestamp::parse_rfc3339(&str)` | `RFC 3339` com offset preservado; fração de segundo não é representável |
+| `Date` | `<time datetime>` | `Date::new(ano, mês, dia)` · `Date::parse("YYYY-MM-DD")` | data-only; não inventa hora/fuso |
+| `DateTimeValue` | atributo `datetime` | `Date` ou `Timestamp` | unifica data-only e instante no mesmo atributo |
 | `Label<'a>` | nome acessível | `Label::text(m)` · `Label::sr_only(m)` — `m: impl Msg` | não pode ser vazio |
 
 ## 3. Escaping: tabela normativa
@@ -118,8 +120,13 @@ pub trait Msg: Copy { fn as_str(self) -> &'static str; }
 impl Text<'static> { pub fn msg<M: Msg>(m: M) -> Self; }
 
 // no CONSUMIDOR: o enum dele, resolvido no locale da request
-//   enum Msg { NavHome, LatestNews, … }
-//   impl html_auy::Msg for Msg { fn as_str(self) -> &'static str { … } }
+#[derive(Clone, Copy, Msg)]
+enum M {
+    #[msg("Início")]
+    NavHome,
+    #[msg("Últimas notícias")]
+    LatestNews,
+}
 ```
 
 - Todo texto **visível** entra por `Msg` (i18n) ou `Text::new(&dado)` (dinâmico); literal `"Olá"`
@@ -139,7 +146,8 @@ comparação de string.
 |---|---|---|
 | largura/altura de imagem | `WidthPx`/`HeightPx` | inteiro > 0, sem unidade no valor |
 | `datetime` (perfil *instante*) | `Timestamp` | RFC 3339 **com offset** (`Z` ou `+03:00`); nunca sem offset nem em UTC forçado — o fuso local é do dado |
-| `datetime` (perfis *data*, *mês*, *semana*, *hora*, *duração*) | `DateOnly`/`YearMonth`/`Week`/`TimeOfDay`/`Duration` | um tipo por perfil do `<time datetime>`; converter entre perfis é erro de compilação |
+| `datetime` (perfil *data*) | `Date` | `YYYY-MM-DD`; sem hora e sem fuso |
+| `datetime` (*mês*, *semana*, *hora*, *duração*) | ainda não há tipo | use `AttrVal` só se o perfil for aceitável; conversão silenciosa é proibida |
 | contagem/estatística | `Count` | formatação localizada, agrupamento determinístico |
 | dinheiro | `Money` | inteiro em centavos + `Msg` de moeda; **nunca** `f64` |
 | lista de `srcset` | `SrcSet` | largura crescente, tipo MIME em ordem lexical |

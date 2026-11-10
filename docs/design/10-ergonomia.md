@@ -10,13 +10,32 @@ Só isto:
 | `for x in itens { … }` | repetição |
 | `fn nome(p: Dados) -> Markup { html! { … } }` | a view é uma função |
 | `Msg::X` | texto (traduzido) |
-| — | `<html>`, `<head>`, `<body>`, `<title>` e `<h1>` **não** se escrevem: o `Page` os emite |
+| — | `<html>`, `<head>`, `<body>` e `<title>` são do `Page`; o `h1` é emitido por padrão e pode ser declarado pela view |
 
 Não precisa de: `&`, lifetimes, `move`, `.into()`, `impl Trait`, closures, `?` dentro do bloco.
 Tudo isso fica na assinatura dos primitivos e dos valores tipados.
 
 **Cheat sheet de 12 linhas** acompanha o repositório do consumidor e é o único material de onboarding
 necessário para quem já sabe HTML.
+
+## 1.1 Açúcar estático (sem afrouxar a fronteira)
+
+As melhorias de ergonomia seguem uma regra: **atalho só para valor estático ou validado em
+compilação**. Nada aceita `String` livre, nada esconde CSRF/`alt`/`role` e nada vira template de
+runtime.
+
+| Atalho | Uso | Garantia |
+|---|---|---|
+| `use html_auy::prelude::*` | imports do dia a dia | só reexporta; nenhuma regra muda |
+| `Markup::concat([a, b])` | compor fragmentos irmãos | ordem preservada; sem chamada acidental `(a)(b)` |
+| `#[derive(Msg)]` + `#[msg("…")]` | catálogo do consumidor | variante sem texto não compila |
+| `href="/rota"` / `src="/asset"` | literal interno | validado pelo macro; externo continua `Href`/`Src` |
+| `Regions::new().header(…)` | shell | mesmos slots e ordem do documento |
+| `Assets` a partir de `[Option<Asset>]` | composição de assets | `None` é ignorado; duplicata não move |
+| `Date` / `Timestamp::parse_rfc3339` | `<time datetime>` | data-only não inventa hora; offset preservado |
+
+`(a)(b)` continua erro, mas agora aponta `Markup::concat`; para uma chamada real entre parênteses,
+use `((f)(x))`. O parser não tenta adivinhar se o primeiro grupo é markup ou função.
 
 ## 2. Formato das mensagens de erro
 
@@ -87,7 +106,7 @@ inequívoco vira erro de compilação, nunca sugestão silenciosa.
 
 ## 5. Anti-ruído (regra dura)
 
-- Advisory conta por **página**, não por ocorrência.
+- Regra de N4 conta por **página**, não por ocorrência.
 - Regra que dispara mais de 3× na mesma página é **bug do primitivo**: abre issue no primitivo, não
   no call site.
 - Nenhuma regra de N4 pode disparar em PR pequeno: o alvo é **zero ocorrência** nos arquivos de referência (`M3`), não um limite que desce.
@@ -108,10 +127,10 @@ inequívoco vira erro de compilação, nunca sugestão silenciosa.
 
 - [ ] Nenhum elemento cru que tenha primitivo equivalente.
 - [ ] Todo texto visível é `Msg` (nenhum literal).
-- [ ] Todo link interno é `LUrl`.
+- [ ] Todo link interno é literal validado ou `LUrl`; URL externa continua `Href`.
 - [ ] Nenhum `data-*` inventado (só os declarados).
 - [ ] Snapshot revisado: a mudança de HTML é intencional e legível.
-- [ ] Orçamento de elementos crus não aumentou.
+- [ ] Relatório de elementos crus revisado (sem gate automático).
 
 ## 8. Edição de texto (copy) por quem não é de Rust
 

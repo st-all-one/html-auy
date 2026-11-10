@@ -99,7 +99,7 @@ status/cache em [HTTP e integrações](12-http-e-integracoes.md).
 Objetivo: os dados que entram na view já têm tipo e significado.
 
 - Modele ids, nomes, datas e estados com newtypes do seu domínio; não passe `String` crua até o markup.
-- Defina o `enum M` que implementa `Msg` para os textos traduzíveis.
+- Defina o `enum M` com `#[derive(Clone, Copy, Msg)]` e `#[msg("…")]` para os textos traduzíveis.
 - Defina os `ClassToken`s do design system, em vez de montar classes por `format!`.
 - Mantenha `Text`, `Href`, `Src`, `SrcSet`, `JsonLd` e `Timestamp` na fronteira da view, não no banco.
 - Se a aplicação serve mídia de storage, implemente `MediaPath`; se usa variantes, implemente `Variant`.
@@ -139,7 +139,7 @@ fn product_page(product: &Product) -> Page {
     );
     let view = View::new(html! {
         section {
-            h2 { Text::new("Detalhes") }
+            h2 { M::Details }
             p { Text::new(product.description.as_str()) }
         }
     });

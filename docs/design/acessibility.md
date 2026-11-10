@@ -47,8 +47,8 @@ let image = Img::new(
 ```rust
 let name = FieldState::new(AttrVal::new(&state.name))
     .required(true)
-    .help(Text::new("Como consta no documento"))
-    .error(Text::new("Informe o nome completo"));
+    .help(Text::msg(M::NameHelp))
+    .error(Text::msg(M::NameError));
 
 let field = Field::text(FieldName::new("nome"), M::Name, &name);
 ```
@@ -93,18 +93,18 @@ O skip link é o primeiro elemento focável:
 
 ```rust
 let data = ShellData::new(
-    Text::new("Solicitações"),
-    Text::new("Solicitações"),
+    Text::msg(M::Title),
+    Text::msg(M::Heading),
     Lang::parse("pt-BR").expect("idioma"),
 )
-.skip(Text::new("Pular para o conteúdo"));
+.skip(Text::msg(M::SkipToContent));
 ```
 
 A ajuda consistente ocupa um slot fixo do shell:
 
 ```rust
 let help = html! {
-    p { Text::new("Precisa de ajuda? Fale com o atendimento.") }
+    p { M::Help }
 };
 
 let data = ShellData::new(title, heading, lang).help(help);
@@ -121,8 +121,7 @@ let data = ShellData::new(title, heading, lang).help(help);
 - `aria-current` é único dentro de cada `<nav>` mais próximo; navegações separadas podem ter seu próprio item atual. A regra de audit ignora `aria-current="false"`.
 
 ```rust
-let mut regions = Regions::new();
-regions.header = Some(html! {
+let regions = Regions::new().header(html! {
     header {
         nav aria_label=(Label::text(M::MainNav)) {
             a href=(home) aria_current="page" { M::Home }
@@ -155,7 +154,7 @@ use html_auy::{Audio, Href, LUrl, Src, Text, Transcript};
 
 let transcript = Transcript::new(
     Href::internal(LUrl::new("/media/episodio-transcricao").expect("rota")),
-    Text::new("Transcrição do episódio"),
+    Text::msg(M::Transcript),
 );
 
 let audio = Audio::new(Src::parse("/media/episodio.mp3").expect("fonte"))
@@ -185,7 +184,7 @@ Ative `audit` nos testes ou no CI:
 
 ```toml
 [dev-dependencies]
-html-auy = { version = "0.1", features = ["audit"] }
+html-auy = { version = "0.2", features = ["audit"] }
 ```
 
 ```rust
@@ -193,7 +192,8 @@ let findings = html_auy::audit::check(page.markup().as_str());
 assert!(findings.is_empty(), "{findings:#?}");
 ```
 
-`Finding` expõe a regra, a mensagem e informação do nó; a saída é determinística e segue a ordem do documento, com a ordem fixa das regras desempatando achados no mesmo nó.
+`Finding` expõe a regra e a mensagem; a saída é determinística e segue a ordem do documento, com a
+ordem fixa das regras desempatando achados no mesmo nó.
 
 As 13 regras são:
 

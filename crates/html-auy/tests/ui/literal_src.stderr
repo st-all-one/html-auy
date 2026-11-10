@@ -1,0 +1,7 @@
+error: `src="https://cdn.example/a.png"` não é um caminho interno válido
+         = regra: contexto de escape (D1)
+         = ajuda: use `/caminho` ou a forma tipada `src=(Src::parse(…))`; literais não aceitam URL externa
+ --> tests/ui/literal_src.rs:6:29
+  |
+6 |     let _ = html! { img src="https://cdn.example/a.png" alt=(html_auy::Alt::decorative()) width=(html_auy::WidthPx::new(1)) height=(h...
+  |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^

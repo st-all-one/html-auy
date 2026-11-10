@@ -6,8 +6,27 @@
 use crate::escape;
 use crate::markup::{Markup, Render};
 use crate::msg::Msg;
-use crate::value::{Alt, AttrValue, FieldName, Href, Id, Label, Sizes, Src, SrcSet, Timestamp};
+use crate::value::{
+    Alt, AttrValue, DateTimeValue, FieldName, Fragment, Href, Id, Label, Sizes, Src, SrcSet,
+    Timestamp,
+};
 use alloc::string::String;
+
+/// Resolve um `href` literal já validado pelo macro.
+#[must_use]
+pub fn href_literal(value: &'static str) -> Option<Href<'static>> {
+    if value.starts_with('#') {
+        Fragment::new(value).map(Href::fragment)
+    } else {
+        crate::value::LUrl::new(value).map(Href::internal)
+    }
+}
+
+/// Resolve um `src` literal já validado pelo macro.
+#[must_use]
+pub fn src_literal(value: &'static str) -> Option<Src<'static>> {
+    Src::parse(value)
+}
 
 /// Buffer de saída com as operações que o macro emite.
 #[derive(Debug, Default)]
@@ -145,9 +164,16 @@ impl Writer {
         self.attr("height", value);
     }
 
-    /// `datetime`.
+    /// `datetime` de instante completo.
     pub fn attr_timestamp(&mut self, value: &Timestamp) {
         self.attr("datetime", value);
+    }
+
+    /// `datetime` de data-only ou instante RFC 3339.
+    pub fn attr_datetime(&mut self, value: &impl DateTimeValue) {
+        self.buf.push_str(" datetime=\"");
+        value.write_datetime(&mut self.buf);
+        self.buf.push('"');
     }
 
     /// Filho que implementa [`Render`].

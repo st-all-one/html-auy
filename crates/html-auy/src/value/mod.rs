@@ -21,7 +21,7 @@ pub use jsonld::{JsonGraph, JsonLd};
 pub use lang::{Dir, Hreflang, Lang};
 pub use media::Media;
 pub use text::{AttrVal, FieldName, Id, Label};
-pub use timestamp::{Offset, Timestamp};
+pub use timestamp::{Date, DateTimeValue, Offset, Timestamp};
 pub(crate) use url::valid_path;
 pub use url::{ExternalUrl, Fragment, Href, LUrl, MailAddr, MediaPath, PhoneNumber, Src};
 

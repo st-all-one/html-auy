@@ -182,7 +182,7 @@ checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
 
 [[package]]
 name = "html-auy"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "html-auy-macros",
  "html5ever",
@@ -196,14 +196,14 @@ dependencies = [
 
 [[package]]
 name = "html-auy-macros"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "html-auy-macros-core",
 ]
 
 [[package]]
 name = "html-auy-macros-core"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "proc-macro2",
  "proptest",

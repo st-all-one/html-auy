@@ -206,8 +206,9 @@ crate vazio; nenhum `#![allow]` no workspace; `unsafe_code = "forbid"`.
 |---|---|
 | `html/src/markup.rs` | `Markup`, `Render`, buffer único (sem alocação intermediária) |
 | `html/src/escape.rs` | tabela dos 5 caracteres + entidades numéricas de controle |
-| `html/src/value/*.rs` | `Text`, `AttrVal`, `Href`, `Src`, `SrcSet`, `Alt`, `WidthPx`, `HeightPx`, `Class`, `Tone`, `Label`, `Id`, `FieldName`, `JsonLd` |
-| `html/src/msg.rs` | `pub trait Msg: Copy { fn as_str(self) -> &'static str; }` + `Text::msg(m)` (D31: o enum é do consumidor; o crate não conhece locale) |
+| `html/src/value/*.rs` | `Text`, `AttrVal`, `Href`, `Src`, `SrcSet`, `Alt`, `WidthPx`, `HeightPx`, `Date`, `Timestamp`, `Class`, `Tone`, `Label`, `Id`, `FieldName`, `JsonLd` |
+| `html/src/msg.rs` | `pub trait Msg: Copy { fn as_str(self) -> &'static str; }` + `Text::msg(m)` (D31: o enum é do consumidor; o crate não conhece locale); `#[derive(Msg)]` gera o `match` de `#[msg("…")]` |
+| `html/src/prelude.rs` | reexporta o vocabulário cotidiano; nenhuma regra nova |
 
 **API (contrato do crate):**
 

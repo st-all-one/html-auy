@@ -72,7 +72,7 @@ O processo é por tag:
 
 1. Atualizar `version` em `Cargo.toml` e [`CHANGELOG.md`](../../CHANGELOG.md).
 2. Rodar o gate local da seção 7.
-3. Commitar, criar tag anotada `v0.1.1` e enviar a tag.
+3. Commitar, criar tag anotada `v<versão>` e enviar a tag.
 4. O workflow [`release.yml`](../../.github/workflows/release.yml) verifica que a tag coincide com a
    versão do workspace e publica, nesta ordem:
    - `html-auy-macros-core`
@@ -93,12 +93,15 @@ cargo test --workspace
 cargo test -p html-auy --features audit
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features
-cargo package -p html-auy-macros-core --allow-dirty
+cargo package -p html-auy-macros-core --locked
 python3 tools/validate_spec.py
 python3 tools/gen_spec.py --check
 python3 tools/check_links.py
 python3 -m unittest discover -s tools/tests
 ```
+
+O CI também roda `cargo deny check`, `cargo audit`, `cargo machete` e o job de MSRV; o gate local é
+um subconjunto executável na máquina do mantenedor.
 
 `cargo package` da crate principal só verifica contra o crates.io depois que os dois crates internos
 estão publicados; até lá, `cargo publish --dry-run -p html-auy` pode ser usado como ensaio depois de

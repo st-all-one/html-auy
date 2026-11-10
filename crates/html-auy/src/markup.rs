@@ -19,6 +19,19 @@ impl Markup {
         Self(out)
     }
 
+    /// Concatena `Markup`s na ordem dada, num único buffer.
+    ///
+    /// É o jeito explícito de compor fragmentos que não são elementos irmãos; evita a armadilha
+    /// de escrever `(a)(b)`, que o parser lê como uma chamada.
+    #[must_use]
+    pub fn concat(parts: impl IntoIterator<Item = Self>) -> Self {
+        let mut out = String::new();
+        for part in parts {
+            out.push_str(&part.0);
+        }
+        Self(out)
+    }
+
     /// O HTML como texto.
     #[must_use]
     pub fn as_str(&self) -> &str {

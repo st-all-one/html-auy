@@ -15,6 +15,7 @@ mod table;
 mod ast;
 mod attrs;
 mod codegen;
+mod derive;
 mod diagnostic;
 mod expr;
 mod parser;
@@ -23,6 +24,12 @@ mod validate;
 
 #[cfg(test)]
 mod tests;
+
+/// Expande `#[derive(Msg)]`; entrada inválida vira `compile_error!`, nunca pânico.
+#[must_use]
+pub fn expand_msg_derive(input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+    derive::derive(input)
+}
 
 /// Expande um bloco `html!` em tokens; entrada inválida vira `compile_error!`, nunca pânico.
 #[must_use]

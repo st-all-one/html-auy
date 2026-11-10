@@ -1,5 +1,8 @@
 # 27 — Lições do `eta` para o 0.1.0
 
+> **Documento histórico.** Registra a leitura feita para o 0.1.0; o demo citado foi removido no
+> 0.2.0. O exemplo executável atual é `crates/html-auy/examples/portal_governamental.rs`.
+
 Este documento registra a leitura do `eta/` (templating engine em TypeScript, v4) e o que foi
 absorvido — e recusado — no `html-auy` 0.1.0. O objetivo não é copiar a arquitetura de templates em
 runtime, e sim roubar o que ela faz bem: **superfície pequena, defaults explícitos e erro com

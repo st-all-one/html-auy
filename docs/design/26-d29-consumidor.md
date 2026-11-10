@@ -51,7 +51,7 @@ O consumidor compila esse CSS no build, grava `theme.<hash>.css` e registra o as
 `ShellData::assets`:
 
 ```rust
-let assets: Assets = [Asset::style("/assets/theme.9f2c1a.css").expect("asset")]
+let assets: Assets = [Asset::style("/assets/theme.9f2c1a.css")]
     .into_iter()
     .collect();
 ShellData::new(title, heading, lang).assets(assets)

@@ -37,9 +37,10 @@ Consequências:
 - Um handler **não consegue** devolver HTML sem passar pelo shell: `document`/`head`/`body`/`title`/
   `meta`/`link`/`script`/`noscript` **não compilam** em `html!` (`shell_only_elements`, escopo
   `block` — é erro de compilação, não convenção).
-- `Page` carrega `status`, cabeçalhos de área e o `ETag` do corpo já renderizado.
-- Uma view de módulo devolve `Markup` do **miolo**; o shell é o único lugar que emite `<html>`,
-  `<head>`, `<header>`, `<main>`, `<footer>` — e os slots `before_main`/`after_main` posicionam
+- `Page` carrega só o `Markup`; status, cabeçalhos e `ETag` são do adaptador HTTP do consumidor.
+- Uma view de módulo devolve `Markup` do **miolo**. O shell emite os elementos `only = "shell"`
+  (`html`, `head`, `body`, `title`, `meta`, `link`, `script`, `noscript`, `main`); `header` e
+  `footer` chegam como `Markup` em `Regions`. Os slots `before_main`/`after_main` posicionam
   breadcrumb/aside no `<body>`, fora do `<main>`.
 - `POST` que altera estado responde **`303 See Other`** com `Location`, sempre — sem isso o F5
   reenvia o formulário e o usuário não tem como saber se a operação aconteceu.
@@ -65,31 +66,28 @@ streaming se perde.
 
 ### O que o shell resolve (uma vez por request)
 
-`ShellCtx` é montado pelo consumidor antes de renderizar e contém:
+`ShellData` e `View` são montados pelo consumidor antes de renderizar:
 
-| Campo | Origem | Uso |
+| Dado | Onde entra | Uso |
 |---|---|---|
-| `locale` | URL | `lang`/`dir`, `LUrl`, `Msg` |
-| `preset` + `regions` | dados ([ADR-016] equivalente) | presença de header/footer/aside, grid |
-| `theme` | tokens resolvidos (ver §3) | `data-theme`, link do `/theme.css` |
-| `a11y` | cookies | `data-a11y-*` no `<html>` (sem FOUC) |
+| locale | `ShellData::new(…, lang)` | `lang` e `Msg` resolvido antes da view |
+| direção | `ShellData::dir(Dir)` | `dir` do `<html>`; o crate não infere de `lang` |
+| título e `h1` | `ShellData::new(title, heading, …)` | `<title>` e `<h1>` obrigatórios |
+| SEO | `description`, `canonical`, `alternates`, `open_graph` | `<meta>`/`<link>` no `<head>` |
+| JSON-LD | `schemas(Vec<JsonLd>)` | `<script type="application/ld+json">` |
+| assets | `assets(Assets)` | CSS/JS na ordem declarada |
+| regiões | `regions(Regions)` | header, before-main, after-main, footer |
+| root | `html_attributes`/`body_attributes` | classe e `data-*` validados |
+| sem JS | `noscript(Markup)` | fallback no início do `<body>` |
+| main | `View::new(Markup)` | um único miolo |
+| modais/assets da tela | `View::modal`/`View::asset` | depois do footer e do shell |
 
-`ShellData::html_attributes` e `ShellData::body_attributes` recebem `RootAttributes` com `class`
-(ex.: `dark` do Tailwind) e `data-*` validados (ex.: `data-bs-theme`). A ordem é classe e depois os
-`data-*` na ordem de declaração; o shell não aceita atributo arbitrário no root.
-| `nav` | manifesto de módulos | `nav` nomeado, um `aria-current` |
-| `meta` | SEO (title/description/canonical/hreflang/Open Graph) | `<head>` |
-| `jsonld` | `JsonLd` | `<script type="application/ld+json">` |
-| `slots` | registries | `Vec<Markup>` ordenado |
-| `main` | `View::main` | `Markup` (um só) |
-| `modals` | `View::modals` | `Vec<Markup>` — contribuição devolvida, nunca pilha (D24) |
-| `assets` | `ctx.require(...)` | `<script>`/`<link>` com hash |
-| `search` | query sanitizada | `<search>` do header |
+`RootAttributes` aceita `class` (ex.: `dark` do Tailwind) e `data-*` validados (ex.: `data-bs-theme`);
+a ordem é classe e depois os `data-*` na ordem de declaração. O shell não aceita atributo arbitrário
+no root.
 
-**Estado no MVP:** `ShellData` entrega `title`, `heading`, `lang`, `description`, `canonical`,
-`manifest`, `dir`, `schemas`, `assets`, `regions`, `skip`, `noscript`, `alternates`, `open_graph`, `htmx_config` e `hints`. `theme`, `a11y`
-(`data-a11y-*`), `nav` e `slots` são do consumidor/pós-MVP; o crate não emite CSS, cookie nem
-cabeçalho HTTP.
+Tema, cookies de a11y, manifesto de navegação, busca e registries de slots continuam no consumidor:
+o crate não emite CSS, cookie nem cabeçalho HTTP.
 
 `alternates` recebe `Alternate::new(Lang, ExternalUrl)` e `Alternate::x_default(ExternalUrl)`;
 `open_graph` recebe `OpenGraph::new().kind(OpenGraphKind::Article).image(ExternalUrl)` e deriva

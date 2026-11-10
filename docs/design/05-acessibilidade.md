@@ -48,9 +48,9 @@ Um aviso que dispara 20 vezes por página é desligado na segunda semana. Por is
 | 3.1.2 | idioma de partes | **tipo**: `lang=(Lang)` em qualquer elemento (atributo global BCP-47) |
 | 3.2.1/3.2.2 | sem mudança por foco/entrada | **estrutural**: não existe `on*`; mudança só por submit |
 | 3.2.6 | ajuda consistente (2.2, **A**) | **shell**: `ShellData::help(Markup)` fixa o bloco entre header e `<main>`; o consumidor decide conteúdo e presença |
-| 3.3.1 | identificação de erro | **tipo**: `Field` exige `erro: Option<Text>` e emite `aria-invalid` |
-| 3.3.2 | rótulos ou instruções | **tipo**: `Field` exige `label`; `ajuda: Option<Text>` vira `aria-describedby` |
-| 3.3.3 | sugestão de correção | **tipo**: `Field` recebe o texto de sugestão em `erro: Option<Text>` |
+| 3.3.1 | identificação de erro | **tipo**: `FieldState::error(Text)` emite `aria-invalid` e o id do erro |
+| 3.3.2 | rótulos ou instruções | **tipo**: `Field` recebe `M: Msg` como label; `FieldState::help(Text)` vira `aria-describedby` |
+| 3.3.3 | sugestão de correção | **tipo**: `FieldState::error(Text)` recebe o texto de sugestão |
 | 3.3.7 | entrada redundante (2.2, **nível A**) | **tipo**: `Autocomplete` com tokens de identidade; o reuso de valor no mesmo fluxo é do consumidor |
 | 3.3.8 | autenticação acessível — mínimo (2.2, **AA**) | **tipo**: `input type=password` com `Autocomplete` (`current-password`/`new-password`/`username webauthn`), sem CAPTCHA e sem bloquear colar/gerenciador; o fluxo de passkey é do consumidor. 3.3.9 (AAA) fora da meta |
 | 4.1.2 | nome, papel, valor | **tipo**: `a`/`button` exigem nome acessível; `Dialog` gera `aria-labelledby` (pós-MVP); **N4**: com dois ou mais `nav`/`aside`, cada um exige nome (`landmark_names_required`) |

@@ -190,6 +190,22 @@ fn emit_attr(element: &Element, attr: &Attr, name: &str, writer: &Ident) -> Toke
                 let value = Literal::string(&normalized);
                 return quote_spanned! {at=> #writer.attr_static(#name_literal, #value); };
             }
+            if name == "href" {
+                let value = Literal::string(text);
+                return quote_spanned! {at=>
+                    if let Some(__v) = ::html_auy::__private::href_literal(#value) {
+                        #writer.attr_href(&__v);
+                    }
+                };
+            }
+            if name == "src" {
+                let value = Literal::string(text);
+                return quote_spanned! {at=>
+                    if let Some(__v) = ::html_auy::__private::src_literal(#value) {
+                        #writer.attr_src(&__v);
+                    }
+                };
+            }
             let value = Literal::string(text);
             quote_spanned! {at=> #writer.attr_static(#name_literal, #value); }
         }
@@ -238,7 +254,7 @@ fn attr_call(
         "aria-label" => "attr_label",
         "id" => "attr_id",
         "name" => "attr_field_name",
-        "datetime" => "attr_timestamp",
+        "datetime" => "attr_datetime",
         // Dimensão tipada só onde o plano tipa (`img`/`video`/`iframe`); em SVG é genérica.
         "width" if matches!(element, "img" | "video" | "iframe") => "attr_width",
         "height" if matches!(element, "img" | "video" | "iframe") => "attr_height",

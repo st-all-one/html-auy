@@ -27,7 +27,7 @@ Corpus real: **225 `.blade.php`** (23,6k LOC, 2.084 usos de componente, 6.765 ta
 | **b** | `@stack`/`@push` | **sim** | `View` = mônade de contribuições (`main`, `modals`, `assets`) devolvida para cima | `type` | pilha ambiente é ordem implícita de flush; valor devolvido é testável e não tem estado global |
 | **d** | `old()`/`$errors` | **sim (a forma, não a fonte)** | `FieldState { valor, erro, ajuda }` + `Field::text(name, label, &state)` | `type` | é exatamente onde mora o defeito de a11y (`aria-invalid`/`aria-describedby` divergentes); hoje são 2 componentes duplicando a lógica |
 | **a** | `$attributes` | **parcial** | `Class` combinável (`Class::of(&[…]).extend(…)`); `data-*` fechado por **gate**; **sem** bag | `block` + gate | 478 usos existem porque o componente não conhece o chamador. Em Rust o componente devolve `Markup` com as classes dele; o que sobra é classe do chamador e `data-*`, e só isso deve ser componível |
-| **e** | plural (`trans_choice`/`@choice`) | **não** | `Msg` é handle; plural é `impl From<Msg> for Text` do consumidor | — | absorver plural = absorver dados CLDR dos 4 locales: dependência e política, zero garantia de HTML |
+| **e** | plural (`trans_choice`/`@choice`) | **não** | `Msg` é handle; plural é `impl From<Msg> for Text`/`Display` do próprio enum no consumidor, nunca no crate | — | absorver plural = absorver dados CLDR dos 4 locales: dependência e política, zero garantia de HTML |
 | **f** | componente por string | **não** | `dyn Widget -> Markup` no consumidor | — | não existir tag dinâmica **é** a garantia; o registry já é resolvido por trait object |
 
 ## 3. As formas de API
@@ -118,9 +118,9 @@ que `select.blade.php` e `form-group.blade.php` repetem.
 ### 3.4 `Class` combinável e `data-*` fechado (o que substitui o bag)
 
 ```rust
-pub struct Class(u64 /* bitmask de tokens da spec */);
+pub struct Class { tokens: Vec<&'static str> }
 impl Class {
-    pub fn of(tokens: &[Tone]) -> Self;              // ordem canônica no render
+    pub fn of<T: ClassToken>(tokens: &[T]) -> Self;  // ordem canônica no render
     pub fn extend(self, other: Class) -> Self;       // dedupe
 }
 ```

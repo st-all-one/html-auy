@@ -3,5 +3,5 @@
 use html_auy::html;
 
 fn main() {
-    let _ = html! { a href="/x" { m } };
+    let _ = html! { a href="javascript:alert(1)" { m } };
 }

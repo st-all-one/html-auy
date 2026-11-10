@@ -79,7 +79,7 @@ dono do vocabulário.
 ## 2.3 Onde uma invariante nova vai parar (regra de três perguntas)
 
 1. Depende só do bloco `html!`? → **`block`**: a macro recusa, com span.
-2. Depende do documento, mas o documento é um **tipo**? → **`shell`**: torne inexpressável
+2. Depende do documento, mas o documento é um **tipo**? → **`type`**: torne inexpressável
    (`Page` recebe um `main`, um `h1`, um `title`).
 3. Depende de fragmentos que nunca se veem? → **`output`**: `N4` sobre a saída. **Nunca** anunciada como
    garantia de compilação — é o erro que a revisão de 2026-11-06 corrigiu em 5 das 8 regras.

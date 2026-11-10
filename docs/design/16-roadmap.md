@@ -12,7 +12,7 @@
 | `html-spec` (`build.rs`) | gerador em tempo de build + esquema | ~300 + gerado | — (D27) |
 | `html_auy::shell` | `Page`, `ShellData`, `View` (D24), `Form` (D23), `Field` (D25); sem tema (D29) | ~430 | ~430 |
 | `html-macro` | parser, validação, codegen (sem `fmt`) | ~1.900 | ~1.650 |
-| `audit` (`N4`) | `html5ever` + as 6 invariantes `output`, atrás de `feature = "audit"` | ~400 (crate + binário) | ~250 |
+| `audit` (`N4`) | `html5ever` + as 6 invariantes `output` (hoje 8), atrás de `feature = "audit"` | ~400 (crate + binário) | ~250 |
 | `cq` (binário) | check/fmt/fix/audit/spec | ~700 | — (D28) |
 | testes | golden, property, `trybuild`, fuzz, paridade da spec, conformidade | ~450 | ~450 |
 | **total** | | **~4.780 LOC** | **~3.780 LOC** (+ ~120 Python) |

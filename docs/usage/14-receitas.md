@@ -8,25 +8,25 @@ indicadas.
 ## Página com header, breadcrumb e footer
 
 ```rust
-use html_auy::{Label, Regions, html};
+use html_auy::prelude::*;
 
-let mut regions = Regions::new();
-regions.header = Some(html! {
-    header {
-        nav aria_label=(Label::text(M::MainNav)) {
-            a href=(home) aria_current="page" { M::Home }
-            a href=(news) { M::News }
+let regions = Regions::new()
+    .header(html! {
+        header {
+            nav aria_label=(Label::text(M::MainNav)) {
+                a href=(home) aria_current="page" { M::Home }
+                a href=(news) { M::News }
+            }
         }
-    }
-});
-regions.before_main = Some(html! {
-    nav aria_label=(Label::text(M::Breadcrumb)) {
-        a href=(home) { M::Home }
-        Text::new(" / ")
-        Text::new("Notícias")
-    }
-});
-regions.footer = Some(html! { footer { Text::new("© 2026") } });
+    })
+    .before_main(html! {
+        nav aria_label=(Label::text(M::Breadcrumb)) {
+            a href=(home) { M::Home }
+            span aria_hidden="true" { M::Separator }
+            M::News
+        }
+    })
+    .footer(html! { footer { M::Copyright } });
 
 let data = ShellData::new(title, heading, lang).regions(regions);
 ```
@@ -138,10 +138,10 @@ let data = ShellData::new(title, heading, lang)
 
 ```rust
 let assets: Assets = [
-    Asset::external_style("https://cdn.example/reset.css").expect("cdn"),
-    Asset::external_classic_script("https://cdn.example/bootstrap.bundle.js").expect("cdn"),
-    Asset::classic_script("/assets/legacy.js").expect("legacy"),
-    Asset::script("/assets/app.js").expect("app"),
+    Asset::external_style("https://cdn.example/reset.css"),
+    Asset::external_classic_script("https://cdn.example/bootstrap.bundle.js"),
+    Asset::classic_script("/assets/legacy.js"),
+    Asset::script("/assets/app.js"),
 ].into_iter().collect();
 ```
 
@@ -200,7 +200,7 @@ impl Render for Badge<'_> {
     }
 }
 
-let badge = Markup::from_render(&Badge { text: Text::new("Novo") });
+let badge = Markup::from_render(&Badge { text: Text::msg(M::New) });
 html! { div { (badge) } }
 ```
 
@@ -225,10 +225,11 @@ let classes = ClassList::try_new(
 ## Resposta parcial
 
 ```rust
+let count = 3;
 let partial = Partial::new(html! {
     section id="cart" { h2 id="cart-title" { M::Cart } … }
 })
-.update(Id::new("cart-count"), Swap::Inner, html! { Text::new("3") })
+.update(Id::new("cart-count"), Swap::Inner, html! { Text::new(&count.to_string()) })
 .focus(Id::new("cart-title"));
 ```
 

@@ -6,7 +6,7 @@ Use `html-auy` instead of depending on this crate directly:
 
 ```toml
 [dependencies]
-html-auy = "0.1"
+html-auy = "0.2"
 ```
 
 The macro parser, validator, and code generator live in

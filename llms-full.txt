@@ -2,14 +2,14 @@
 
 > `html-auy` is a typed HTML vocabulary for Rust. It validates element/attribute vocabulary at compile time, chooses escaping from the value type, emits deterministic bytes, and treats accessibility as an API and validation property. HTML is an artifact; there is no VDOM, hydration, runtime template, or embedded JavaScript.
 
-This document is the dense, full reference for an LLM working on or with this repository. It is current for `0.1.1` and the working tree described by the repository docs. When this file and code disagree, inspect the code and `spec/elements.toml`; when this file and the normative docs disagree, inspect the docs listed at the end.
+This document is the dense, full reference for an LLM working on or with this repository. It is current for `0.2.0` and the working tree described by the repository docs. When this file and code disagree, inspect the code and `spec/elements.toml`; when this file and the normative docs disagree, inspect the docs listed at the end.
 
 ## 1. Identity, status, and constraints
 
 - Repository: <https://github.com/st-all-one/html-auy>
 - Public crate: `html-auy` (Rust name `html_auy`)
 - Macro crates: `html-auy-macros` (proc-macro) and `html-auy-macros-core` (parser/validator/codegen)
-- Version: `0.1.1`
+- Version: `0.2.0`
 - License: MIT OR Apache-2.0
 - Edition: 2024
 - MSRV: Rust 1.92
@@ -20,7 +20,7 @@ This document is the dense, full reference for an LLM working on or with this re
 - No `unsafe` in the workspace (`#![forbid(unsafe_code)]`).
 - No binary, CLI, `build.rs`, HTTP server, router, ORM, session store, or `IntoResponse`.
 - No runtime HTML templates and no public raw-HTML sink.
-- Spec size at `0.1.1`: 111 elements, 71 invariants: 59 `block`, 4 `type`, 8 `output`.
+- Spec size at `0.2.0`: 111 elements, 71 invariants: 59 `block`, 4 `type`, 8 `output`.
 - `audit` exposes 13 final-document rules.
 
 The project is not a web framework. It does not perform I/O, read environment variables, resolve locale, access clocks, parse request bodies, manage cookies, or measure rendered CSS. The consumer owns those concerns.
@@ -82,13 +82,19 @@ Boundaries:
 ### 5.1 Basic form
 
 ```rust
-use html_auy::{html, Href, LUrl, Markup, Text};
+use html_auy::prelude::*;
+
+#[derive(Clone, Copy, Msg)]
+enum M {
+    #[msg("Read")]
+    Read,
+}
 
 fn card(title: &str, href: LUrl<'_>) -> Markup {
     html! {
         article class="card" data_kind="news" {
             h2 { Text::new(title) }
-            a href=(Href::internal(href)) { Text::new("Read") }
+            a href=(Href::internal(href)) { M::Read }
         }
     }
 }
@@ -103,12 +109,13 @@ fn card(title: &str, href: LUrl<'_>) -> Markup {
 
 ### 5.2 Text, messages, and composition
 
-The macro distinguishes three inputs:
+The macro distinguishes four inputs:
 
 | Input | Syntax | Semantics |
 |---|---|---|
 | translated message | `p { M::Title }` | `Msg` expression; escaped as text |
 | dynamic text | `p { Text::new(&value) }` | `Text`; escaped as text |
+| static text where a `Text` is required | `Text::msg(M::Title)` | `Msg` resolved to escaped `Text` |
 | prebuilt markup | `div { (card) }` | expression in parentheses; composed as `Render`/`Markup` |
 
 A literal string is not valid inside `html!`:
@@ -117,9 +124,9 @@ A literal string is not valid inside `html!`:
 html! { p { "Hello" } } // error: literal text is not allowed
 ```
 
-Use `Msg` for static translated text, `Text` for external dynamic text, and `(markup)` for trusted already-rendered markup.
+Use `M::X` for static UI text; use `Text::msg(M)` where the API requires `Text`; use `Text::new` only for external dynamic text; use `(markup)` for trusted already-rendered markup. `#[derive(Msg)]` with `#[msg("…")]` is the concise catalog implementation.
 
-Several adjacent `Markup` expressions are parsed as calls; separate them with an element or a loop when needed.
+`Markup::concat([a, b])` composes sibling markup. `(a)(b)` is an error whose hint points to `concat`.
 
 ### 5.3 Control flow
 
@@ -146,7 +153,7 @@ html! {
 
 ### 5.4 Attributes
 
-- `attr="literal"`: only for vocabulary-approved literal attributes.
+- `attr="literal"`: only for vocabulary-approved literal attributes. `href="/path"`, `href="#fragment"`, and `src="/asset"` are validated internal literals; external URLs stay typed (`Href::external`, `Src::parse`).
 - `attr=(value)`: value must implement `AttrValue`; `&str` and `String` do not.
 - `attr?=(Option<T>)`: emits only for `Some`; `None` emits nothing.
 - Boolean attributes use presence: `disabled=(true)` emits `disabled`; `false` omits it. There is no `disabled="false"`.
@@ -202,7 +209,7 @@ Every context has a type. There is no public arbitrary HTML string.
 | ordinary attribute | `AttrVal<'a>` | `AttrVal::new(&str)` | escapes the five + CR/LF/TAB |
 | internal route | `LUrl<'a>` | `LUrl::new`, `from_string`, `with_segments` | starts with `/`; rejects `//`, `:`, `..`, controls |
 | absolute URL | `ExternalUrl<'a>` | `ExternalUrl::parse` | only `http`/`https`; scheme normalized |
-| link | `Href<'a>` | `internal`, `fragment`, `external`, `mailto`, `tel` | only allowed destinations |
+| link | `Href<'a>` | literal `/…`/`#…` in `html!`, `internal`, `fragment`, `external`, `mailto`, `tel` | literal validated or typed destination |
 | fragment | `Fragment<'a>` | `Fragment::new` | `#` or safe `#id` |
 | email | `MailAddr<'a>` | `MailAddr::parse` | conservative `local@domain.tld` |
 | phone | `PhoneNumber<'a>` | `PhoneNumber::parse` | E.164 (`+` + 1..15 digits) |
@@ -211,7 +218,9 @@ Every context has a type. There is no public arbitrary HTML string.
 | `sizes` | `Sizes<'a>` | `Sizes::new`, `try_new` | grammar; invalid becomes empty |
 | alt text | `Alt<'a>` | `Alt::new`, `decorative` | empty only by explicit decoration |
 | dimension | `WidthPx` / `HeightPx` | `new(u32)` | never zero; 0 saturates to 1 |
-| date/time | `Timestamp` | `new(unix_seconds, Offset)` | RFC 3339 with offset |
+| date-only | `Date` | `new(year, month, day)`, `parse("YYYY-MM-DD")` | no invented time or offset |
+| date/time | `Timestamp` | `new(unix_seconds, Offset)`, `parse_rfc3339` | RFC 3339 with offset; fractional seconds rejected |
+| `datetime` attribute | `DateTimeValue` | `Date` or `Timestamp` | unifies date-only and instant in one attribute |
 | offset | `Offset` | `UTC`, `from_seconds`, `from_hms`, `parse` | up to ±23:59, in minutes |
 | language | `Lang` | `Lang::parse`, `Lang::EN` | canonical BCP-47 (`pt-BR`) |
 | direction | `Dir` | `Ltr`, `Rtl`, `Auto` | closed enum |
@@ -319,12 +328,7 @@ Builders:
 
 ### 7.3 Regions
 
-`Regions` fields:
-
-- `header: Option<Markup>`
-- `before_main: Option<Markup>`
-- `after_main: Option<Markup>`
-- `footer: Option<Markup>`
+`Regions` fields: `header`, `before_main`, `after_main`, `footer` (all `Option<Markup>`). The builder form is `Regions::new().header(…).before_main(…).footer(…)`; public fields remain available.
 
 Empty slots emit nothing. Regions are the consumer's composition boundary for landmarks; `audit` checks repeated unnamed `nav`/`aside` and landmark name collisions.
 
@@ -355,7 +359,7 @@ Empty slots emit nothing. Regions are the consumer's composition boundary for la
 ```
 
 - `charset` is first and early in the first 1024 bytes.
-- `Assets` preserve declaration order; duplicates do not move position.
+- `Assets` preserve declaration order; duplicates do not move position. `collect::<Assets>()` accepts `Option<Asset>` and skips `None`.
 - CSS before scripts if the cascade requires it; the crate does not infer.
 - `help` is between header and `before_main`.
 - `modals` are after the footer and outside `<main>`.
@@ -393,7 +397,7 @@ Asset constructors:
 - Internal paths must start with `/`.
 - External assets require explicit `https`/`http` constructors.
 - Paths are `&'static str`; build-hashed names should be Rust constants.
-- `Asset` does not carry `integrity` in `0.1`; SRI is not emitted for `link`/`script` by this type.
+- `Asset` does not carry `integrity` in `0.2`; SRI is not emitted for `link`/`script` by this type.
 - `Hint` covers preconnect, dns-prefetch, preload, modulepreload, and prefetch.
 - Hints are emitted by species order, independent of vector order.
 - `Preload::font` includes `type="font/woff2"` and `crossorigin="anonymous"`.
@@ -451,8 +455,8 @@ Methods:
 ```rust
 let name = FieldState::new(AttrVal::new(&state.name))
     .required(true)
-    .help(Text::new("As in the document"))
-    .error(Text::new("Enter the full name"));
+    .help(Text::msg(M::NameHelp))
+    .error(Text::msg(M::NameError));
 ```
 
 | Builder | Effect |
@@ -633,7 +637,7 @@ script-src-attr 'none';
 - The default path has no inline script and needs no nonce.
 - `style=` requires an explicit `style-src-attr` change.
 - CDN use requires explicit source allowlisting.
-- `Asset` does not emit SRI in `0.1`; `Integrity` is available for `Preload`.
+- `Asset` does not emit SRI in `0.2`; `Integrity` is available for `Preload`.
 - Headers such as HSTS, `X-Content-Type-Options`, and `Referrer-Policy` belong to the consumer.
 
 ## 12. HTTP and application integration
@@ -726,14 +730,13 @@ The four `type` invariants are `banner_unique_at_root`, `document_title_required
 | `tools/` | spec generator, validator, link checker, tests |
 | `docs/` | design, decisions, accessibility, security, testing, migration |
 | `docs/usage/` | operational wiki, current API |
-| `demo/` | comparison examples, not published |
+| `examples/portal_governamental_preview/` | generated four-locale portal preview, not published |
 | `fuzz/` | parser fuzz target, separate workspace |
 | `htmx/` | optional htmx profile assets/experiments |
 | `sniff-css/` | separate CSS/browser gate workspace |
-| `EXAMPLE.html` | rendered example |
 | `CHANGELOG.md` | release history |
 
-Workspace members are only the three public crates. `fuzz/` and `sniff-css/` are separate workspaces. `demo/` is not released.
+Workspace members are only the three public crates. `fuzz/` and `sniff-css/` are separate workspaces. `examples/` is not published.
 
 ## 16. Documentation map
 

@@ -1,0 +1,6 @@
+error: duas expressões `(…)` seguidas não são concatenadas
+         = ajuda: use `Markup::concat([a, b])`; se for uma chamada, envolva-a em parênteses duplos: `((f)(x))`
+ --> tests/ui/markup_adjacent.rs:6:27
+  |
+6 |     let _ = html! { div { (a) (b) } };
+  |                           ^^^

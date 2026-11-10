@@ -16,15 +16,15 @@ resolver = "3"
 exclude = ["fuzz"]
 
 [workspace.package]
-version = "0.1.1"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.92"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/st-all-one/html-auy"
 
 [workspace.dependencies]
-html-auy-macros = { version = "0.1.1", path = "crates/html-auy-macros" }
-html-auy-macros-core = { version = "0.1.1", path = "crates/html-auy-macros-core" }
+html-auy-macros = { version = "0.2.0", path = "crates/html-auy-macros" }
+html-auy-macros-core = { version = "0.2.0", path = "crates/html-auy-macros-core" }
 
 html5ever = "0.27"
 markup5ever_rcdom = "0.3"

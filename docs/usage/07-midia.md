@@ -111,7 +111,7 @@ use html_auy::{HeightPx, Lang, MediaPreload, Src, Text, Track, Video, WidthPx};
 
 let captions = Track::captions(
     Src::parse("/media/aula.vtt").expect("legenda"),
-    Text::new("Legendas em português"),
+    Text::msg(M::CaptionsPt),
 );
 
 let video = Video::new(
@@ -123,14 +123,14 @@ let video = Video::new(
 .dimensions(WidthPx::new(1280), HeightPx::new(720))
 .track(Track::subtitles(
     Src::parse("/media/aula-en.vtt").expect("legenda"),
-    Text::new("English"),
+    Text::msg(M::CaptionsEn),
     Lang::parse("en").expect("idioma"),
 ))
 .track(Track::descriptions(
     Src::parse("/media/aula-ad.vtt").expect("audiodescrição"),
-    Text::new("Audiodescrição"),
+    Text::msg(M::AudioDescription),
 ))
-.fallback(Text::new("Seu navegador não suporta vídeo."));
+.fallback(Text::msg(M::VideoFallback));
 
 let markup = video.render();
 ```
@@ -150,13 +150,13 @@ use html_auy::{Audio, Href, LUrl, MediaPreload, Src, Text, Transcript};
 
 let transcript = Transcript::new(
     Href::internal(LUrl::new("/media/podcast-transcricao").expect("rota")),
-    Text::new("Transcrição do episódio"),
+    Text::msg(M::Transcript),
 );
 
 let audio = Audio::new(Src::parse("/media/podcast.mp3").expect("áudio"))
     .preload(MediaPreload::Metadata)
     .transcript(transcript)
-    .fallback(Text::new("Seu navegador não suporta áudio."));
+    .fallback(Text::msg(M::AudioFallback));
 
 let markup = audio.render();
 ```

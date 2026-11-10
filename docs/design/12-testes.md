@@ -54,9 +54,9 @@ Uma fixture por mensagem normativa de [`10-ergonomia.md`](10-ergonomia.md) §2, 
 - elemento inexistente na spec;
 - `style`/`on*` (não existem: erro de atributo desconhecido com dica).
 
-- `Alt::new("")` e `javascript:` **não** são casos de `trybuild`: o primeiro equivale a
-  `Alt::decorative()` e o segundo não constrói (`ExternalUrl::parse` devolve `None`) — a prova é de
-  runtime, nos testes de valor.
+- `Alt::new("")` **não** é caso de `trybuild`: equivale a `Alt::decorative()`; a prova é de runtime.
+- `href="javascript:…"` e `src="https://…"` literais são casos de `trybuild`; a forma tipada
+  (`ExternalUrl::parse`/`Src::parse`) devolve `None` e é provada em runtime.
 - Caso que prova a **ausência** de API de template por string: qualquer tentativa de compilar template
   a partir de `String`/`&str` de runtime falha por tipo (não existe função pública para isso), e a falha
   é fixada em `trybuild`.
@@ -119,7 +119,7 @@ cargo test -p html-auy --features audit # N4: regras do `audit` (D30)
 cargo +nightly fuzz run parser      # parser (crate `fuzz/`, fora do workspace)
 ```
 
-### 10.1 Gates de processo (herdados do `sniff-css`, ver [`22`](22-rigor.md))
+### 11.1 Gates de processo (herdados do `sniff-css`, ver [`22`](22-rigor.md))
 
 | Gate | Comando | Cobre |
 |---|---|---|
@@ -130,7 +130,7 @@ cargo +nightly fuzz run parser      # parser (crate `fuzz/`, fora do workspace)
 | pânico no parser | `cargo +nightly fuzz run parser` (smoke) | input adverso nunca vira pânico — sempre `compile_error!`; profundidade de aninhamento tem teto de 64 |
 | snapshots | `cargo test` + `INSTA_UPDATE=always` para regenerar | bytes determinísticos, comparação byte-for-byte |
 
-### 11.0 Gates fora do crate
+### 11.2 Gates fora do crate
 
 | Gate | O que cobra |
 |---|---|
@@ -138,13 +138,14 @@ cargo +nightly fuzz run parser      # parser (crate `fuzz/`, fora do workspace)
 | `tools/data_check.py` (D26) | `data-*` declarado ↔ usado ↔ lido pelo JS |
 | `N4` (`feature = "audit"`) | as 13 regras do `audit` (8 invariantes de `output` + 5 de conformidade/estrutura) sobre o HTML final |
 
-## 11.1 Inventário mínimo de `trybuild` (uma mensagem = um caso)
+## 11.3 Inventário mínimo de `trybuild` (uma mensagem = um caso)
 
 `elemento desconhecido` · `atributo desconhecido` · `atributo obrigatório ausente` · `aninhamento
 ilegal` · `valor fora do enum` · `role` inválido · `aria-*` fora do enum · `aria-*` fora da allowlist
 do elemento · `aria-hidden` em focável · `label` sem `id` pareado · `srcset` sem `sizes`/dims ·
 `elemento de documento em html!` · `<form>` à mão · `Form::open` com `Method::Post` sem `CsrfToken` ·
 filhos de primitivo validados · `target="_blank"` com `rel` computado · `pattern` com flags ·
-`source`/parte de tabela fora do pai · aninhamento acima de 64 níveis.
+`source`/parte de tabela fora do pai · aninhamento acima de 64 níveis · `(a)(b)` sem
+`Markup::concat` · `href`/`src` literal inválido · variante de `Msg` sem `#[msg]`.
 
 Cada caso guarda o `.stderr` versionado: mudar a mensagem é mudar o contrato ([`10`](10-ergonomia.md) §2).

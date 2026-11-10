@@ -284,7 +284,7 @@ fn parse_attr(cursor: &mut Cursor, diags: &mut Vec<Diag>, ident: &Ident) -> Opti
 }
 
 /// Desescapa um literal de string comum (`"…"`), sem sufixo e sem raw string.
-fn literal_text(literal: &Literal) -> Option<String> {
+pub(crate) fn literal_text(literal: &Literal) -> Option<String> {
     let raw = literal.to_string();
     if let Some(content) = raw_text(&raw) {
         return Some(String::from(content));
@@ -493,6 +493,18 @@ fn parse_expression(cursor: &mut Cursor, diags: &mut Vec<Diag>) -> Option<Item> 
         cursor.bump();
         return None;
     };
+    if has_adjacent_parentheses(&scanned.tokens) {
+        diags.push(
+            Diag::new(
+                scanned.span,
+                "duas expressões `(…)` seguidas não são concatenadas",
+            )
+            .hint(
+                "use `Markup::concat([a, b])`; se for uma chamada, envolva-a em parênteses duplos: `((f)(x))`",
+            ),
+        );
+        return None;
+    }
     if let Some(group) = cursor.take_brace() {
         let children = parse_group(&group, diags, cursor.depth.saturating_add(1));
         return Some(Item::Primitive(Primitive {
@@ -512,6 +524,23 @@ fn parse_expression(cursor: &mut Cursor, diags: &mut Vec<Diag>) -> Option<Item> 
             span: scanned.span,
         }))
     }
+}
+
+/// `(a)(b)` é uma chamada de `a` para o scanner; no `html!`, quase sempre é concatenação
+/// pretendida. O erro aponta o caminho explícito (`Markup::concat`) e a saída para chamadas reais.
+fn has_adjacent_parentheses(tokens: &TokenStream) -> bool {
+    let mut previous_parenthesis = false;
+    for token in tokens.clone() {
+        let is_parenthesis = matches!(
+            &token,
+            TokenTree::Group(group) if group.delimiter() == Delimiter::Parenthesis
+        );
+        if is_parenthesis && previous_parenthesis {
+            return true;
+        }
+        previous_parenthesis = is_parenthesis;
+    }
+    false
 }
 
 fn parse_group(group: &Group, diags: &mut Vec<Diag>, depth: usize) -> Block {

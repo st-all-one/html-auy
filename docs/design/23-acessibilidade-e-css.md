@@ -1,8 +1,8 @@
 # 23 — Acessibilidade e CSS: a fronteira do que é decidível
 
-> **Proveniência.** O catálogo de regras vem do `sniff-css` (`crates/sniff-css-check/src/rules.rs`, 25
-> checks medidos sobre estilo computado, mais `--uniform`), e a doutrina de julgamento de
-> `docs/accessibility.md` (grade de acessibilidade, `is_user_noticeable`, contraste composto in-page).
+> **Proveniência.** O catálogo de regras vem do `sniff-css` (`sniff-css/crates/sniff-css-check/src/rules.rs`, 25 checks:
+> 22 computados + 3 estáticos, mais `--uniform`), e a doutrina de julgamento de
+> `sniff-css/docs/accessibility.md` (grade de acessibilidade, `is_user_noticeable`, contraste composto in-page).
 > **Absorção:** o **conhecimento de fronteira** (o que é estático, o que exige browser) entra na spec e no
 > `N4`; a **execução** continua no consumidor, como gate separado.
 
@@ -99,8 +99,8 @@ invariante do crate dispensa o `sniff`.** Eles cobrem camadas diferentes, e a fr
 |---|---|
 | divisão por decidibilidade (bloco / página / computado) | este documento + [`04`](04-validacao.md) §4.0 |
 | 6 invariantes estáticas novas | `spec/elements.toml` (`control_has_accessible_name`, `no_aria_hidden_on_focusable`, `heading_levels_no_skips`, `ids_unique`, `landmark_names_required`, `aria_current_unique_per_nav`) |
-| catálogo de 25 regras computadas como **contrato de gate** do consumidor | §2.2 |
-| vocabulário `display_visible` × `accessibility_grade` | §3.3 |
+| catálogo de 25 regras (22 computadas + 3 estáticas) como **contrato de gate** do consumidor | §2.2 |
+| vocabulário `display_visible` × `accessibility_grade` | §3 |
 | doutrina "medir, não chutar" (evidência no relatório) | [`22`](22-rigor.md) §9 e [`12`](12-testes.md) |
 
 **Não absorvido:** as regras em si, o CDP, o parser de propriedades CSS, os bundles de captura. O crate

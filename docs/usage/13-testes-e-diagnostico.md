@@ -80,8 +80,8 @@ alvo de toque ou layout.
 O repositório mantém `crates/html-auy/tests/ui/*.rs` e `.stderr` com `trybuild`:
 
 ```text
-tests/ui/img_without_alt.rs
-tests/ui/img_without_alt.stderr
+tests/ui/missing_alt.rs
+tests/ui/missing_alt.stderr
 tests/ui/classes_free_string.rs
 tests/ui/shell_main.rs
 ```

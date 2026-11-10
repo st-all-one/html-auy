@@ -40,7 +40,7 @@ invariants = ["alt_empty_means_decorative", "intrinsic_dimensions_required", "sr
 category = ["phrasing", "interactive"]
 transparent = true                    # herda o content model do pai; `children` só vale na raiz
 required = ["href"]                   # validado por `Href`, não por regex
-allowed = ["hreflang", "rel", "target", "download", "referrerpolicy", "class", "aria-*", "data-*"]
+allowed = ["rel", "hreflang", "target", "download", "type", "class", "data-*", "aria-*", "referrerpolicy"]
 children = ["flow"]
 forbidden_children = ["interactive"]  # nenhum interativo descendente, em qualquer profundidade
 ```
@@ -60,7 +60,7 @@ Campos (esquema 2):
 | `forbidden_children` | exceções sobre `children`; nome de elemento vale no filho direto, categoria vale em qualquer profundidade |
 | `transparent` | herda o content model do ancestral não transparente mais próximo (`<a>`); `children` é só o fallback na raiz |
 | `invariants` | nomes das regras que o validador implementa (registro em [`04-validacao.md`](04-validacao.md) §4) |
-| `deprecated` | quando presente, emite advisory e mantém compilação por uma minor |
+| `deprecated` | reservado para recusa com hint de substituição; não existe camada advisory |
 
 > **Por que o esquema subiu para 2:** a auditoria mostrou que `required` estava sobrecarregado
 > (misturava atributo com filho), `category` única tornava `<p>texto <a></a></p>` impossível, e

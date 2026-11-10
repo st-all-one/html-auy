@@ -23,3 +23,38 @@ pub(crate) fn is_typed(element: &str, name: &str) -> bool {
     }
     TYPED.contains(&name)
 }
+
+/// Caminho interno literal aceito pelo macro; espelha a gramática de `LUrl::new`.
+///
+/// A cópia existe porque o macro não depende do crate `html-auy` (seria um ciclo). Os testes de
+/// `tests/values.rs` e `tests/ergonomics.rs` fixam os dois lados.
+pub(crate) fn literal_path(input: &str) -> bool {
+    if !input.starts_with('/') || input.starts_with("//") {
+        return false;
+    }
+    let rejected = input.chars().any(|ch| {
+        ch.is_control()
+            || ch.is_ascii_whitespace()
+            || matches!(ch, ':' | '\\' | '"' | '<' | '>' | '`')
+    });
+    if rejected {
+        return false;
+    }
+    !input.split('/').any(|segment| {
+        segment == "."
+            || segment == ".."
+            || segment.eq_ignore_ascii_case(".%2e")
+            || segment.eq_ignore_ascii_case("%2e.")
+            || segment.eq_ignore_ascii_case("%2e%2e")
+    })
+}
+
+/// Fragmento literal aceito pelo macro; espelha `Fragment::new`.
+pub(crate) fn literal_fragment(input: &str) -> bool {
+    input.strip_prefix('#').is_some_and(|name| {
+        name.is_empty()
+            || name
+                .chars()
+                .all(|ch| ch.is_ascii_alphanumeric() || ch == '_' || ch == '-')
+    })
+}

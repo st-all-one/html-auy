@@ -70,18 +70,20 @@ ETag = '"' + sha256(bytes finais) + '"'
 O crate **não** emite `hx-*`; ele modela a intenção para o seu adaptador:
 
 ```rust
-use html_auy::{Id, Partial, Swap, html};
+use html_auy::prelude::*;
+use html_auy::{Id, Partial, Swap};
 
+let cart_count = 3;
 let partial = Partial::new(html! {
     section id="cart" {
         h2 id="cart-title" { M::Cart }
-        p { Text::new("Atualizado") }
+        p { M::Updated }
     }
 })
 .update(
     Id::new("cart-count"),
     Swap::Inner,
-    html! { Text::new("3") },
+    html! { Text::new(&cart_count.to_string()) },
 )
 .focus(Id::new("cart-title"));
 ```
@@ -184,7 +186,7 @@ GET /carrinho (HX-Request)
 - O crate não escolhe transporte, não lê `HX-*`, não escreve `Vary` e não define status.
 - `Partial` não é uma resposta HTTP; é um valor para o adaptador.
 - `Page` não tem `ETag`; calcule sobre os bytes finais.
-- `Asset` não carrega `integrity`; SRI de `link`/`script` não é emitido no `0.1`.
+- `Asset` não carrega `integrity`; SRI de `link`/`script` não é emitido no `0.2`.
 - `style=` inline muda a CSP; trate como decisão de segurança, não como detalhe de HTTP.
 
 Para o esqueleto completo de uma aplicação — Cargo, `PageResponse`, rotas, assets, erros e

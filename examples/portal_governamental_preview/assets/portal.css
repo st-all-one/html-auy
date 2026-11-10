@@ -132,6 +132,37 @@ h3 {
   color: #fff;
 }
 
+.language-switch ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.language-switch a {
+  display: block;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.language-switch a:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.language-switch a[aria-current="page"] {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: #fff;
+}
+
 .notice {
   border-block: 1px solid var(--warning-line);
   background: var(--warning-bg);

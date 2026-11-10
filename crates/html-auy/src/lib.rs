@@ -54,6 +54,7 @@ mod markup;
 pub mod media;
 mod msg;
 pub(crate) mod numeric;
+pub mod prelude;
 pub mod response;
 pub mod shell;
 pub mod spec;
@@ -65,7 +66,7 @@ pub use form::{Action, CsrfToken, Form, Method, SubmitKey};
 pub use hint::{
     CrossOrigin, FetchPriority, Hint, ImagePreload, Preload, PreloadAs, ReferrerPolicy,
 };
-pub use html_auy_macros::html;
+pub use html_auy_macros::{Msg, html};
 pub use markup::{Markup, Render};
 pub use media::{
     Audio, Img, Loading, MediaPreload, Picture, Source, Track, TrackKind, Transcript, Video,
@@ -77,9 +78,9 @@ pub use shell::{
     Regions, RootAttributes, ShellData,
 };
 pub use value::{
-    Alt, AttrVal, AttrValue, Autocomplete, Class, ClassList, ClassToken, Dir, ExternalUrl,
-    FieldName, Fragment, HeightPx, Href, Hreflang, Id, Integrity, JsonGraph, JsonLd, LUrl, Label,
-    Lang, MailAddr, Media, MediaPath, Offset, PhoneNumber, Sizes, Src, SrcSet, Timestamp, Tone,
-    Variant, WidthPx,
+    Alt, AttrVal, AttrValue, Autocomplete, Class, ClassList, ClassToken, Date, DateTimeValue, Dir,
+    ExternalUrl, FieldName, Fragment, HeightPx, Href, Hreflang, Id, Integrity, JsonGraph, JsonLd,
+    LUrl, Label, Lang, MailAddr, Media, MediaPath, Offset, PhoneNumber, Sizes, Src, SrcSet,
+    Timestamp, Tone, Variant, WidthPx,
 };
 pub use view::View;

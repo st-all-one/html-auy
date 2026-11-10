@@ -8,25 +8,20 @@ entrega os dois a `Page`; o `Page` devolve o HTML completo.
 ## O código completo
 
 ```rust
-use html_auy::{html, Lang, Msg, Page, ShellData, Text, View};
+use html_auy::prelude::*;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Msg)]
 enum M {
+    #[msg("Início")]
     Title,
+    #[msg("Bem-vindo")]
     Heading,
+    #[msg("Esta é a página inicial.")]
     Greeting,
+    #[msg("Pular para o conteúdo")]
     Skip,
-}
-
-impl Msg for M {
-    fn as_str(self) -> &'static str {
-        match self {
-            M::Title => "Início",
-            M::Heading => "Bem-vindo",
-            M::Greeting => "Esta é a página inicial.",
-            M::Skip => "Pular para o conteúdo",
-        }
-    }
+    #[msg("Descrição para buscadores")]
+    Description,
 }
 
 fn page() -> Page {
@@ -99,9 +94,9 @@ O construtor mínimo já entrega um documento válido. Os builders cobrem o rest
 
 ```rust
 let data = ShellData::new(title, heading, lang)
-    .description(Text::new("Descrição para buscadores"))
+    .description(Text::msg(M::Description))
     .canonical(ExternalUrl::parse("https://example.org/").expect("URL"))
-    .skip(Text::new("Pular para o conteúdo"))
+    .skip(Text::msg(M::Skip))
     .assets(assets)
     .regions(regions);
 ```
@@ -115,7 +110,7 @@ A lista completa, a ordem do `<head>` e os assets estão em
 |---|---|---|
 | `html! { main { … } }` | `<main>` é `only = "shell"` | o `Page` já emite `<main>`; comece pela view |
 | `html! { h1 { … } }` com `Page` | dois `h1` no documento | use `h2` na view; o `h1` é o `heading` |
-| `html! { p { "Olá" } }` | texto literal não é permitido | `M::Greeting` ou `Text::new("Olá")` |
+| `html! { p { "Olá" } }` | texto literal não é permitido | `M::Greeting` (estático) ou `Text::new(&value)` (dinâmico) |
 | `Lang::new("pt-BR")` | `Lang` não tem construtor livre | `Lang::parse("pt-BR")?` ou `Lang::EN` |
 | `Page::new(&data, html! { … })` | `Page` espera `View` | `Page::new(&data, View::new(html! { … }))` |
 

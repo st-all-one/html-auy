@@ -16,7 +16,7 @@ Shadow DOM por host (~0,5 ms), e para "funcionar sem JS" é preciso SSR que emit
 `<template shadowroot>` — `style` inline, contra a CSP sem inline. <slot>, `part`, `::slotted` e
 `:host` só existem com shadow root, então a dependência vem em cadeia, não em parte. E o corpus não
 tem uma linha sobre elemento indefinido piscando. O que CE resolveria aqui já está resolvido por
-`Markup` + `enum Slot` + `/theme.css`. Ver D20 em [`13-decisoes.md`](13-decisoes.md).
+`Markup` + `View`/`Regions` + `/theme.css`. Ver D20 em [`13-decisoes.md`](13-decisoes.md).
 
 **Por que não há warnings do compilador?**
 Porque proc-macro em Rust stable só emite erro — `proc_macro::Diagnostic` é instável. Recomendação não
@@ -49,12 +49,13 @@ escrito pelo consumidor; o crate não conhece framework nem `http` ([`01-arquite
 completo, então streaming de resposta fica no consumidor (com cache desligado).
 
 **Como usar htmx?**
-Opcional e fora do vocabulário: asset declarado + `Render::{Full, Partial}` + `Vary: HX-Request` +
+Opcional e fora do vocabulário: asset declarado + `RequestClass::{Full, Partial}` + `Partial` + `Vary: HX-Request` +
 `axe` depois do swap. Ver [`07-js-e-assets.md`](07-js-e-assets.md) §7.
 
-**Por que todo texto precisa ser `Msg`?**
+**Por que texto de UI é `Msg` (e dado dinâmico é `Text::new`)?**
 Porque nome acessível, `title`, `alt` e link precisam existir nos 4 locales, e porque o lint de 2.4.4
 (link ambíguo) fica trivial por variante. Custo: catálogo gerado (2.702 entradas no estudo de caso).
+Dado que veio do banco/HTTP entra por `Text::new`, não por `Msg`.
 
 **Por que `Tone`/`SectionId` e não cor?**
 Cor livre quebra acessibilidade (contraste), CSP (inline) e cache (ETag por página). Identidade +
@@ -65,7 +66,7 @@ Sim: tokens são dados; o `/theme.css` muda de `ETag` e a próxima request receb
 endpoint privado `no-store`.
 
 **E se o projeto morrer?**
-O código é MIT OR Apache-2.0 e o crate `html-auy` 0.1.0 continua disponível no crates.io; o consumidor pode
+O código é MIT OR Apache-2.0 e o crate `html-auy` 0.2.0 continua disponível no crates.io; o consumidor pode
 vendorizar a versão que usa, mantém os snapshots como contrato e estes documentos como decisão
 registrada. Não há dependência de serviço ou runtime externo.
 

@@ -22,8 +22,8 @@ A aplicação depende somente de `html-auy`. Os outros dois existem porque uma p
 exportar os tipos do crate principal; são publicados para que `html-auy` possa ser instalado do
 crates.io.
 
-O workspace também contém `demo/` e `fuzz/`, que **não** são publicados e, no caso do fuzz, tem
-workspace próprio (nightly).
+O workspace também contém `examples/` (incluindo o portal governamental) e `fuzz/`, que **não** são
+publicados; o fuzz tem workspace próprio (nightly).
 
 ## 2. Grafo de dependências
 

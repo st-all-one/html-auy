@@ -112,8 +112,8 @@ crate.
 ```rust
 let nome = FieldState::new(AttrVal::new(&state.nome))
     .required(true)
-    .help(Text::new("Como no documento"))
-    .error(Text::new("Informe o nome completo"));
+    .help(Text::msg(M::HelpName))
+    .error(Text::msg(M::ErrorName));
 
 let campo = Field::text(FieldName::new("nome"), M::Name, &nome);
 ```

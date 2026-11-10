@@ -49,14 +49,14 @@ Cada implementação roda **os mesmos casos**; divergência = teste vermelho.
 { "id": "p.rejects.div", "input": "<p><div>x</div></p>",
   "expect": "reject", "invariant": "no_flow_inside_phrasing", "scope": "block" }
 
-{ "id": "img.requires.alt", "input": "<img src=x width=8 height=8>",
-  "expect": "reject", "invariant": "alt_required", "scope": "block" }
+{ "id": "img.requires.dimensions", "input": "<img src=x alt=x>",
+  "expect": "reject", "invariant": "intrinsic_dimensions_required", "scope": "block" }
 
 { "id": "img.accepts.decorative", "input": "<img src=x alt=\"\" width=8 height=8>",
   "expect": "accept", "scope": "block" }
 
 { "id": "page.rejects.two.h1", "input": "<main><h1>a</h1><h1>b</h1></main>",
-  "expect": "reject", "invariant": "single_h1", "scope": "type" }
+  "expect": "reject", "invariant": "single_h1", "scope": "output" }
 ```
 
 Regras do corpus:

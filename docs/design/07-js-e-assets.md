@@ -36,7 +36,6 @@ fn base() -> Assets {
         Asset::script("/assets/app.js"),
     ]
     .into_iter()
-    .flatten()
     .collect()
 }
 ```

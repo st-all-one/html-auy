@@ -25,7 +25,7 @@ JavaScript, `ETag`/304). Três telas:
 ```rust
 // app/src/msg.rs — enum do consumidor; o crate só conhece o trait (D31)
 #[derive(Clone, Copy)]
-pub enum Msg { Home, News, LatestNews, ReadNews, Title, Required, InvalidEmail, Submit, EmptyList, BackToTop }
+pub enum Msg { Home, News, LatestNews, ReadNews, Title, Captions, Required, InvalidEmail, Submit, EmptyList, BackToTop }
 
 impl html_auy::Msg for Msg {
     fn as_str(self) -> &'static str {
@@ -194,7 +194,7 @@ let cover = Img::new(
 
 let video = Video::new(
     Src::parse("/media/aula.mp4").expect("asset"),
-    Track::captions(Src::parse("/media/aula.vtt").expect("legenda"), Text::new("Legendas")),
+    Track::captions(Src::parse("/media/aula.vtt").expect("legenda"), Text::msg(Msg::Captions)),
 )
 .poster(Src::parse("/media/aula.jpg").expect("poster"))
 .preload(MediaPreload::Metadata)
@@ -260,7 +260,7 @@ Propriedades que o consumidor passa a ter **por construção**:
 ## 8. O teste que roda no CI do consumidor
 
 ```rust
-// app/tests/a11y_pages.rs — `html = { path = "…", features = ["audit"] }` (D30)
+// app/tests/a11y_pages.rs — `html-auy = { path = "…", features = ["audit"] }` (D30)
 #[test]
 fn paginas_publicas_passam_no_n4() {
     for page in render_all_fixtures() {
