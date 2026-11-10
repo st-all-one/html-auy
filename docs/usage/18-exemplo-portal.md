@@ -13,6 +13,9 @@ cargo run -p html-auy --example portal_governamental
 O programa escreve o documento completo em `stdout`; não há servidor, template em runtime nem
 dependência de Axum. O exemplo compila sem a feature `audit`.
 
+Para ver a versão com CSS de demonstração, use a
+[`preview`](../../examples/portal_governamental_preview/README.md) e sirva a pasta localmente.
+
 ## O que a página exercita
 
 | Parte | Mecanismo |
